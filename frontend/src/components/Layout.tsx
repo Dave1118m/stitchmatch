@@ -1,9 +1,9 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { notificationsAPI } from '../lib/api';
-import { Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, Bell, ClipboardList, Shield } from 'lucide-react';
+import { Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, Bell, ClipboardList, Shield, ChevronDown, Check } from 'lucide-react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, logout, switchRole } = useAuth();
@@ -16,6 +16,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [switchingRole, setSwitchingRole] = useState<string | null>(null);
+  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
   const isDark = useDarkMode();
 
   useEffect(() => {
@@ -24,6 +26,16 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (isDark) {
       document.documentElement.classList.add('dark');
     }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
+        setRoleDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -106,6 +118,15 @@ export default function Layout({ children }: { children: ReactNode }) {
     { path: '/admin', label: 'Admin Panel', icon: Shield, roles: ['admin'] },
   ];
 
+  const roleOptions = [
+    { role: 'customer', label: 'Customer', icon: User, description: 'Browse tailors & order custom garments' },
+    { role: 'tailor', label: 'Tailor', icon: Scissors, description: 'Manage shop, requests & client orders' },
+    { role: 'admin', label: 'Admin', icon: Shield, description: 'Platform oversight & user governance' },
+  ];
+
+  const currentRoleObj = roleOptions.find((r) => r.role === user?.role) || roleOptions[0];
+  const CurrentRoleIcon = currentRoleObj.icon;
+
   return (
     <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <div className="flex min-h-screen">
@@ -147,83 +168,152 @@ export default function Layout({ children }: { children: ReactNode }) {
             )}
           </nav>
 
-          {/* Role Switcher & Bottom Bar */}
+          {/* Role Switcher Dropdown & Bottom Bar */}
           <div className={`p-2 lg:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2`}>
-            <div>
-              {sidebarOpen ? (
-                <div className="mb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 px-1">
-                    Switch Role
-                  </p>
-                  <div className={`p-1 rounded-xl flex items-center gap-1 ${darkMode ? 'bg-gray-900/60' : 'bg-gray-100'}`}>
-                    {[
-                      { role: 'customer', label: 'Customer', icon: User },
-                      { role: 'tailor', label: 'Tailor', icon: Scissors },
-                      { role: 'admin', label: 'Admin', icon: Shield },
-                    ].map((r) => {
-                      const RoleIcon = r.icon;
-                      const isSelected = user?.role === r.role;
-                      const isLoading = switchingRole === r.role;
-                      return (
-                        <button
-                          key={r.role}
-                          onClick={() => handleSwitchRole(r.role)}
-                          disabled={switchingRole !== null}
-                          title={`Switch to ${r.label}`}
-                          className={`flex-1 flex items-center justify-center space-x-1 py-1.5 px-1 rounded-lg text-xs font-medium transition-all duration-200 ${
-                            isSelected
-                              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
-                              : darkMode
-                              ? 'text-gray-400 hover:text-white hover:bg-gray-700/60'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                          } ${switchingRole !== null && !isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          {isLoading ? (
-                            <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          ) : (
-                            <RoleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                          )}
-                          <span className="truncate">{r.label}</span>
-                        </button>
-                      );
-                    })}
+            {/* Role Switcher Dropdown */}
+            {sidebarOpen ? (
+              <div className="relative" ref={roleDropdownRef}>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 px-1">
+                  Active Role
+                </label>
+                <button
+                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium ${
+                    darkMode
+                      ? 'bg-gray-800/80 border-gray-700 text-white hover:bg-gray-700/70'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5 truncate">
+                    <div className="p-1 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white flex-shrink-0">
+                      <CurrentRoleIcon className="w-4 h-4" />
+                    </div>
+                    <span className="capitalize truncate font-semibold">{currentRoleObj.label}</span>
                   </div>
-                </div>
-              ) : (
-                <div className="mb-2 flex flex-col items-center gap-1.5">
-                  {[
-                    { role: 'customer', label: 'Customer', icon: User },
-                    { role: 'tailor', label: 'Tailor', icon: Scissors },
-                    { role: 'admin', label: 'Admin', icon: Shield },
-                  ].map((r) => {
-                    const RoleIcon = r.icon;
-                    const isSelected = user?.role === r.role;
-                    const isLoading = switchingRole === r.role;
-                    return (
-                      <button
-                        key={r.role}
-                        onClick={() => handleSwitchRole(r.role)}
-                        disabled={switchingRole !== null}
-                        title={`Switch to ${r.label}`}
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
-                            : darkMode
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                        }`}
-                      >
-                        {isLoading ? (
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <RoleIcon className="w-4 h-4" />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Popup */}
+                {roleDropdownOpen && (
+                  <div className={`absolute bottom-full left-0 mb-2 w-full min-w-[220px] rounded-2xl shadow-xl border overflow-hidden z-50 transition-all ${
+                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                  }`}>
+                    <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wider ${
+                      darkMode ? 'border-gray-700 text-gray-400 bg-gray-800/90' : 'border-gray-100 text-gray-500 bg-gray-50'
+                    }`}>
+                      Switch Account Role
+                    </div>
+                    <div className="p-1.5 space-y-1">
+                      {roleOptions.map((r) => {
+                        const OptionIcon = r.icon;
+                        const isSelected = user?.role === r.role;
+                        const isLoading = switchingRole === r.role;
+
+                        return (
+                          <button
+                            key={r.role}
+                            disabled={switchingRole !== null}
+                            onClick={() => {
+                              handleSwitchRole(r.role);
+                              setRoleDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-start space-x-2.5 px-2.5 py-2 rounded-xl transition-all duration-150 text-left ${
+                              isSelected
+                                ? darkMode
+                                  ? 'bg-purple-900/30 text-purple-300 font-semibold'
+                                  : 'bg-purple-50 text-purple-700 font-semibold'
+                                : darkMode
+                                ? 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            <div className={`mt-0.5 p-1 rounded-lg flex-shrink-0 ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
+                                : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {isLoading ? (
+                                <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <OptionIcon className="w-3.5 h-3.5" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium leading-none">{r.label}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0 ml-1" />}
+                              </div>
+                              <p className={`text-[10px] mt-1 line-clamp-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                {r.description}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="relative flex justify-center" ref={roleDropdownRef}>
+                <button
+                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  title={`Current Role: ${currentRoleObj.label}. Click to switch.`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-200 ${
+                    darkMode
+                      ? 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <CurrentRoleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </button>
+
+                {roleDropdownOpen && (
+                  <div className={`absolute bottom-full left-12 mb-2 w-56 rounded-2xl shadow-xl border overflow-hidden z-50 transition-all ${
+                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                  }`}>
+                    <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wider ${
+                      darkMode ? 'border-gray-700 text-gray-400 bg-gray-800/90' : 'border-gray-100 text-gray-500 bg-gray-50'
+                    }`}>
+                      Switch Account Role
+                    </div>
+                    <div className="p-1.5 space-y-1">
+                      {roleOptions.map((r) => {
+                        const OptionIcon = r.icon;
+                        const isSelected = user?.role === r.role;
+                        const isLoading = switchingRole === r.role;
+
+                        return (
+                          <button
+                            key={r.role}
+                            disabled={switchingRole !== null}
+                            onClick={() => {
+                              handleSwitchRole(r.role);
+                              setRoleDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 text-left text-xs ${
+                              isSelected
+                                ? darkMode
+                                  ? 'bg-purple-900/30 text-purple-300 font-semibold'
+                                  : 'bg-purple-50 text-purple-700 font-semibold'
+                                : darkMode
+                                ? 'text-gray-300 hover:bg-gray-700/60'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <OptionIcon className="w-3.5 h-3.5" />
+                              <span>{r.label}</span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <Link
               to="/settings"
@@ -389,46 +479,69 @@ export default function Layout({ children }: { children: ReactNode }) {
               )}
             </nav>
             <div className={`p-3 sm:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-3`}>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 px-1">
-                  Switch Role
-                </p>
-                <div className={`p-1 rounded-xl flex items-center gap-1 ${darkMode ? 'bg-gray-900/60' : 'bg-gray-100'}`}>
-                  {[
-                    { role: 'customer', label: 'Customer', icon: User },
-                    { role: 'tailor', label: 'Tailor', icon: Scissors },
-                    { role: 'admin', label: 'Admin', icon: Shield },
-                  ].map((r) => {
-                    const RoleIcon = r.icon;
-                    const isSelected = user?.role === r.role;
-                    const isLoading = switchingRole === r.role;
-                    return (
-                      <button
-                        key={r.role}
-                        onClick={() => {
-                          handleSwitchRole(r.role);
-                          setMobileMenuOpen(false);
-                        }}
-                        disabled={switchingRole !== null}
-                        className={`flex-1 flex items-center justify-center space-x-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
-                            : darkMode
-                            ? 'text-gray-400 hover:text-white hover:bg-gray-700/60'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                        }`}
-                      >
-                        {isLoading ? (
-                          <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                        ) : (
-                          <RoleIcon className="w-3.5 h-3.5 flex-shrink-0" />
-                        )}
-                        <span className="truncate">{r.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="relative">
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 px-1">
+                  Active Role
+                </label>
+                <button
+                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium ${
+                    darkMode
+                      ? 'bg-gray-800/80 border-gray-700 text-white hover:bg-gray-700/70'
+                      : 'bg-gray-50 border-gray-200 text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2.5 truncate">
+                    <div className="p-1 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white flex-shrink-0">
+                      <CurrentRoleIcon className="w-4 h-4" />
+                    </div>
+                    <span className="capitalize truncate font-semibold">{currentRoleObj.label}</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {roleDropdownOpen && (
+                  <div className={`mt-2 rounded-2xl shadow-lg border overflow-hidden transition-all ${
+                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                  }`}>
+                    <div className="p-1.5 space-y-1">
+                      {roleOptions.map((r) => {
+                        const OptionIcon = r.icon;
+                        const isSelected = user?.role === r.role;
+                        const isLoading = switchingRole === r.role;
+
+                        return (
+                          <button
+                            key={r.role}
+                            disabled={switchingRole !== null}
+                            onClick={() => {
+                              handleSwitchRole(r.role);
+                              setRoleDropdownOpen(false);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150 text-left text-xs ${
+                              isSelected
+                                ? darkMode
+                                  ? 'bg-purple-900/30 text-purple-300 font-semibold'
+                                  : 'bg-purple-50 text-purple-700 font-semibold'
+                                : darkMode
+                                ? 'text-gray-300 hover:bg-gray-700/60'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              <OptionIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                              <span>{r.label}</span>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
+
               <Link
                 to="/settings"
                 onClick={() => setMobileMenuOpen(false)}
