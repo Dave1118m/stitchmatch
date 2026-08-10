@@ -3,11 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { generatePhotoToken } from '../utils/photoLinks';
 import { parseJson, parseJsonArray, serializeJson } from '../utils/jsonHelpers';
+import { validateBody } from '../middleware/validate';
+import { MeasurementPhotoSchema, MeasurementAdjustmentSchema } from '../utils/schemas';
 
 const router = Router();
 
 // Upload measurement photos (customer)
-router.post('/:requestId/photos', authenticate, authorize('customer'), async (req: AuthRequest, res: Response) => {
+router.post('/:requestId/photos', authenticate, authorize('customer'), validateBody(MeasurementPhotoSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;
@@ -102,7 +104,7 @@ router.get('/:requestId/photo/:which/signed', authenticate, async (req: AuthRequ
 });
 
 // Tailor adds manual adjustments
-router.put('/:requestId/adjustments', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
+router.put('/:requestId/adjustments', authenticate, authorize('tailor'), validateBody(MeasurementAdjustmentSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;

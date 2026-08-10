@@ -3,8 +3,11 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { parseJson, serializeJson } from '../utils/jsonHelpers';
 import { createNotification } from '../helpers/notificationHelper';
+import { validateBody } from '../middleware/validate';
+import { ProposeNegotiationSchema } from '../utils/schemas';
 
 const router = Router();
+
 // Get all negotiations for a request
 router.get('/:requestId', authenticate, async (req: AuthRequest, res: Response) => {
   try {
@@ -38,7 +41,7 @@ router.get('/:requestId', authenticate, async (req: AuthRequest, res: Response) 
 });
 
 // Propose a counter-offer (tailor or customer)
-router.post('/:requestId/propose', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/:requestId/propose', authenticate, validateBody(ProposeNegotiationSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;

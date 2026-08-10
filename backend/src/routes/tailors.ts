@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { parseJsonArray, serializeJson } from '../utils/jsonHelpers';
 import { notifyTailorApproval } from '../helpers/notificationHelper';
+import { validateBody } from '../middleware/validate';
+import { UpdateTailorProfileSchema } from '../utils/schemas';
 
 const router = Router();
 
@@ -179,7 +181,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Update tailor profile (tailor only)
-router.put('/profile', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
+router.put('/profile', authenticate, authorize('tailor'), validateBody(UpdateTailorProfileSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { bio, specialties, basePricingMin, basePricingMax, portfolioImages } = req.body;

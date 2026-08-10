@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { parseJsonArray } from '../utils/jsonHelpers';
+import { validateBody } from '../middleware/validate';
+import { UpdateUserSchema, SwitchRoleSchema } from '../utils/schemas';
 
 const router = Router();
 
@@ -41,7 +43,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Update user profile
-router.put('/me', authenticate, async (req: AuthRequest, res: Response) => {
+router.put('/me', authenticate, validateBody(UpdateUserSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { name, phone, location, avatarUrl } = req.body;
@@ -67,7 +69,7 @@ router.put('/me', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // Switch user role
-router.put('/switch-role', authenticate, async (req: AuthRequest, res: Response) => {
+router.put('/switch-role', authenticate, validateBody(SwitchRoleSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { role } = req.body;

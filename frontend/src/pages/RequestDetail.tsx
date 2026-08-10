@@ -3,13 +3,17 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { requestsAPI, measurementsAPI, ordersAPI, reviewsAPI, negotiationsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
-import { ArrowLeft, MessageSquare, CheckCircle, XCircle, Star, Camera, Scissors, DollarSign, Calendar, FileText } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { ArrowLeft, MessageSquare, CheckCircle, XCircle, Star, Camera, Scissors, DollarSign, Calendar, FileText, Printer } from 'lucide-react';
+import ImageModal from '../components/ImageModal';
+import { RequestDetailSkeleton } from '../components/SkeletonLoaders';
 
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
 export default function RequestDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const isDark = useDarkMode();
   const [request, setRequest] = useState<any>(null);
@@ -21,6 +25,7 @@ export default function RequestDetail() {
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [reviewReply, setReviewReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [modalImage, setModalImage] = useState<{ src: string; title: string } | null>(null);
 
   // Negotiation state
   const [negotiations, setNegotiations] = useState<any[]>([]);
@@ -207,8 +212,8 @@ export default function RequestDetail() {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
-  if (!request) return <p>Request not found</p>;
+  if (loading) return <RequestDetailSkeleton />;
+  if (!request) return <p className="text-center py-20">Request not found</p>;
 
   const isCustomer = user?.id === request.customerId;
   const isTailor = user?.id === request.tailorId;
@@ -219,17 +224,35 @@ export default function RequestDetail() {
 
   return (
     <div>
-      <Link to="/dashboard" className={`flex items-center space-x-1 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} mb-6`}>
+      <Link to="/dashboard" className={`flex items-center space-x-1 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} mb-6 print:hidden`}>
         <ArrowLeft className="h-4 w-4" /><span>Back to Dashboard</span>
       </Link>
+
+      {/* Image Modal Lightbox */}
+      <ImageModal
+        isOpen={!!modalImage}
+        src={modalImage?.src || null}
+        title={modalImage?.title}
+        onClose={() => setModalImage(null)}
+      />
 
       {/* Status Progress */}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h1>
-          <Link to={`/messages/${id}`} className="btn-secondary flex items-center space-x-2">
-            <MessageSquare className="h-4 w-4" /><span>Chat</span>
-          </Link>
+          <div className="flex items-center space-x-2 print:hidden">
+            <button
+              onClick={() => window.print()}
+              className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium flex items-center space-x-2 transition-colors"
+              title="Print or Save Order Spec Sheet PDF"
+            >
+              <Printer className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span className="hidden sm:inline">Print Spec Sheet</span>
+            </button>
+            <Link to={`/messages/${id}`} className="btn-secondary flex items-center space-x-2">
+              <MessageSquare className="h-4 w-4" /><span>Chat</span>
+            </Link>
+          </div>
         </div>
         <div className="flex items-center justify-between">
           {statusFlow.map((status, index) => (
@@ -363,10 +386,34 @@ export default function RequestDetail() {
                   </div>
 
                   {(request.measurement.frontPhotoUrl || request.measurement.sidePhotoUrl || request.measurement.backPhotoUrl) && (
-                    <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                      {request.measurement.frontPhotoUrl && <img src={request.measurement.frontPhotoUrl} alt="Front View" className="w-14 h-16 object-cover rounded border" />}
-                      {request.measurement.sidePhotoUrl && <img src={request.measurement.sidePhotoUrl} alt="Side View" className="w-14 h-16 object-cover rounded border" />}
-                      {request.measurement.backPhotoUrl && <img src={request.measurement.backPhotoUrl} alt="Back View" className="w-14 h-16 object-cover rounded border" />}
+                    <div>
+                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1 font-medium`}>Measurement Photos (Click to Zoom):</p>
+                      <div className="flex gap-2.5 pt-1.5 border-t border-gray-200 dark:border-gray-700">
+                        {request.measurement.frontPhotoUrl && (
+                          <img
+                            src={request.measurement.frontPhotoUrl}
+                            alt="Front View"
+                            onClick={() => setModalImage({ src: request.measurement.frontPhotoUrl, title: 'Front Measurement View' })}
+                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
+                          />
+                        )}
+                        {request.measurement.sidePhotoUrl && (
+                          <img
+                            src={request.measurement.sidePhotoUrl}
+                            alt="Side View"
+                            onClick={() => setModalImage({ src: request.measurement.sidePhotoUrl, title: 'Side Measurement View' })}
+                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
+                          />
+                        )}
+                        {request.measurement.backPhotoUrl && (
+                          <img
+                            src={request.measurement.backPhotoUrl}
+                            alt="Back View"
+                            onClick={() => setModalImage({ src: request.measurement.backPhotoUrl, title: 'Back Measurement View' })}
+                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
+                          />
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

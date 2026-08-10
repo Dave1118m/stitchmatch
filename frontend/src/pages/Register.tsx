@@ -24,6 +24,21 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Client-side validations matching backend Zod schema
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+    if (!/[A-Z]/.test(form.password)) {
+      setError('Password must contain at least one uppercase letter');
+      return;
+    }
+    if (!/[0-9]/.test(form.password)) {
+      setError('Password must contain at least one number');
+      return;
+    }
+
     setLoading(true);
     try {
       await register(form);
@@ -48,7 +63,7 @@ export default function Register() {
         </div>
 
         <div className="card !p-4 sm:!p-6">
-          {error && <div className={`mb-4 p-3 ${isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700'} rounded-lg text-sm`}>{error}</div>}
+          {error && <div className={`mb-4 p-3 ${isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700'} rounded-lg text-sm font-medium`}>{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>I am a</label>
@@ -57,7 +72,6 @@ export default function Register() {
                 <option value="tailor">Tailor</option>
                 <option value="admin">Admin</option>
               </select>
-              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Tip: Register admin via CLI with: <code className="px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-700">cd backend && node seed-admin.js</code></p>
             </div>
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Full Name</label>
@@ -69,7 +83,8 @@ export default function Register() {
             </div>
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Password</label>
-              <input type="password" name="password" value={form.password} onChange={handleChange} className="input-field text-sm sm:text-base" required minLength={6} />
+              <input type="password" name="password" value={form.password} onChange={handleChange} className="input-field text-sm sm:text-base" required minLength={8} />
+              <p className={`text-[11px] mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Must be at least 8 characters with 1 uppercase letter & 1 number.</p>
             </div>
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Phone (optional)</label>

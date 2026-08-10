@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -36,51 +37,53 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/tailors" element={<Tailors />} />
-          <Route path="/tailors/:id" element={<TailorProfile />} />
-          <Route path="/tailors/:id/portfolio" element={<Portfolio />} />
-          <Route path="/tailors/:id/reviews" element={<Reviews />} />
-          
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Layout><Dashboard /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/requests/:id" element={
-            <ProtectedRoute>
-              <Layout><RequestDetail /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/messages" element={
-            <ProtectedRoute>
-              <Layout><Messages /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/messages/:conversationId" element={
-            <ProtectedRoute>
-              <Layout><Messages /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Layout><Profile /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Layout><Settings /></Layout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute roles={['admin']}>
-              <Layout><AdminPanel /></Layout>
-            </ProtectedRoute>
-          } />
-        </Routes>
+        <ToastProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/tailors" element={<Tailors />} />
+            <Route path="/tailors/:id" element={<TailorProfile />} />
+            <Route path="/tailors/:id/portfolio" element={<Portfolio />} />
+            <Route path="/tailors/:id/reviews" element={<Reviews />} />
+            
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout><Dashboard /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/requests/:id" element={
+              <ProtectedRoute>
+                <Layout><RequestDetail /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/messages" element={
+              <ProtectedRoute>
+                <Layout><Messages /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/messages/:conversationId" element={
+              <ProtectedRoute>
+                <Layout><Messages /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Layout><Profile /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <Layout><Settings /></Layout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute roles={['admin']}>
+                <Layout><AdminPanel /></Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

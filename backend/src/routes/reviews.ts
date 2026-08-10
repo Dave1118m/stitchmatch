@@ -1,11 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
+import { validateBody } from '../middleware/validate';
+import { CreateReviewSchema, ReplyReviewSchema } from '../utils/schemas';
 
 const router = Router();
 
 // Create review (customer, after order completed)
-router.post('/:requestId', authenticate, authorize('customer'), async (req: AuthRequest, res: Response) => {
+router.post('/:requestId', authenticate, authorize('customer'), validateBody(CreateReviewSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;
@@ -46,7 +48,7 @@ router.post('/:requestId', authenticate, authorize('customer'), async (req: Auth
 });
 
 // Tailor replies to review
-router.put('/:id/reply', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
+router.put('/:id/reply', authenticate, authorize('tailor'), validateBody(ReplyReviewSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { id } = req.params;

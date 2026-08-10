@@ -4,6 +4,7 @@ import { requestsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { MessageSquare, Plus, Clock, CheckCircle, AlertCircle, Scissors } from 'lucide-react';
+import { RequestCardSkeleton } from '../components/SkeletonLoaders';
 
 const statusColors: Record<string, string> = {
   Pending: 'bg-yellow-100 text-yellow-800',
@@ -84,8 +85,10 @@ export default function Dashboard() {
 
       {/* Requests List */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <RequestCardSkeleton key={i} />
+          ))}
         </div>
       ) : requests.length === 0 ? (
         <div className="card text-center py-16">

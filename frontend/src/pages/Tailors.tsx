@@ -5,6 +5,7 @@ import { tailorsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { Search, MapPin, Star, Scissors } from 'lucide-react';
+import { TailorCardSkeleton } from '../components/SkeletonLoaders';
 
 export default function Tailors() {
   const { user } = useAuth();
@@ -205,8 +206,10 @@ export default function Tailors() {
 
         {/* Results */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <TailorCardSkeleton key={n} />
+            ))}
           </div>
         ) : tailors.length === 0 ? (
           <div className="text-center py-20">

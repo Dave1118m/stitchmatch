@@ -2,10 +2,12 @@ import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { validateBody } from '../middleware/validate';
+import { RegisterSchema, LoginSchema, OAuthSchema } from '../utils/schemas';
 
 const router = Router();
 
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', validateBody(RegisterSchema), async (req: Request, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { email, password, name, role, phone, location, authProvider } = req.body;
@@ -74,7 +76,7 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', validateBody(LoginSchema), async (req: Request, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { email, password } = req.body;
@@ -125,7 +127,7 @@ router.post('/login', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/oauth', async (req: Request, res: Response) => {
+router.post('/oauth', validateBody(OAuthSchema), async (req: Request, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { email, name, authProvider, providerId, role } = req.body;

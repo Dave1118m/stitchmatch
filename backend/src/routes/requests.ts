@@ -3,11 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { parseJson, serializeJson } from '../utils/jsonHelpers';
 import { notifyRequestStatus, notifyOrderStatus } from '../helpers/notificationHelper';
+import { validateBody } from '../middleware/validate';
+import { CreateRequestSchema } from '../utils/schemas';
 
 const router = Router();
 
 // Create service request
-router.post('/', authenticate, authorize('customer'), async (req: AuthRequest, res: Response) => {
+router.post('/', authenticate, authorize('customer'), validateBody(CreateRequestSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { tailorId, garmentType, fabricPreference, deadline, budget, notes } = req.body;

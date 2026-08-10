@@ -3,14 +3,36 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { messagesAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useToast } from '../context/ToastContext';
 import { getSocket, joinConversationRoom, leaveConversationRoom, sendTyping } from '../lib/socket';
 import { ArrowLeft, Send, Menu } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
+import { MessageListSkeleton } from '../components/SkeletonLoaders';
+
+const playIncomingChime = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Graceful fallback
+  }
+};
 
 export default function Messages() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,6 +53,9 @@ export default function Messages() {
 
     socket.on('new_message', (message: any) => {
       setMessages((prev) => [...prev, message]);
+      if (message.senderId !== user?.id) {
+        playIncomingChime();
+      }
     });
 
     socket.on('user_typing', ({ userId, isTyping }: { userId: string; isTyping: boolean }) => {
@@ -133,9 +158,7 @@ export default function Messages() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-1 py-2 mb-3 space-y-4">
           {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-            </div>
+            <MessageListSkeleton />
           ) : messages.length === 0 ? (
             <div className={`text-center py-20 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
               <p>No messages yet. Start the conversation!</p>
