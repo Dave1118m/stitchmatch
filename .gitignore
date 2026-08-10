@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build & Dist outputs
+dist/
+**/dist/
+build/
+**/build/
+
+# Environments & secrets
+.env
+**/.env
+.env.local
+.env.*.local
+
+# Virtual environments & python
+.venv/
+__pycache__/
+
+# Logs & temp files
+*.log
+**/logs/
+tmp_logs/
+uploads/
+**/uploads/
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

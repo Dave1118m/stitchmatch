@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid()) @map("id")
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  authProvider  String    @map("auth_provider") @default("email")
+  role          String    @default("customer")
+  name          String
+  phone         String?
+  avatarUrl     String?   @map("avatar_url")
+  location      String?
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  tailor            Tailor?
+  sentRequests      ServiceRequest[]  @relation("CustomerRequests")
+  receivedRequests  ServiceRequest[]  @relation("TailorRequests")
+  sentMessages      Message[]
+  measurements      Measurement[]
+  negotiationsProposed Negotiation[]
+  orderEvents       OrderEvent[]
+  reviewsGiven      Review[]          @relation("CustomerReviews")
+  reviewsReceived   Review[]          @relation("TailorReviews")
+  customerConversations Conversation[] @relation("CustomerConversations")
+  tailorConversations Conversation[]   @relation("TailorConversations")
+
+  @@map("users")
+}
+
+model Tailor {
+  id                String          @id @map("id")
+  approvalStatus    String          @default("pending") @map("approval_status")
+  bio               String?         @db.Text
+  specialties       String?         @map("specialties") @db.Text
+  basePricingMin    Decimal?        @map("base_pricing_min")
+  basePricingMax    Decimal?        @map("base_pricing_max")
+  portfolioImages   String?         @map("portfolio_images") @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at")
+
+  user              User            @relation(fields: [id], references: [id])
+  serviceRequests   ServiceRequest[]
+
+  @@map("tailors")
+}
+
+model ServiceRequest {
+  id                String        @id @default(uuid())
+  customerId        String        @map("customer_id")
+  tailorId          String        @map("tailor_id")
+  garmentType       String        @map("garment_type")
+  fabricPreference  String?       @map("fabric_preference")
+  deadline          DateTime?
+  budget            Decimal?
+  notes             String?
+  status            String        @default("Pending")
+  finalPrice        Decimal?      @map("final_price")
+  garmentSpecs      String?       @map("garment_specs")
+  customerConfirmed Boolean       @default(false) @map("customer_confirmed")
+  tailorConfirmed   Boolean       @default(false) @map("tailor_confirmed")
+  agreedAt          DateTime?     @map("agreed_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  customer      User          @relation("CustomerRequests", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tailor        User          @relation("TailorRequests", fields: [tailorId], references: [id], map: "fk_service_requests_tailor_user", onDelete: NoAction, onUpdate: NoAction)
+  tailorProfile Tailor        @relation(fields: [tailorId], references: [id], map: "fk_service_requests_tailor_profile", onDelete: NoAction, onUpdate: NoAction)
+  agreementSnapshots AgreementSnapshot[]
+  conversation  Conversation?
+  measurement   Measurement?
+  negotiations  Negotiation[]
+  orderEvents   OrderEvent[]
+  review        Review?
+
+  @@map("service_requests")
+}
+
+model Conversation {
+  id          String   @id @default(uuid())
+  customerId  String   @map("customer_id")
+  tailorId    String   @map("tailor_id")
+  requestId   String?  @unique @map("request_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  customer    User            @relation("CustomerConversations", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tailor      User            @relation("TailorConversations", fields: [tailorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  request     ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages    Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id              String      @id @default(uuid())
+  conversationId  String      @map("conversation_id")
+  senderId        String      @map("sender_id")
+  messageType     String      @default("text") @map("message_type")
+  content         String?
+  fileName        String?     @map("file_name")
+  fileSize        BigInt?     @map("file_size")
+  readAt          DateTime?   @map("read_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sender          User         @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("messages")
+}
+
+model Measurement {
+  id              String    @id @default(uuid())
+  requestId       String    @unique @map("request_id")
+  customerId      String    @map("customer_id")
+  frontPhotoUrl   String?   @map("front_photo_url")
+  sidePhotoUrl    String?   @map("side_photo_url")
+  backPhotoUrl    String?   @map("back_photo_url")
+  aiStatus        String    @default("pending") @map("ai_status")
+  aiConfidence    Decimal?  @map("ai_confidence")
+  chest           Decimal?
+  waist           Decimal?
+  hip             Decimal?
+  inseam          Decimal?
+  shoulderWidth   Decimal?  @map("shoulder_width")
+  armLength       Decimal?  @map("arm_length")
+  adjustments     String?   @default("[]")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  request         ServiceRequest @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer        User           @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("measurements")
+}
+
+model OrderEvent {
+  id          String      @id @default(uuid())
+  requestId   String      @map("request_id")
+  status      String
+  notes       String?
+  photos      String?      @map("photos")
+  createdBy   String      @map("created_by")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  request     ServiceRequest @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creator     User           @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("order_events")
+}
+
+model Review {
+  id          String    @id @default(uuid())
+  requestId   String    @unique @map("request_id")
+  customerId  String    @map("customer_id")
+  tailorId    String    @map("tailor_id")
+  rating      Int
+  feedback    String?
+  tailorReply String?   @map("tailor_reply")
+  replyAt     DateTime? @map("reply_at")
+  isFlagged   Boolean   @default(false) @map("is_flagged")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  request     ServiceRequest @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer    User           @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tailor      User           @relation("TailorReviews", fields: [tailorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("reviews")
+}
+
+model AgreementSnapshot {
+  id        String   @id @default(uuid())
+  requestId String   @map("request_id")
+  snapshot  String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  request   ServiceRequest @relation(fields: [requestId], references: [id])
+
+  @@map("agreement_snapshots")
+}
+
+model Negotiation {
+  id            String      @id @default(uuid())
+  requestId     String      @map("request_id")
+  proposedById  String      @map("proposed_by_id")
+  proposedPrice Decimal?    @map("proposed_price")
+  proposedDeadline DateTime? @map("proposed_deadline")
+  garmentSpecs  String?     @map("garment_specs")
+  notes         String?
+  status        String      @default("pending")
+  respondedAt   DateTime?   @map("responded_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  request       ServiceRequest @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  proposedBy    User           @relation(fields: [proposedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("negotiations")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
