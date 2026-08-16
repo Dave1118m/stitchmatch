@@ -1,27 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-model User {
-  id            String    @id @default(uuid()) @map("id")
-  email         String    @unique
-  passwordHash  String?   @map("password_hash")
-  authProvider  String    @map("auth_provider") @default("email")
-  role          String    @default("customer")
-  name          String
-  phone         String?
-  avatarUrl     String?   @map("avatar_url")
-  location      String?
-  isActive      Boolean   @default(true) @map("is_active")
-  createdAt     DateTime  @default(now()) @map("created_at")
-
-  tailor            Tailor?
-  sentRequests      ServiceRequest[]  @relation("CustomerRequests")
   receivedRequests  ServiceRequest[]  @relation("TailorRequests")
   sentMessages      Message[]
   measurements      Measurement[]
