@@ -425,9 +425,13 @@ export default function Layout({ children }: { children: ReactNode }) {
 
                 {/* User Profile */}
                 <div className={`flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                  <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm`}>
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </div>
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Avatar" className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover border border-gray-200 dark:border-gray-600" />
+                  ) : (
+                    <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-semibold text-xs sm:text-sm`}>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="hidden sm:block">
                     <p className={`text-xs sm:text-sm font-medium leading-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user?.name}</p>
                     <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} capitalize`}>{user?.role}</p>

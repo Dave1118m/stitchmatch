@@ -62,9 +62,44 @@ export function setupSocketHandlers(io: Server, prisma: PrismaClient) {
       socket.leave(`request:${requestId}`);
     });
 
+    // Join conversation room for real-time chat
+    socket.on('join_conversation', async (conversationId: string) => {
+      try {
+        const conversation = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+        });
+
+        if (!conversation) {
+          socket.emit('error', { message: 'Conversation not found' });
+          return;
+        }
+
+        if (socket.userId !== conversation.customerId && socket.userId !== conversation.tailorId && socket.userRole !== 'admin') {
+          socket.emit('error', { message: 'Access denied' });
+          return;
+        }
+
+        socket.join(`conversation:${conversationId}`);
+        console.log(`User ${socket.userId} joined conversation room: ${conversationId}`);
+      } catch (error) {
+        console.error('Join conversation error:', error);
+        socket.emit('error', { message: 'Internal server error' });
+      }
+    });
+
+    // Leave conversation room
+    socket.on('leave_conversation', (conversationId: string) => {
+      socket.leave(`conversation:${conversationId}`);
+    });
+
     // Typing indicator
     socket.on('typing', ({ requestId, isTyping }) => {
+      // Broadcast to both request room and conversation room (since requestId might be conversationId depending on where it's called)
       socket.to(`request:${requestId}`).emit('user_typing', {
+        userId: socket.userId,
+        isTyping,
+      });
+      socket.to(`conversation:${requestId}`).emit('user_typing', {
         userId: socket.userId,
         isTyping,
       });

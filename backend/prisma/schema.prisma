@@ -1,3 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid()) @map("id")
+  email         String    @unique
+  passwordHash  String?   @map("password_hash")
+  authProvider  String    @map("auth_provider") @default("email")
+  role          String    @default("customer")
+  name          String
+  phone         String?
+  avatarUrl     String?   @map("avatar_url")
+  location      String?
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  tailor            Tailor?
+  sentRequests      ServiceRequest[]  @relation("CustomerRequests")
   receivedRequests  ServiceRequest[]  @relation("TailorRequests")
   sentMessages      Message[]
   measurements      Measurement[]
@@ -7,6 +31,7 @@
   reviewsReceived   Review[]          @relation("TailorReviews")
   customerConversations Conversation[] @relation("CustomerConversations")
   tailorConversations Conversation[]   @relation("TailorConversations")
+  reactions         MessageReaction[]
 
   @@map("users")
 }
@@ -18,11 +43,11 @@ model Tailor {
   specialties       String?         @map("specialties") @db.Text
   basePricingMin    Decimal?        @map("base_pricing_min")
   basePricingMax    Decimal?        @map("base_pricing_max")
-  portfolioImages   String?         @map("portfolio_images") @db.Text
   createdAt         DateTime        @default(now()) @map("created_at")
 
   user              User            @relation(fields: [id], references: [id])
   serviceRequests   ServiceRequest[]
+  products          Product[]
 
   @@map("tailors")
 }
@@ -78,16 +103,36 @@ model Message {
   conversationId  String      @map("conversation_id")
   senderId        String      @map("sender_id")
   messageType     String      @default("text") @map("message_type")
-  content         String?
+  content         String?     @db.Text
   fileName        String?     @map("file_name")
   fileSize        BigInt?     @map("file_size")
   readAt          DateTime?   @map("read_at")
+  replyToId       String?     @map("reply_to_id")
+  isEdited        Boolean     @default(false) @map("is_edited")
+  deletedAt       DateTime?   @map("deleted_at")
   createdAt       DateTime    @default(now()) @map("created_at")
 
   conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sender          User         @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replyTo         Message?     @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies         Message[]    @relation("MessageReplies")
+  reactions       MessageReaction[]
 
   @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String   @map("message_id")
+  userId    String   @map("user_id")
+  emoji     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@map("message_reactions")
 }
 
 model Measurement {
@@ -187,4 +232,55 @@ model Notification {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("notifications")
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  tailorId    String   @map("tailor_id")
+  name        String
+  description String   @db.Text
+  basePrice   Decimal  @map("base_price")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tailor      Tailor   @relation(fields: [tailorId], references: [id], onDelete: Cascade)
+  images      ProductImage[]
+  colors      ProductColor[]
+  options     DesignOption[]
+
+  @@map("products")
+}
+
+model ProductImage {
+  id          String   @id @default(uuid())
+  productId   String   @map("product_id")
+  url         String   @db.Text
+  isPrimary   Boolean  @default(false) @map("is_primary")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductColor {
+  id          String   @id @default(uuid())
+  productId   String   @map("product_id")
+  name        String
+  hexCode     String   @map("hex_code")
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_colors")
+}
+
+model DesignOption {
+  id          String   @id @default(uuid())
+  productId   String   @map("product_id")
+  name        String
+  values      String   @db.Text
+
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("design_options")
 }

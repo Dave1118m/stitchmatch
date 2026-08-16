@@ -110,7 +110,7 @@ export default function Home() {
                   <LogIn className="h-4 w-4" />
                   <span>Sign In</span>
                 </Link>
-                <Link to="/register" className="btn-primary text-sm px-5 py-2 flex items-center space-x-1.5 shadow-md">
+                <Link to="/join" className="btn-primary text-sm px-5 py-2 flex items-center space-x-1.5 shadow-md">
                   <UserPlus className="h-4 w-4" />
                   <span>Get Started</span>
                 </Link>
@@ -120,93 +120,110 @@ export default function Home() {
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <section className={`relative overflow-hidden ${
-        isDark 
-          ? 'bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900' 
-          : 'bg-gradient-to-b from-slate-50 via-purple-50/30 to-white'
-      } py-20 lg:py-28 border-b ${isDark ? 'border-gray-800' : 'border-slate-100'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      {/* NEW TWO-COLUMN HERO SECTION (3DLOOK Style) */}
+      <section className={`relative overflow-hidden pt-20 pb-24 lg:pt-32 lg:pb-32 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+        {/* Dotted Background Pattern */}
+        <div className={`absolute inset-0 z-0 ${isDark ? 'opacity-10' : 'opacity-40'}`} style={{
+          backgroundImage: `radial-gradient(${isDark ? '#475569' : '#cbd5e1'} 2px, transparent 2px)`,
+          backgroundSize: '40px 40px'
+        }}></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
           
-          {/* Badge */}
-          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-gradient-to-r from-purple-100 via-primary-100 to-pink-100 dark:from-purple-900/70 dark:to-pink-900/70 text-purple-900 dark:text-purple-100 border border-purple-300 dark:border-purple-600 mb-6 shadow-sm">
-            <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-300 animate-pulse" />
-            <span className="font-extrabold tracking-wide">Bespoke Tailoring & AI 3D Body Measurement Platform</span>
+          {/* Left Side Text Content */}
+          <div className="flex-1 text-center lg:text-left pt-10 lg:pt-0">
+            <h2 className="text-[#2563eb] font-medium text-xl sm:text-2xl mb-4 tracking-tight">StitchMatch</h2>
+            <h1 className={`text-4xl sm:text-5xl lg:text-[64px] font-medium tracking-tight leading-[1.15] mb-6 ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>
+              Real-Time Tailoring<br className="hidden lg:block"/>
+              Measurements,<br className="hidden lg:block"/>
+              Powered by AI
+            </h1>
+            <p className={`text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+              Integrate AI-driven body scanning into your bespoke tailoring process to improve fit accuracy, boost client engagement, and reduce return rates while ensuring accurate insights for better garment construction.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
+              <Link to="/join" className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3.5 px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-lg">
+                Let's talk
+              </Link>
+              <a href="#how-it-works" className={`flex items-center justify-center gap-3 py-3.5 px-6 rounded font-medium transition-all w-full sm:w-auto text-lg ${isDark ? 'text-white hover:bg-gray-800' : 'text-slate-900 hover:bg-slate-50'}`}>
+                <div className="w-10 h-10 rounded-full border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                  {/* Play Icon */}
+                  <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[8px] border-l-current border-b-[6px] border-b-transparent ml-1"></div>
+                </div>
+                How it works
+              </a>
+            </div>
           </div>
 
-          {/* Title - Bulletproof High Contrast & Multi-Colored Words */}
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight max-w-5xl mx-auto leading-tight mb-6">
-            <span className="text-purple-950 dark:text-purple-100 font-black">Custom </span>
-            <span className="text-primary-600 dark:text-primary-400 font-black">Tailoring, </span>
-            <span className="text-indigo-950 dark:text-indigo-100 font-black">Designed for You </span>
-            <span className="text-slate-900 dark:text-slate-200 font-extrabold">with </span>
-            <span className="text-pink-600 dark:text-pink-400 font-black">AI Precision</span>
-          </h1>
+          {/* Right Side Image & Glassmorphism Cards */}
+          <div className="flex-1 relative w-full max-w-lg mx-auto lg:max-w-none mt-12 lg:mt-0">
+            {/* The main subject image */}
+            <div className="relative z-10 mx-auto w-[85%] lg:w-[90%] xl:w-[85%]">
+              <img 
+                src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=80" 
+                alt="AI Body Scanning" 
+                className="w-full h-auto object-cover object-top rounded-3xl shadow-2xl"
+              />
+            
+              {/* Floating Glassmorphism UI - Card 1 (Chest Size) */}
+              <div className={`absolute top-[15%] -left-[15%] sm:-left-[20%] lg:-left-[15%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-4 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
+                <div className="w-10 h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center">
+                  <Ruler className={`h-5 w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+                </div>
+                <div>
+                  <p className={`text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Chest Size</p>
+                  <p className={`text-xl font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>42.5 in</p>
+                </div>
+              </div>
 
-          {/* Subtitle - Bulletproof High-Contrast Text */}
-          <p className="text-lg sm:text-xl font-bold max-w-3xl mx-auto mb-10 leading-relaxed text-slate-900 dark:text-slate-100">
-            Connect directly with verified master tailors, extract accurate 3D body measurements with zero tape, negotiate terms, and track every stitch from fabric cut to final fitting.
-          </p>
+              {/* Floating Glassmorphism UI - Card 2 (Accuracy) */}
+              <div className={`absolute top-[45%] -right-[15%] sm:-right-[20%] lg:-right-[15%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-4 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
+                <div className="w-10 h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center">
+                  <CheckCircle className={`h-5 w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+                </div>
+                <div>
+                  <p className={`text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Fit Accuracy</p>
+                  <p className={`text-xl font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>99.4%</p>
+                </div>
+              </div>
 
-          {/* FUNCTIONAL SEARCH BAR */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-10">
-            <div className={`p-2.5 rounded-2xl shadow-lg border flex flex-col sm:flex-row items-center gap-2 ${
-              isDark ? 'bg-gray-800/90 border-gray-700' : 'bg-white border-slate-200'
+              {/* Floating Glassmorphism UI - Card 3 (Status) */}
+              <div className={`absolute bottom-[10%] -left-[10%] sm:-left-[15%] lg:-left-[10%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border w-48 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
+                <p className={`text-[11px] font-semibold tracking-wide uppercase mb-3 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Scan Progress</p>
+                <div className="w-full bg-slate-300/50 dark:bg-gray-700/50 rounded-full h-1.5 mb-2">
+                  <div className="bg-blue-600 h-1.5 rounded-full w-full"></div>
+                </div>
+                <p className={`text-xs font-bold text-right ${isDark ? 'text-white' : 'text-slate-900'}`}>100%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEARCH BAR (Moved Below Hero) */}
+      <section className={`py-8 border-b ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-slate-50 border-slate-200'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+            <div className={`p-2 rounded-xl shadow-sm border flex flex-col sm:flex-row items-center gap-2 ${
+              isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-slate-200'
             }`}>
-              <div className="flex-1 flex items-center px-3 w-full">
-                <Search className={`h-5 w-5 mr-3 ${isDark ? 'text-gray-400' : 'text-slate-400'}`} />
+              <div className="flex-1 flex items-center px-4 w-full">
+                <Search className={`h-5 w-5 mr-3 ${isDark ? 'text-gray-500' : 'text-slate-400'}`} />
                 <input
                   type="text"
                   placeholder="Search by garment type (Suit, Tuxedo, Evening Gown, Overcoat)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full py-2.5 bg-transparent outline-none text-sm ${isDark ? 'text-white placeholder-gray-400' : 'text-slate-900 placeholder-slate-400'}`}
+                  className={`w-full py-3 bg-transparent outline-none text-base ${isDark ? 'text-white placeholder-gray-500' : 'text-slate-900 placeholder-slate-400'}`}
                 />
               </div>
-              <button type="submit" className="btn-primary w-full sm:w-auto text-sm px-6 py-3 rounded-xl flex items-center justify-center space-x-2 shadow-md">
+              <button type="submit" className="bg-[#2563eb] hover:bg-blue-700 text-white w-full sm:w-auto text-sm font-medium px-8 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
                 <Search className="h-4 w-4" />
                 <span>Search Tailors</span>
               </button>
             </div>
-
-            {/* Popular Tags */}
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
-              <span className={isDark ? 'text-gray-400' : 'text-slate-500 font-semibold'}>Popular Tags:</span>
-              {['Bespoke Suits', 'Tuxedos', 'Evening Gowns', 'Bridal Wear', 'Overcoats'].map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => navigate(`/tailors?specialty=${encodeURIComponent(tag)}`)}
-                  className={`px-3 py-1 rounded-full border transition-all ${
-                    isDark ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white border-slate-200 text-slate-700 hover:border-primary-400 hover:bg-primary-50/50 shadow-2xs'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
           </form>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-200 dark:border-gray-800">
-            <div>
-              <p className="text-2xl lg:text-3xl font-extrabold text-primary-600">500+</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600 font-semibold'}`}>Verified Master Tailors</p>
-            </div>
-            <div>
-              <p className="text-2xl lg:text-3xl font-extrabold text-purple-600">99.4%</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600 font-semibold'}`}>AI Scan Fit Accuracy</p>
-            </div>
-            <div>
-              <p className="text-2xl lg:text-3xl font-extrabold text-indigo-600">12,500+</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600 font-semibold'}`}>Custom Orders Completed</p>
-            </div>
-            <div>
-              <p className="text-2xl lg:text-3xl font-extrabold text-amber-500">4.9 ★</p>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-600 font-semibold'}`}>Customer Satisfaction</p>
-            </div>
-          </div>
-
         </div>
       </section>
 
@@ -550,7 +567,7 @@ export default function Home() {
               <span>Find a Tailor Now</span>
             </Link>
             {!user && (
-              <Link to="/register" className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2">
+              <Link to="/register?role=tailor" className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2">
                 <Scissors className="h-5 w-5" />
                 <span>Register as a Tailor</span>
               </Link>

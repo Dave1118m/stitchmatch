@@ -13,7 +13,7 @@ export default function Tailors() {
   const [tailors, setTailors] = useState<any[]>([]);
   const [availableSpecialties, setAvailableSpecialties] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ search: '', location: '', specialty: '', minPrice: '', maxPrice: '', minRating: '' });
+  const [filters, setFilters] = useState({ search: '', location: '', specialty: '', minRating: '' });
   const [selectedSpecialty, setSelectedSpecialty] = useState<any>(null);
   const [selectedRating, setSelectedRating] = useState<any>(null);
 
@@ -36,8 +36,6 @@ export default function Tailors() {
       search: qSearch,
       location: qLocation,
       specialty: qSpecialty,
-      minPrice: '',
-      maxPrice: '',
       minRating: '',
     };
 
@@ -59,8 +57,6 @@ export default function Tailors() {
       const activeSpec = querySpecialty || (selectedSpecialty ? selectedSpecialty.value : currentFilters.specialty);
       if (activeSpec) params.specialty = activeSpec;
 
-      if (currentFilters.minPrice) params.minPrice = currentFilters.minPrice;
-      if (currentFilters.maxPrice) params.maxPrice = currentFilters.maxPrice;
       if (selectedRating) params.minRating = selectedRating.value;
 
       const res = await tailorsAPI.search(params);
@@ -155,15 +151,7 @@ export default function Tailors() {
             />
             <button type="submit" className="btn-primary">Search</button>
           </div>
-          <div className="grid md:grid-cols-4 gap-4 mt-4">
-            <div>
-              <label className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Min Price</label>
-              <input type="number" placeholder="$" value={filters.minPrice} onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })} className="input-field" />
-            </div>
-            <div>
-              <label className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Max Price</label>
-              <input type="number" placeholder="$" value={filters.maxPrice} onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })} className="input-field" />
-            </div>
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Min Rating</label>
               <Select
@@ -249,12 +237,6 @@ export default function Tailors() {
                     <span key={s} className={`px-2 py-1 ${isDark ? 'bg-gray-700 text-primary-400' : 'bg-primary-50 text-primary-700'} text-xs rounded-full`}>{s}</span>
                   ))}
                 </div>
-                {tailor.basePricingMin && (
-                  <div className={`mt-3 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    From <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>${Number(tailor.basePricingMin).toLocaleString()}</span>
-                    {tailor.basePricingMax && ` - $${Number(tailor.basePricingMax).toLocaleString()}`}
-                  </div>
-                )}
               </Link>
               );
             })}

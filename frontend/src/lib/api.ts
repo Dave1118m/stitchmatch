@@ -88,6 +88,9 @@ export const messagesAPI = {
   getConversations: () => api.get('/messages/conversations'),
   createConversation: (tailorId: string) => api.post('/messages/conversations', { tailorId }),
   adminDirect: (targetUserId: string) => api.post('/messages/admin/direct', { targetUserId }),
+  editMessage: (conversationId: string, messageId: string, content: string) => api.put(`/messages/conversation/${conversationId}/messages/${messageId}`, { content }),
+  deleteMessage: (conversationId: string, messageId: string) => api.delete(`/messages/conversation/${conversationId}/messages/${messageId}`),
+  reactToMessage: (conversationId: string, messageId: string, emoji: string) => api.post(`/messages/conversation/${conversationId}/messages/${messageId}/react`, { emoji }),
 };
 
 // Measurements API
@@ -118,3 +121,21 @@ export const notificationsAPI = {
   getUnreadCount: () => api.get('/notifications/count/unread'),
 };
 
+// Products API
+export const productsAPI = {
+  getByTailor: (tailorId: string) => api.get(`/products/tailor/${tailorId}`),
+  create: (data: any) => api.post('/products', data),
+  update: (id: string, data: any) => api.put(`/products/${id}`, data),
+  delete: (id: string) => api.delete(`/products/${id}`),
+};
+
+// Uploads API
+export const uploadsAPI = {
+  uploadImage: (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post('/uploads', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};

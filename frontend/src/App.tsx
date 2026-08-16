@@ -5,6 +5,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Join from './pages/Join';
 import Tailors from './pages/Tailors';
 import TailorProfile from './pages/TailorProfile';
 import Portfolio from './pages/Portfolio';
@@ -42,6 +43,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/join" element={<Join />} />
             <Route path="/tailors" element={<Tailors />} />
             <Route path="/tailors/:id" element={<TailorProfile />} />
             <Route path="/tailors/:id/portfolio" element={<Portfolio />} />

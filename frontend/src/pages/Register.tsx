@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { Scissors } from 'lucide-react';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'customer', phone: '', location: '' });
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialRole = searchParams.get('role') === 'tailor' ? 'tailor' : 'customer';
+
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: initialRole, phone: '', location: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, register } = useAuth();
@@ -65,14 +69,7 @@ export default function Register() {
         <div className="card !p-4 sm:!p-6">
           {error && <div className={`mb-4 p-3 ${isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700'} rounded-lg text-sm font-medium`}>{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div>
-              <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>I am a</label>
-              <select name="role" value={form.role} onChange={handleChange} className="input-field text-sm sm:text-base">
-                <option value="customer">Customer</option>
-                <option value="tailor">Tailor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+
             <div>
               <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Full Name</label>
               <input name="name" value={form.name} onChange={handleChange} className="input-field text-sm sm:text-base" required />

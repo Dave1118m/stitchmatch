@@ -28,6 +28,8 @@ router.get('/conversation/:conversationId', authenticate, async (req: AuthReques
       where: { conversationId },
       include: {
         sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+        replyTo: { select: { id: true, content: true, messageType: true, sender: { select: { name: true } } } },
+        reactions: true,
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -44,7 +46,7 @@ router.post('/conversation/:conversationId', authenticate, async (req: AuthReque
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { conversationId } = req.params;
-    const { messageType, content, fileName, fileSize } = req.body;
+    const { messageType, content, fileName, fileSize, replyToId } = req.body;
 
     // Verify access
     const conversation = await prisma.conversation.findUnique({
@@ -71,9 +73,12 @@ router.post('/conversation/:conversationId', authenticate, async (req: AuthReque
         content,
         fileName,
         fileSize: fileSize ? BigInt(fileSize) : null,
+        replyToId,
       },
       include: {
         sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+        replyTo: { select: { id: true, content: true, messageType: true, sender: { select: { name: true } } } },
+        reactions: true,
       },
     });
 
@@ -96,6 +101,113 @@ router.post('/conversation/:conversationId', authenticate, async (req: AuthReque
     res.status(201).json({ message });
   } catch (error) {
     console.error('Send message error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Edit a message
+router.put('/conversation/:conversationId/messages/:messageId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma: PrismaClient = req.app.get('prisma');
+    const { conversationId, messageId } = req.params;
+    const { content } = req.body;
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    if (message.senderId !== req.userId) return res.status(403).json({ error: 'You can only edit your own messages' });
+    if (message.deletedAt) return res.status(400).json({ error: 'Cannot edit deleted message' });
+    if (message.messageType !== 'text') return res.status(400).json({ error: 'Only text messages can be edited' });
+
+    const updatedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: { content, isEdited: true },
+      include: {
+        sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+        replyTo: { select: { id: true, content: true, messageType: true, sender: { select: { name: true } } } },
+        reactions: true,
+      },
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`conversation:${conversationId}`).emit('message_edited', updatedMessage);
+    }
+
+    res.json({ message: updatedMessage });
+  } catch (error) {
+    console.error('Edit message error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete a message
+router.delete('/conversation/:conversationId/messages/:messageId', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma: PrismaClient = req.app.get('prisma');
+    const { conversationId, messageId } = req.params;
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    if (message.senderId !== req.userId) return res.status(403).json({ error: 'You can only delete your own messages' });
+
+    const deletedMessage = await prisma.message.update({
+      where: { id: messageId },
+      data: { deletedAt: new Date(), content: 'This message was deleted' },
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`conversation:${conversationId}`).emit('message_deleted', { messageId, deletedAt: deletedMessage.deletedAt });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete message error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// React to a message
+router.post('/conversation/:conversationId/messages/:messageId/react', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const prisma: PrismaClient = req.app.get('prisma');
+    const { conversationId, messageId } = req.params;
+    const { emoji } = req.body;
+
+    const message = await prisma.message.findUnique({ where: { id: messageId } });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    // Toggle reaction
+    const existing = await prisma.messageReaction.findFirst({
+      where: { messageId, userId: req.userId, emoji }
+    });
+
+    let reaction;
+    if (existing) {
+      await prisma.messageReaction.delete({ where: { id: existing.id } });
+    } else {
+      reaction = await prisma.messageReaction.create({
+        data: { messageId, userId: req.userId!, emoji }
+      });
+    }
+
+    const updatedMessage = await prisma.message.findUnique({
+      where: { id: messageId },
+      include: {
+        sender: { select: { id: true, name: true, avatarUrl: true, role: true } },
+        replyTo: { select: { id: true, content: true, messageType: true, sender: { select: { name: true } } } },
+        reactions: true,
+      },
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`conversation:${conversationId}`).emit('message_reacted', updatedMessage);
+    }
+
+    res.json({ message: updatedMessage });
+  } catch (error) {
+    console.error('React message error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

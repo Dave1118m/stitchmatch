@@ -6,7 +6,7 @@ import { useDarkMode } from '../hooks/useDarkMode';
 import PortfolioGallery from '../components/PortfolioGallery';
 import ReviewCard from '../components/ReviewCard';
 import ReviewStats from '../components/ReviewStats';
-import { Star, MapPin, Scissors, ArrowLeft, Send, MessageSquare, Image, ExternalLink } from 'lucide-react';
+import { Star, MapPin, Scissors, ArrowLeft, Send, MessageSquare, Image, ExternalLink, Package } from 'lucide-react';
 
 export default function TailorProfile() {
   const { id } = useParams();
@@ -150,15 +150,6 @@ export default function TailorProfile() {
           {/* Bio */}
           {tailor.bio && <p className={`mt-4 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{tailor.bio}</p>}
 
-          {/* Pricing */}
-          {tailor.basePricingMin && (
-            <div className={`mt-4 p-3 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg text-sm`}>
-              <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Price Range: </span>
-              <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>${Number(tailor.basePricingMin).toLocaleString()}</span>
-              {tailor.basePricingMax && <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}> - ${Number(tailor.basePricingMax).toLocaleString()}</span>}
-            </div>
-          )}
-
           {/* Rating Distribution */}
           <div className="mt-4">
             {[5, 4, 3, 2, 1].map((star) => (
@@ -211,36 +202,13 @@ export default function TailorProfile() {
         )}
 
         {/* Portfolio */}
-        <div className="card mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <Image className="h-5 w-5 inline mr-1" /> Portfolio
-            </h2>
-            {tailor.portfolioImages?.length > 0 && (
-              <Link
-                to={`/tailors/${id}/portfolio`}
-                className={`text-sm flex items-center space-x-1 ${isDark ? 'text-primary-400 hover:text-primary-300' : 'text-primary-600 hover:text-primary-700'}`}
-              >
-                <span>View All</span>
-                <ExternalLink className="h-3 w-3" />
-              </Link>
-            )}
-          </div>
-          {tailor.portfolioImages?.length > 0 ? (
-            <PortfolioGallery items={tailor.portfolioImages.slice(0, 6)} />
-          ) : (
-            <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>No portfolio images yet.</p>
-          )}
-          {tailor.portfolioImages?.length > 6 && (
-            <div className="mt-4 text-center">
-              <Link
-                to={`/tailors/${id}/portfolio`}
-                className={`text-sm font-medium ${isDark ? 'text-primary-400 hover:text-primary-300' : 'text-primary-600 hover:text-primary-700'}`}
-              >
-                View all {tailor.portfolioImages.length} images
-              </Link>
-            </div>
-          )}
+        <div className={`card mb-6 flex flex-col items-center justify-center py-10 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+            <Package className="h-12 w-12 text-primary-600 mb-4" />
+            <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Products Catalog</h2>
+            <p className={`mb-6 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Browse custom designs, garments, and products offered by this tailor.</p>
+            <Link to={`/tailors/${id}/portfolio`} className="btn-primary flex items-center">
+               View Catalog <ExternalLink className="ml-2 h-4 w-4" />
+            </Link>
         </div>
 
         {/* Reviews */}

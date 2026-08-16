@@ -15,7 +15,10 @@ import reviewRoutes from './routes/reviews';
 import negotiationRoutes from './routes/negotiations';
 import notificationRoutes from './routes/notifications';
 import photosRoutes from './routes/photos';
+import productRoutes from './routes/products';
+import uploadRoutes from './routes/uploads';
 import { setupSocketHandlers } from './socket';
+import path from 'path';
 
 dotenv.config();
 
@@ -37,6 +40,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // Make prisma and io available to routes
 app.set('prisma', prisma);
 app.set('io', io);
@@ -53,6 +59,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/negotiations', negotiationRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/photos', photosRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/uploads', uploadRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
