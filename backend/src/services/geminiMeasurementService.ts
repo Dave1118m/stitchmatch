@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
+import { validateAnthropometricSanity, ValidationCheckResult } from './measurementValidator';
 
 export interface BodyMeasurementsOutput {
   chest: number;
@@ -15,6 +16,7 @@ export interface BodyMeasurementsOutput {
   analysisNotes?: string;
   clothingAssessment?: 'form_fitting' | 'regular' | 'loose_or_thick';
   postureAssessment?: string;
+  validationReport?: ValidationCheckResult;
 }
 
 /**
@@ -126,7 +128,7 @@ Return ONLY a valid JSON object matching this exact structure:
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0]);
-      return {
+      const rawMeasurements = {
         chest: Number(parsed.chest) || Math.round(userHeightCm * 0.55 * 10) / 10,
         waist: Number(parsed.waist) || Math.round(userHeightCm * 0.47 * 10) / 10,
         hip: Number(parsed.hip) || Math.round(userHeightCm * 0.56 * 10) / 10,
@@ -135,10 +137,22 @@ Return ONLY a valid JSON object matching this exact structure:
         armLength: Number(parsed.armLength) || Math.round(userHeightCm * 0.36 * 10) / 10,
         neck: Number(parsed.neck) || 39.0,
         height: userHeightCm,
-        aiConfidence: Number(parsed.aiConfidence) || 96.0,
+      };
+
+      // Perform strict MTailor / ISO 8559 Anthropometric Sanity Validation
+      const validationReport = validateAnthropometricSanity(rawMeasurements, userHeightCm);
+      const confidence = Math.min(
+        Number(parsed.aiConfidence) || 96.0,
+        validationReport.score
+      );
+
+      return {
+        ...rawMeasurements,
+        aiConfidence: confidence,
         clothingAssessment: parsed.clothingAssessment || 'form_fitting',
         postureAssessment: parsed.postureAssessment || 'Balanced posture detected.',
         analysisNotes: parsed.analysisNotes || 'Processed with Gemini Vision AI',
+        validationReport,
       };
     }
   } catch (error: any) {
@@ -154,7 +168,7 @@ Return ONLY a valid JSON object matching this exact structure:
  */
 function generateFallbackMeasurements(heightCm: number = 175): BodyMeasurementsOutput {
   const h = heightCm;
-  return {
+  const rawMeasurements = {
     chest: Math.round((h * 0.55 + (Math.random() * 4 - 2)) * 10) / 10,
     waist: Math.round((h * 0.47 + (Math.random() * 4 - 2)) * 10) / 10,
     hip: Math.round((h * 0.56 + (Math.random() * 4 - 2)) * 10) / 10,
@@ -163,9 +177,16 @@ function generateFallbackMeasurements(heightCm: number = 175): BodyMeasurementsO
     armLength: Math.round((h * 0.36 + (Math.random() * 2 - 1)) * 10) / 10,
     neck: Math.round((h * 0.22 + (Math.random() * 1.5 - 0.75)) * 10) / 10,
     height: h,
-    aiConfidence: Math.round((93 + Math.random() * 5) * 10) / 10,
+  };
+
+  const validationReport = validateAnthropometricSanity(rawMeasurements, h);
+
+  return {
+    ...rawMeasurements,
+    aiConfidence: validationReport.score,
     clothingAssessment: 'form_fitting',
     postureAssessment: 'Standard upright posture calibrated against reference height.',
     analysisNotes: 'Calibrated ISO 8559 Anthropometric AI calculation',
+    validationReport,
   };
 }
