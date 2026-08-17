@@ -1,11 +1,14 @@
 import { ReactNode, useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { notificationsAPI } from '../lib/api';
+import LanguageSwitcher from './LanguageSwitcher';
 import { Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, Bell, ClipboardList, Shield, ChevronDown, Check } from 'lucide-react';
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const { user, logout, switchRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,17 +114,17 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isActive = (path: string) => location.pathname === path;
 
   const mainNavLinks = [
-    { path: '/dashboard', label: 'Requests', icon: ClipboardList, roles: ['customer', 'tailor', 'admin'] },
-    { path: '/tailors', label: 'Find Tailors', icon: Scissors, roles: ['customer'] },
-    { path: '/messages', label: 'Messages', icon: MessageSquare, roles: ['customer', 'tailor'] },
-    { path: '/profile', label: 'Profile', icon: User, roles: ['customer', 'tailor', 'admin'] },
-    { path: '/admin', label: 'Admin Panel', icon: Shield, roles: ['admin'] },
+    { path: '/dashboard', label: t('nav.requests'), icon: ClipboardList, roles: ['customer', 'tailor', 'admin'] },
+    { path: '/tailors', label: t('nav.findTailors'), icon: Scissors, roles: ['customer'] },
+    { path: '/messages', label: t('nav.messages'), icon: MessageSquare, roles: ['customer', 'tailor'] },
+    { path: '/profile', label: t('nav.profile'), icon: User, roles: ['customer', 'tailor', 'admin'] },
+    { path: '/admin', label: t('nav.adminPanel'), icon: Shield, roles: ['admin'] },
   ];
 
   const roleOptions = [
-    { role: 'customer', label: 'Customer', icon: User, description: 'Browse tailors & order custom garments' },
-    { role: 'tailor', label: 'Tailor', icon: Scissors, description: 'Manage shop, requests & client orders' },
-    { role: 'admin', label: 'Admin', icon: Shield, description: 'Platform oversight & user governance' },
+    { role: 'customer', label: t('nav.customer'), icon: User, description: t('nav.customerDesc') },
+    { role: 'tailor', label: t('nav.tailor'), icon: Scissors, description: t('nav.tailorDesc') },
+    { role: 'admin', label: t('nav.admin'), icon: Shield, description: t('nav.adminDesc') },
   ];
 
   const currentRoleObj = roleOptions.find((r) => r.role === user?.role) || roleOptions[0];
@@ -326,7 +329,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               }`}
             >
               <Settings className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">Settings</span>}
+              {sidebarOpen && <span className="font-medium">{t('nav.settings')}</span>}
             </Link>
             <button
               onClick={handleLogout}
@@ -337,7 +340,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               }`}
             >
               <LogOut className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">Logout</span>}
+              {sidebarOpen && <span className="font-medium">{t('nav.logout')}</span>}
             </button>
           </div>
         </aside>
@@ -362,10 +365,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </button>
               </div>
 
-              <div className="flex items-center space-x-2 sm:space-x-4">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                {/* Language Switcher */}
+                <LanguageSwitcher variant="dropdown" />
+
                 {/* Dark Mode Toggle */}
                 <button
                   onClick={toggleDarkMode}
+                  title={t('nav.toggleTheme')}
                   className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'} transition-colors`}
                 >
                   {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -375,6 +382,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <div className="relative">
                   <button 
                     onClick={handleNotificationClick}
+                    aria-label={t('nav.notifications')}
                     className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'} transition-colors relative`}
                   >
                     <Bell className="h-5 w-5" />
@@ -389,11 +397,11 @@ export default function Layout({ children }: { children: ReactNode }) {
                   {showNotifications && (
                     <div className={`absolute right-0 mt-2 w-80 rounded-lg shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} z-50`}>
                       <div className={`p-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
+                        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('nav.notifications')}</h3>
                       </div>
                       <div className="max-h-96 overflow-y-auto">
                         {notifications.length === 0 ? (
-                          <div className={`p-4 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No notifications</div>
+                          <div className={`p-4 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{t('nav.noNotifications')}</div>
                         ) : (
                           notifications.map((notification) => (
                             <div
@@ -483,9 +491,17 @@ export default function Layout({ children }: { children: ReactNode }) {
               )}
             </nav>
             <div className={`p-3 sm:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-3`}>
+              {/* Language Selection in Mobile Menu */}
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1.5 px-1">
+                  {t('nav.language')}
+                </label>
+                <LanguageSwitcher variant="inline" className="w-full justify-center" />
+              </div>
+
               <div className="relative">
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-1 px-1">
-                  Active Role
+                  {t('nav.switchRole')}
                 </label>
                 <button
                   onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
@@ -558,7 +574,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 }`}
               >
                 <Settings className="h-5 w-5" />
-                <span className="font-medium">Settings</span>
+                <span className="font-medium">{t('nav.settings')}</span>
               </Link>
               <button
                 onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
@@ -569,7 +585,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 }`}
               >
                 <LogOut className="h-5 w-5" />
-                <span className="font-medium">Logout</span>
+                <span className="font-medium">{t('nav.logout')}</span>
               </button>
             </div>
           </div>

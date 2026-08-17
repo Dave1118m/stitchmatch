@@ -20,6 +20,10 @@ export default {
           900: '#701a75',
         },
       },
+      fontFamily: {
+        sans: ['Outfit', 'Noto Sans Ethiopic', 'system-ui', 'sans-serif'],
+        ethiopic: ['Noto Sans Ethiopic', 'sans-serif'],
+      },
     },
   },
   plugins: [],

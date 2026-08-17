@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { 
   X, 
@@ -6,7 +7,6 @@ import {
   ChevronLeft, 
   CheckCircle2, 
   XCircle,
-  User, 
   Sun, 
   Smartphone, 
   ShieldCheck, 
@@ -27,6 +27,7 @@ interface MeasurementInstructionsModalProps {
 }
 
 export default function MeasurementInstructionsModal({ isOpen, onClose, onComplete }: MeasurementInstructionsModalProps) {
+  const { t } = useTranslation();
   const isDark = useDarkMode();
   const [step, setStep] = useState(1);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -49,10 +50,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
   };
 
   const stepMeta = [
-    { title: 'Attire & Fit', icon: Shirt },
-    { title: 'Room & Lighting', icon: Sun },
-    { title: 'Camera Setup', icon: Smartphone },
-    { title: 'The 3 Poses', icon: Focus }
+    { title: t('measurements.photoGuide.step1Tab'), icon: Shirt },
+    { title: t('measurements.photoGuide.step2Tab'), icon: Sun },
+    { title: t('measurements.photoGuide.step3Tab'), icon: Smartphone },
+    { title: t('measurements.photoGuide.step4Tab'), icon: Focus }
   ];
 
   const renderStepContent = () => {
@@ -75,7 +76,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex items-end justify-between p-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow">
-                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Proper Fitted Attire
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {t('measurements.photoGuide.step1Title')}
                   </span>
                   <span className="inline-flex items-center text-xs text-white/80 group-hover:text-white bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
                     <Maximize2 className="w-3.5 h-3.5 mr-1" /> Zoom
@@ -83,7 +84,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 </div>
               </div>
               <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Click image to view high-resolution photo guide
+                {t('measurements.photoGuide.zoomHint')}
               </p>
             </div>
 
@@ -91,11 +92,11 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
             <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 dark:bg-primary-950/60 dark:text-primary-300 mb-2">
-                  <Shirt className="w-3.5 h-3.5" /> Step 1 of 4: Attire
+                  <Shirt className="w-3.5 h-3.5" /> {t('measurements.photoGuide.step1Badge')}
                 </div>
-                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>What to Wear</h3>
+                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step1Title')}</h3>
                 <p className={`text-sm mt-1 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  To calculate millimeter-accurate tailoring measurements, our AI requires clear visibility of your natural contours.
+                  {t('measurements.photoGuide.step1Desc')}
                 </p>
               </div>
 
@@ -103,28 +104,28 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Wear tight-fitting activewear</strong>: Leggings, biker shorts, yoga pants, or a snug fitted shirt.
+                    {t('measurements.photoGuide.step1Check1')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Tuck in your top</strong>: Ensure the waistband and hip joints are explicitly delineated.
+                    {t('measurements.photoGuide.step1Check2')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Tie long hair up</strong>: Keep hair tied back off your neck, collarbone, and shoulders.
+                    {t('measurements.photoGuide.step1Check3')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-red-50/60 border-red-200/60 text-gray-800'}`}>
                   <XCircle className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Avoid loose/baggy clothes</strong>: Sweaters, oversized tees, hoodies, or robes will distort measurements.
+                    {t('measurements.photoGuide.step1Avoid')}
                   </span>
                 </div>
               </div>
@@ -150,7 +151,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex items-end justify-between p-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500 text-white shadow">
-                    <Sun className="w-3.5 h-3.5 mr-1" /> Optimal Lighting Setup
+                    <Sun className="w-3.5 h-3.5 mr-1" /> {t('measurements.photoGuide.step2Title')}
                   </span>
                   <span className="inline-flex items-center text-xs text-white/80 group-hover:text-white bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
                     <Maximize2 className="w-3.5 h-3.5 mr-1" /> Zoom
@@ -158,7 +159,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 </div>
               </div>
               <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Click image to inspect room setup diagram
+                {t('measurements.photoGuide.zoomHint')}
               </p>
             </div>
 
@@ -166,11 +167,11 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
             <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-950/60 dark:text-yellow-300 mb-2">
-                  <Sun className="w-3.5 h-3.5" /> Step 2 of 4: Environment
+                  <Sun className="w-3.5 h-3.5" /> {t('measurements.photoGuide.step2Badge')}
                 </div>
-                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Room & Lighting</h3>
+                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step2Title')}</h3>
                 <p className={`text-sm mt-1 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Even lighting and high background contrast prevent shadow artifacts from masking your body silhouette.
+                  {t('measurements.photoGuide.step2Desc')}
                 </p>
               </div>
 
@@ -178,21 +179,21 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Well-lit room</strong>: Turn on ambient ceiling or front-facing room lights to eliminate harsh cast shadows.
+                    {t('measurements.photoGuide.step2Check1')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Plain, contrasting backdrop</strong>: Stand against a solid wall (e.g., dark clothing against a light wall).
+                    {t('measurements.photoGuide.step2Check2')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-red-50/60 border-red-200/60 text-gray-800'}`}>
                   <XCircle className="w-5 h-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Avoid backlighting & windows behind you</strong>: Strong light behind turns you into a black outline and loses 3D depth.
+                    {t('measurements.photoGuide.step2Avoid')}
                   </span>
                 </div>
               </div>
@@ -218,7 +219,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex items-end justify-between p-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500 text-white shadow">
-                    <Smartphone className="w-3.5 h-3.5 mr-1" /> 90° Vertical & 2m Distance
+                    <Smartphone className="w-3.5 h-3.5 mr-1" /> 90°
                   </span>
                   <span className="inline-flex items-center text-xs text-white/80 group-hover:text-white bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
                     <Maximize2 className="w-3.5 h-3.5 mr-1" /> Zoom
@@ -226,7 +227,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 </div>
               </div>
               <p className={`text-xs mt-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Click image to inspect camera angle & distance
+                {t('measurements.photoGuide.zoomHint')}
               </p>
             </div>
 
@@ -234,11 +235,11 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
             <div className="lg:col-span-6 flex flex-col justify-center space-y-4">
               <div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 mb-2">
-                  <Smartphone className="w-3.5 h-3.5" /> Step 3 of 4: Setup
+                  <Smartphone className="w-3.5 h-3.5" /> {t('measurements.photoGuide.step3Badge')}
                 </div>
-                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Camera Placement</h3>
+                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step3Title')}</h3>
                 <p className={`text-sm mt-1 leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Perspective distortion happens if the phone is tilted or too close. Keep the camera completely vertical.
+                  {t('measurements.photoGuide.step3Desc')}
                 </p>
               </div>
 
@@ -246,21 +247,21 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Prop phone completely vertical (90°)</strong>: Do not tilt phone backwards or forwards. Lean it against a mug, box, or phone stand.
+                    {t('measurements.photoGuide.step3Check1')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Position at waist height</strong>: Place on a table or counter (~3 ft / 1 meter off the ground).
+                    {t('measurements.photoGuide.step3Check2')}
                   </span>
                 </div>
 
                 <div className={`flex items-start p-3 rounded-xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60 text-gray-200' : 'bg-green-50/60 border-green-200/60 text-gray-800'}`}>
                   <CheckCircle2 className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                   <span className="text-sm">
-                    <strong>Step back ~2 meters (6–7 ft)</strong>: Your entire body (from the top of your head to the soles of your feet) must be visible in frame.
+                    {t('measurements.photoGuide.step3Check3')}
                   </span>
                 </div>
               </div>
@@ -286,15 +287,15 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex items-end justify-between p-4">
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-600 text-white shadow">
-                    <Focus className="w-3.5 h-3.5 mr-1" /> 3 Mandatory Poses
+                    <Focus className="w-3.5 h-3.5 mr-1" /> {t('measurements.photoGuide.step4Badge')}
                   </span>
                   <span className="inline-flex items-center text-xs text-white/80 group-hover:text-white bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-lg">
-                    <Maximize2 className="w-3.5 h-3.5 mr-1" /> Click to Enlarge
+                    <Maximize2 className="w-3.5 h-3.5 mr-1" /> Zoom
                   </span>
                 </div>
               </div>
               <p className={`text-xs mt-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Click image to inspect front, side, and back pose guidelines
+                {t('measurements.photoGuide.zoomHint')}
               </p>
             </div>
 
@@ -307,10 +308,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                   <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
                     1
                   </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Front Pose</h4>
+                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4FrontTitle')}</h4>
                 </div>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Face camera directly. Feet shoulder-width apart. Hold arms slightly away from sides (an &ldquo;A&rdquo; shape) so waist outline is clear.
+                  {t('measurements.photoGuide.step4FrontDesc')}
                 </p>
               </div>
 
@@ -321,10 +322,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                   <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
                     2
                   </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Side Pose</h4>
+                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4SideTitle')}</h4>
                 </div>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Turn 90° into profile. Stand upright with shoulders relaxed and chin level. Look straight ahead, arms at sides.
+                  {t('measurements.photoGuide.step4SideDesc')}
                 </p>
               </div>
 
@@ -335,10 +336,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                   <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
                     3
                   </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Back Pose</h4>
+                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4BackTitle')}</h4>
                 </div>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Face away from the camera. Replicate the same upright stance and arm gap as the Front Pose for shoulder/back width detection.
+                  {t('measurements.photoGuide.step4BackDesc')}
                 </p>
               </div>
             </div>
@@ -349,7 +350,7 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
             }`}>
               <ShieldCheck className="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" />
               <span className="text-xs font-medium">
-                <strong>Privacy Guaranteed:</strong> Photos are strictly encrypted, processed by AI measurement algorithms, and never shared publicly.
+                {t('measurements.photoGuide.privacyGuaranteed')}
               </span>
             </div>
           </div>
@@ -376,8 +377,8 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold leading-tight">AI Measurement Photo Guide</h2>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Follow these 4 simple steps for tailored precision</p>
+                <h2 className="text-base sm:text-lg font-bold leading-tight">{t('measurements.photoGuide.modalTitle')}</h2>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('measurements.photoGuide.modalSubtitle')}</p>
               </div>
             </div>
             <button 
@@ -441,14 +442,14 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
               }`}
             >
               <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
+              {t('measurements.photoGuide.prevBtn')}
             </button>
             
             <button
               onClick={handleNext}
               className="btn-primary flex items-center px-6 sm:px-8 py-2.5 rounded-full text-sm sm:text-base font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
             >
-              {step === totalSteps ? 'I Understand, Let\'s Start' : 'Next Step'}
+              {step === totalSteps ? t('measurements.photoGuide.startBtn') : t('measurements.photoGuide.nextBtn')}
               {step < totalSteps && <ChevronRight className="w-4 h-4 ml-1.5 -mr-1" />}
             </button>
           </div>

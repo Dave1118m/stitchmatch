@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { requestsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -22,20 +23,28 @@ const statusColorsDark: Record<string, string> = {
   Completed: 'bg-gray-700 text-gray-300',
 };
 
-const statusLabels: Record<string, string> = {
-  Pending: 'Pending',
-  Under_Discussion: 'Under Discussion',
-  Agreed: 'Agreed',
-  In_Progress: 'In Progress',
-  Completed: 'Completed',
-};
-
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const isDark = useDarkMode();
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'Pending':
+        return t('dashboard.filterPending');
+      case 'Under_Discussion':
+        return t('dashboard.filterAccepted');
+      case 'In_Progress':
+        return t('dashboard.filterInProgress');
+      case 'Completed':
+        return t('dashboard.filterCompleted');
+      default:
+        return status;
+    }
+  };
 
   useEffect(() => {
     loadRequests();
@@ -57,18 +66,18 @@ export default function Dashboard() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard</h1>
-          <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>Welcome back, {user?.name}</p>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('dashboard.title')}</h1>
+          <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('auth.signInTitle')}, {user?.name}</p>
         </div>
         {user?.role === 'customer' && (
           <Link to="/tailors" className="btn-primary flex items-center space-x-2">
-            <Plus className="h-4 w-4" /><span>New Request</span>
+            <Plus className="h-4 w-4" /><span>{t('dashboard.newRequestBtn')}</span>
           </Link>
         )}
       </div>
 
       {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {['Pending', 'Under_Discussion', 'In_Progress', 'Completed'].map((status) => (
           <button
             key={status}
@@ -78,7 +87,7 @@ export default function Dashboard() {
             <div className={`text-2xl font-bold ${status === 'Completed' ? 'text-green-600' : 'text-primary-600'}`}>
               {requests.filter((r: any) => r.status === status).length}
             </div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{statusLabels[status]}</div>
+            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{getStatusLabel(status)}</div>
           </button>
         ))}
       </div>
@@ -93,11 +102,11 @@ export default function Dashboard() {
       ) : requests.length === 0 ? (
         <div className="card text-center py-16">
           <Scissors className={`h-16 w-16 ${isDark ? 'text-gray-600' : 'text-gray-300'} mx-auto mb-4`} />
-          <h3 className={`text-xl font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No requests yet</h3>
+          <h3 className={`text-xl font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('dashboard.emptyTitle')}</h3>
           {user?.role === 'customer' ? (
-            <Link to="/tailors" className="btn-primary mt-4 inline-block">Find a Tailor</Link>
+            <Link to="/tailors" className="btn-primary mt-4 inline-block">{t('home.getStartedBtn')}</Link>
           ) : (
-            <p className={isDark ? 'text-gray-500 mt-2' : 'text-gray-400 mt-2'}>You'll see customer requests here</p>
+            <p className={isDark ? 'text-gray-500 mt-2' : 'text-gray-400 mt-2'}>{t('dashboard.emptyDesc')}</p>
           )}
         </div>
       ) : (
@@ -112,13 +121,13 @@ export default function Dashboard() {
                   <div className="min-w-0">
                     <h3 className={`font-semibold text-sm sm:text-base truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h3>
                     <p className={`text-xs sm:text-sm truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {user?.role === 'customer' ? `Tailor: ${request.tailor.name}` : `Customer: ${request.customer.name}`}
+                      {user?.role === 'customer' ? `${t('dashboard.card.tailor')}: ${request.tailor.name}` : `${t('dashboard.card.client')}: ${request.customer.name}`}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 sm:space-x-4 self-start sm:self-auto">
                   <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${isDark ? statusColorsDark[request.status] : statusColors[request.status]}`}>
-                    {statusLabels[request.status]}
+                    {getStatusLabel(request.status)}
                   </span>
                   <div className={`flex items-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     <MessageSquare className="h-4 w-4 mr-1" />
@@ -129,23 +138,23 @@ export default function Dashboard() {
               {request.deadline && (
                 <div className={`mt-2 flex items-center text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   <Clock className="h-4 w-4 mr-1" />
-                  <span>Deadline: {new Date(request.deadline).toLocaleDateString()}</span>
+                  <span>{t('dashboard.card.deadline')}: {new Date(request.deadline).toLocaleDateString()}</span>
                 </div>
               )}
               {/* Agreement Status */}
               {request.status === 'Under_Discussion' && (
                 <div className={`mt-3 pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
                   <div className="flex items-center justify-between text-sm">
-                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Agreement Status:</span>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Agreement:</span>
                     <div className="flex items-center space-x-2">
                       <span className={`flex items-center ${request.customerConfirmed ? 'text-green-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        You
+                        {t('dashboard.card.client')}
                       </span>
                       <span className={isDark ? 'text-gray-600' : 'text-gray-300'}>/</span>
                       <span className={`flex items-center ${request.tailorConfirmed ? 'text-green-500' : (isDark ? 'text-gray-500' : 'text-gray-400')}`}>
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Tailor
+                        {t('dashboard.card.tailor')}
                       </span>
                     </div>
                   </div>

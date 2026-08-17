@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useDarkMode } from '../hooks/useDarkMode';
 import joinCustomerImg from '../assets/join_customer_client.jpg';
 import joinTailorImg from '../assets/join_tailor_artisan.jpg';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Scissors, User, ArrowRight } from 'lucide-react';
 
 export default function Join() {
+  const { t } = useTranslation();
   const isDark = useDarkMode();
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<'customer' | 'tailor' | null>(null);
@@ -23,18 +26,21 @@ export default function Join() {
       <header className={`py-6 px-8 flex justify-between items-center w-full`}>
         <Link to="/" className="inline-flex items-center space-x-2">
           <Scissors className="h-8 w-8 text-primary-600" />
-          <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>StitchMatch</span>
+          <span className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('nav.brand')}</span>
         </Link>
-        <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          Already have an account? <Link to="/login" className="text-primary-600 hover:underline">Log In</Link>
-        </p>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher variant="dropdown" />
+          <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            {t('join.alreadyHaveAccount')} <Link to="/login" className="text-primary-600 hover:underline">{t('join.signIn')}</Link>
+          </p>
+        </div>
       </header>
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full text-center">
           <h1 className={`text-3xl sm:text-4xl font-bold mb-8 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            Join as a client or tailor
+            {t('join.title')}
           </h1>
 
           <div className="grid sm:grid-cols-2 gap-6 mb-8 text-left">
@@ -59,7 +65,7 @@ export default function Join() {
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-2">
                       <User className="h-6 w-6 text-white" />
-                      <h3 className="text-xl font-bold text-white">Customer</h3>
+                      <h3 className="text-xl font-bold text-white">{t('nav.customer')}</h3>
                     </div>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       selectedRole === 'customer' ? 'border-primary-500 bg-primary-500' : 'border-white/50'
@@ -70,9 +76,9 @@ export default function Join() {
                 </div>
               </div>
               <div className={`p-6 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <h4 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>I am looking for custom tailoring</h4>
+                <h4 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('join.customerTitle')}</h4>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                  Discover master tailors, submit service requests with AI body scanning, and get beautiful bespoke clothes made just for you.
+                  {t('join.customerDesc')}
                 </p>
               </div>
             </div>
@@ -98,7 +104,7 @@ export default function Join() {
                   <div className="flex justify-between items-center w-full">
                     <div className="flex items-center space-x-2">
                       <Scissors className="h-6 w-6 text-white" />
-                      <h3 className="text-xl font-bold text-white">Tailor</h3>
+                      <h3 className="text-xl font-bold text-white">{t('nav.tailor')}</h3>
                     </div>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       selectedRole === 'tailor' ? 'border-primary-500 bg-primary-500' : 'border-white/50'
@@ -109,9 +115,9 @@ export default function Join() {
                 </div>
               </div>
               <div className={`p-6 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-                <h4 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>I am a master tailor offering services</h4>
+                <h4 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('join.tailorTitle')}</h4>
                 <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                  Create a stunning atelier profile, manage client negotiations, upload your portfolio, and expand your digital business.
+                  {t('join.tailorDesc')}
                 </p>
               </div>
             </div>
@@ -126,7 +132,7 @@ export default function Join() {
                 : isDark ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
-            <span>{selectedRole === 'tailor' ? 'Apply as a Tailor' : selectedRole === 'customer' ? 'Join as a Customer' : 'Create Account'}</span>
+            <span>{selectedRole ? `${t('join.continue')} ${selectedRole === 'tailor' ? t('nav.tailor') : t('nav.customer')}` : t('auth.createAccountBtn')}</span>
             <ArrowRight className="h-5 w-5" />
           </button>
         </div>

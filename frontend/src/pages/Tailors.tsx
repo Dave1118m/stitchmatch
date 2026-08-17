@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Select from 'react-select';
 import { tailorsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Search, MapPin, Star, Scissors } from 'lucide-react';
 import { TailorCardSkeleton } from '../components/SkeletonLoaders';
 
 export default function Tailors() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [tailors, setTailors] = useState<any[]>([]);
@@ -86,15 +89,23 @@ export default function Tailors() {
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-2">
             <Scissors className="h-8 w-8 text-primary-600" />
-            <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>StitchMatch</span>
+            <span className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('nav.brand')}</span>
           </Link>
-          <Link to={user ? '/dashboard' : '/'} className={`text-sm ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-700'}`}>
-            {user ? 'Dashboard' : 'Home'}
-          </Link>
+          <div className="flex items-center space-x-4">
+            <LanguageSwitcher variant="dropdown" />
+            <Link to={user ? '/dashboard' : '/'} className={`text-sm font-medium ${isDark ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+              {user ? t('nav.requests') : t('common.back')}
+            </Link>
+          </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('tailors.title')}</h1>
+          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>{t('tailors.subtitle')}</p>
+        </div>
+
         {/* Search & Filters */}
         <form onSubmit={handleSearch} className="card mb-8">
           <div className="grid md:grid-cols-4 gap-4">
@@ -102,7 +113,7 @@ export default function Tailors() {
               <Search className={`absolute left-3 top-3 h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
               <input
                 type="text"
-                placeholder="Search tailors..."
+                placeholder={t('tailors.searchPlaceholder')}
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 className="input-field pl-10"
@@ -110,7 +121,7 @@ export default function Tailors() {
             </div>
             <input
               type="text"
-              placeholder="Location"
+              placeholder="City / Region"
               value={filters.location}
               onChange={(e) => setFilters({ ...filters, location: e.target.value })}
               className="input-field"
@@ -119,7 +130,7 @@ export default function Tailors() {
               value={selectedSpecialty}
               onChange={setSelectedSpecialty}
               options={specialtyOptions}
-              placeholder="All Specialties"
+              placeholder={t('tailors.filterAllSpecialties')}
               isClearable
               className="react-select-container"
               classNamePrefix="react-select"
@@ -149,16 +160,16 @@ export default function Tailors() {
                 }),
               }}
             />
-            <button type="submit" className="btn-primary">Search</button>
+            <button type="submit" className="btn-primary">{t('common.search')}</button>
           </div>
           <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div>
-              <label className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>Min Rating</label>
+              <label className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>{t('common.filter')}</label>
               <Select
                 value={selectedRating}
                 onChange={setSelectedRating}
                 options={ratingOptions}
-                placeholder="Any Rating"
+                placeholder={t('tailors.filterRating')}
                 isClearable={false}
                 className="react-select-container"
                 classNamePrefix="react-select"
@@ -202,8 +213,8 @@ export default function Tailors() {
         ) : tailors.length === 0 ? (
           <div className="text-center py-20">
             <Scissors className={`h-16 w-16 ${isDark ? 'text-gray-600' : 'text-gray-300'} mx-auto mb-4`} />
-            <h3 className={`text-xl font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No tailors found</h3>
-            <p className={isDark ? 'text-gray-500 mt-2' : 'text-gray-400 mt-2'}>Try adjusting your filters</p>
+            <h3 className={`text-xl font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('tailors.empty')}</h3>
+            <p className={isDark ? 'text-gray-500 mt-2' : 'text-gray-400 mt-2'}>{t('tailors.resetFilter')}</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

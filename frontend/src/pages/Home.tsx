@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { tailorsAPI } from '../lib/api';
 import heroModelImg from '../assets/hero_model_transparent.png';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { 
   Scissors, Search, MessageSquare, ArrowRight, LogIn, 
   UserPlus, Camera, CheckCircle, Star, Sparkles, MapPin, 
@@ -12,6 +14,7 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const isDark = useDarkMode();
   const navigate = useNavigate();
@@ -105,14 +108,25 @@ export default function Home() {
 
           {/* Nav Links - Desktop */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
-            <a href="#how-it-works" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>How It Works</a>
-            <a href="#features" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>Capabilities</a>
-            <a href="#portfolio" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>Work Showcase</a>
-            <a href="#tailors" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>Master Tailors</a>
+            <a href="#how-it-works" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>
+              {t('home.howItWorks.badge')}
+            </a>
+            <a href="#features" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>
+              {t('home.features.badge')}
+            </a>
+            <a href="#portfolio" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>
+              {t('home.categories.title')}
+            </a>
+            <a href="#tailors" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>
+              {t('home.footer.exploreTailors')}
+            </a>
           </nav>
 
           {/* User Auth CTAs & Theme Toggle */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="dropdown" />
+
             {/* Dark / Light Mode Switcher */}
             <button
               onClick={toggleDarkMode}
@@ -129,18 +143,18 @@ export default function Home() {
 
             {user ? (
               <Link to="/dashboard" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1.5 sm:space-x-2 shadow-md">
-                <span>Dashboard</span>
+                <span>{t('nav.requests')}</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
               <>
                 <Link to="/login" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
                   <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Sign In</span>
+                  <span>{t('nav.signIn')}</span>
                 </Link>
                 <Link to="/join" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
                   <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Get Started</span>
+                  <span>{t('nav.joinNow')}</span>
                 </Link>
               </>
             )}
@@ -168,29 +182,37 @@ export default function Home() {
               onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
             >
-              How It Works
+              {t('home.howItWorks.badge')}
             </a>
             <a 
               href="#features" 
               onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
             >
-              Capabilities
+              {t('home.features.badge')}
             </a>
             <a 
               href="#portfolio" 
               onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
             >
-              Work Showcase
+              {t('home.categories.title')}
             </a>
             <a 
               href="#tailors" 
               onClick={() => setMobileNavOpen(false)}
               className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
             >
-              Master Tailors
+              {t('home.footer.exploreTailors')}
             </a>
+
+            {/* Mobile Language Switcher */}
+            <div className="pt-2">
+              <span className={`block text-[11px] font-semibold uppercase tracking-wider mb-1.5 px-3 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                {t('nav.language')}
+              </span>
+              <LanguageSwitcher variant="inline" className="w-full justify-center" />
+            </div>
 
             {/* Mobile Theme Toggle */}
             <div className={`pt-2 border-t flex items-center justify-between px-3 ${isDark ? 'border-gray-800' : 'border-slate-100'}`}>
@@ -225,26 +247,25 @@ export default function Home() {
           
           {/* Left Side Text Content */}
           <div className="flex-1 text-center lg:text-left pt-6 lg:pt-0">
-            <h2 className="text-[#2563eb] font-medium text-lg sm:text-2xl mb-3 sm:mb-4 tracking-tight">StitchMatch</h2>
+            <h2 className="text-[#2563eb] font-medium text-lg sm:text-2xl mb-3 sm:mb-4 tracking-tight">{t('home.badge')}</h2>
             <h1 className={`text-3xl sm:text-5xl lg:text-[64px] font-medium tracking-tight leading-[1.15] mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>
-              Real-Time Tailoring<br className="hidden sm:block lg:block"/>
-              Measurements,<br className="hidden sm:block lg:block"/>
-              Powered by AI
+              {t('home.heroTitle')}<br className="hidden sm:block lg:block"/>
+              <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">{t('home.heroTitleGradient')}</span>
             </h1>
             <p className={`text-base sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-8 sm:mb-10 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Integrate AI-driven body scanning into your bespoke tailoring process to improve fit accuracy, boost client engagement, and reduce return rates while ensuring accurate insights for better garment construction.
+              {t('home.heroSubtitle')}
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6">
               <Link to="/join" className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3 sm:py-3.5 px-8 sm:px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-base sm:text-lg">
-                Let's talk
+                {t('home.getStartedBtn')}
               </Link>
               <a href="#how-it-works" className={`flex items-center justify-center gap-3 py-3 sm:py-3.5 px-6 rounded font-medium transition-all w-full sm:w-auto text-base sm:text-lg ${isDark ? 'text-white hover:bg-gray-800' : 'text-slate-900 hover:bg-slate-50'}`}>
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
                   {/* Play Icon */}
                   <div className="w-0 h-0 border-t-[5px] sm:border-t-[6px] border-t-transparent border-l-[7px] sm:border-l-[8px] border-l-current border-b-[5px] sm:border-b-[6px] border-b-transparent ml-1"></div>
                 </div>
-                How it works
+                {t('home.howItWorks.title')}
               </a>
             </div>
           </div>
@@ -273,7 +294,7 @@ export default function Home() {
               <div className="absolute top-1 sm:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
                 <div className="bg-slate-950/80 dark:bg-gray-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-400/40 text-[11px] font-semibold text-blue-200 flex items-center gap-2 shadow-lg whitespace-nowrap">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>AI Body Mesh • 32 Landmarks Active</span>
+                  <span>{t('home.aiHud.modelStatus')} • {t('home.aiHud.accuracy')}</span>
                 </div>
               </div>
 
@@ -285,7 +306,7 @@ export default function Home() {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border border-white"></span>
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-900/85 text-blue-300 border border-blue-400/40 backdrop-blur-md shadow-md">
-                  Shoulder: 41.2 cm
+                  {t('home.aiHud.shoulder')}: 41.2 cm
                 </span>
               </div>
 
@@ -304,7 +325,7 @@ export default function Home() {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-white"></span>
                 </span>
                 <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-900/85 text-cyan-300 border border-cyan-400/40 backdrop-blur-md shadow-md">
-                  Waist: 74.8 cm
+                  {t('home.aiHud.waist')}: 74.8 cm
                 </span>
               </div>
 
@@ -314,7 +335,7 @@ export default function Home() {
                   <Ruler className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
-                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>Chest Size</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>{t('home.aiHud.chest')}</p>
                   <p className="text-base sm:text-xl font-bold">42.5 in</p>
                 </div>
               </div>
@@ -325,7 +346,7 @@ export default function Home() {
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
-                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>Fit Accuracy</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>{t('home.aiHud.accuracy')}</p>
                   <p className="text-base sm:text-xl font-bold">99.4%</p>
                 </div>
               </div>
@@ -333,7 +354,7 @@ export default function Home() {
               {/* Floating Glassmorphism UI - Card 3 (Scan Progress) */}
               <div className={`absolute bottom-[4%] sm:bottom-[6%] -left-3 sm:-left-[6%] lg:-left-[10%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border w-44 sm:w-52 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>AI Scan Progress</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>{t('home.aiHud.liveScanner')}</p>
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-1.5 mb-1.5">
@@ -347,7 +368,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SEARCH BAR (Moved Below Hero) */}
+      {/* SEARCH BAR */}
       <section className={`py-8 border-b ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-slate-50 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
@@ -358,7 +379,7 @@ export default function Home() {
                 <Search className={`h-5 w-5 mr-3 ${isDark ? 'text-gray-500' : 'text-slate-400'}`} />
                 <input
                   type="text"
-                  placeholder="Search by garment type (Suit, Tuxedo, Evening Gown, Overcoat)..."
+                  placeholder={t('home.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={`w-full py-3 bg-transparent outline-none text-base ${isDark ? 'text-white placeholder-gray-500' : 'text-slate-900 placeholder-slate-400'}`}
@@ -366,7 +387,7 @@ export default function Home() {
               </div>
               <button type="submit" className="bg-[#2563eb] hover:bg-blue-700 text-white w-full sm:w-auto text-sm font-medium px-8 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
                 <Search className="h-4 w-4" />
-                <span>Search Tailors</span>
+                <span>{t('home.searchBtn')}</span>
               </button>
             </div>
           </form>
@@ -378,23 +399,23 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className={`text-3xl sm:text-4xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              How StitchMatch Works
+              {t('home.howItWorks.title')}
             </h2>
             <p className={`text-base sm:text-lg ${isDark ? 'text-gray-300' : 'text-slate-700 font-medium'}`}>
-              Four effortless steps from finding your tailor to wearing your custom garment.
+              {t('home.howItWorks.subtitle')}
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
               isDark ? 'bg-gray-900/60 border-gray-700' : 'bg-white border-slate-200'
             }`}>
               <div className="w-12 h-12 rounded-xl bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300 flex items-center justify-center text-lg font-bold mb-5 shadow-xs">
                 1
               </div>
-              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Find Tailor</h3>
+              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('home.howItWorks.step1Title')}</h3>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-700 font-medium'}`}>
-                Browse tailors by specialty, price range, ratings, and portfolio galleries.
+                {t('home.howItWorks.step1Desc')}
               </p>
             </div>
 
@@ -404,9 +425,9 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 flex items-center justify-center text-lg font-bold mb-5 shadow-xs">
                 2
               </div>
-              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Negotiate & Dual-Lock</h3>
+              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('home.howItWorks.step2Title')}</h3>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-700 font-medium'}`}>
-                Propose counter-offers, agree on deadline & price, and lock terms with dual agreement confirmation.
+                {t('home.howItWorks.step2Desc')}
               </p>
             </div>
 
@@ -416,45 +437,33 @@ export default function Home() {
               <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 flex items-center justify-center text-lg font-bold mb-5 shadow-xs">
                 3
               </div>
-              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>AI 3D Measurement</h3>
+              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('home.howItWorks.step3Title')}</h3>
               <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-700 font-medium'}`}>
-                Upload Front, Side, and Back body photos. AI extracts chest, waist, inseam, and shoulder metrics.
-              </p>
-            </div>
-
-            <div className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
-              isDark ? 'bg-gray-900/60 border-gray-700' : 'bg-white border-slate-200'
-            }`}>
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300 flex items-center justify-center text-lg font-bold mb-5 shadow-xs">
-                4
-              </div>
-              <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Track Stage Progress</h3>
-              <p className={`text-sm leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-700 font-medium'}`}>
-                Track stage updates (Cutting, Sewing, Fitting, Delivery) with photos and real-time Socket.IO alerts.
+                {t('home.howItWorks.step3Desc')}
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ENTIRE SYSTEM CAPABILITIES SECTION - HIGH VISIBILITY BOLD TEXT & RGB CARDS */}
+      {/* ENTIRE SYSTEM CAPABILITIES SECTION */}
       <section id="features" className={`py-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 mb-3">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Full System Architecture</span>
+              <span>{t('home.features.badge')}</span>
             </div>
             <h2 className={`text-3xl sm:text-4xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Entire System Capabilities
+              {t('home.features.title')}
             </h2>
             <p className={`text-base sm:text-lg ${isDark ? 'text-gray-200 font-medium' : 'text-slate-700 font-bold'}`}>
-              Complete end-to-end bespoke tailoring suite built to guarantee precision, real-time communication, and luxury fit.
+              {t('home.features.subtitle')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Royal Purple & Violet */}
+            {/* Card 1 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-purple-950/40 via-gray-800 to-gray-800 border-purple-800/60' 
@@ -464,14 +473,14 @@ export default function Home() {
                 <Scissors className="h-6 w-6" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-purple-600 dark:text-purple-400">Tailor Atelier</span> Directory
+                {t('home.features.verifiedTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Explore detailed tailor profiles complete with verified bio, geographic location, specialty tags, pricing ranges, and high-resolution portfolio galleries.
+                {t('home.features.verifiedDesc')}
               </p>
             </div>
 
-            {/* Card 2: Vivid Emerald & Teal */}
+            {/* Card 2 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-emerald-950/40 via-gray-800 to-gray-800 border-emerald-800/60' 
@@ -481,14 +490,14 @@ export default function Home() {
                 <Camera className="h-6 w-6" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-emerald-600 dark:text-emerald-400">AI Body 3D</span> Scanning
+                {t('home.features.aiScanTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Automated 3D body metric calculation returning confidence scores and exact body metrics for chest, waist, inseam, shoulders, and arm length.
+                {t('home.features.aiScanDesc')}
               </p>
             </div>
 
-            {/* Card 3: Royal Sapphire & Cyan */}
+            {/* Card 3 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-blue-950/40 via-gray-800 to-gray-800 border-blue-800/60' 
@@ -498,14 +507,14 @@ export default function Home() {
                 <MessageSquare className="h-6 w-6" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-blue-600 dark:text-blue-400">Real-Time Socket.IO</span> Chat
+                {t('home.features.chatTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Direct customer & tailor messaging with fabric swatch photo attachments, PDF specs, typing indicators, and instant unread notification alerts.
+                {t('home.features.chatDesc')}
               </p>
             </div>
 
-            {/* Card 4: Rose Gold & Amber */}
+            {/* Card 4 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-amber-950/40 via-gray-800 to-gray-800 border-amber-800/60' 
@@ -515,31 +524,31 @@ export default function Home() {
                 <Lock className="h-6 w-6" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-amber-600 dark:text-amber-400">Dual Contract</span> Lock
+                {t('home.features.escrowTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Both customer and tailor explicitly confirm project terms before work starts, generating an immutable agreement snapshot record.
+                {t('home.features.escrowDesc')}
               </p>
             </div>
 
-            {/* Card 5: Electric Indigo & Magenta */}
+            {/* Card 5 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-indigo-950/40 via-gray-800 to-gray-800 border-indigo-800/60' 
                 : 'bg-gradient-to-br from-indigo-50/90 via-pink-50/30 to-white border-indigo-200/90 shadow-sm'
             }`}>
               <div className="p-3 w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-fuchsia-600 text-white flex items-center justify-center shadow-md mb-4">
-                <Clock className="h-6 w-6" />
+                <Award className="h-6 w-6" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-indigo-600 dark:text-indigo-400">Order Stage</span> Photo Tracking
+                {t('home.features.videoCallTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Tailors log stage updates across cutting, sewing, initial fitting, and delivery with visual progress photos for full transparency.
+                {t('home.features.videoCallDesc')}
               </p>
             </div>
 
-            {/* Card 6: Ruby Red & Gold */}
+            {/* Card 6 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-rose-950/40 via-gray-800 to-gray-800 border-rose-800/60' 
@@ -549,34 +558,33 @@ export default function Home() {
                 <Star className="h-6 w-6 fill-current" />
               </div>
               <h3 className={`text-xl font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                <span className="text-rose-600 dark:text-rose-400">Verified Reviews</span> & Replies
+                {t('home.features.avatarTitle')}
               </h3>
               <p className={`text-sm sm:text-base font-semibold leading-relaxed ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>
-                Customers rate completed orders from 1 to 5 stars with feedback. Tailors publish public responses to build atelier reputation.
+                {t('home.features.avatarDesc')}
               </p>
             </div>
           </div>
         </div>
       </section>
-
-      {/* PORTFOLIO & TAILOR WORK SHOWCASE SECTION (BEAUTIFUL FITTED CLOTHES GALLERY) */}
+      {/* PORTFOLIO & TAILOR WORK SHOWCASE SECTION */}
       <section id="portfolio" className={`py-20 ${isDark ? 'bg-gray-800' : 'bg-slate-50/70'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary-100 text-primary-800 dark:bg-primary-900/40 dark:text-primary-300 mb-2">
                 <ImageIcon className="h-3.5 w-3.5" />
-                <span>Atelier Portfolio Showcase</span>
+                <span>{t('home.categories.title')}</span>
               </div>
               <h2 className={`text-3xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Handcrafted Tailoring Results
+                {t('home.features.badge')}
               </h2>
               <p className={`text-sm sm:text-base ${isDark ? 'text-gray-300' : 'text-slate-600 font-semibold'} mt-1`}>
-                Real bespoke garments tailored through the StitchMatch platform
+                {t('home.features.subtitle')}
               </p>
             </div>
             <Link to="/tailors" className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline">
-              <span>View All Tailor Portfolios</span>
+              <span>{t('home.footer.exploreTailors')}</span>
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -613,20 +621,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FEATURED DYNAMIC TAILORS SHOWCASE (REAL DATABASE UUIDs) */}
+      {/* FEATURED DYNAMIC TAILORS SHOWCASE */}
       <section id="tailors" className={`py-20 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12">
             <div>
               <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Featured Master Tailors
+                {t('home.features.verifiedTitle')}
               </h2>
               <p className={isDark ? 'text-gray-300' : 'text-slate-600 font-medium'}>
-                Top rated bespoke craftsmen available for custom orders
+                {t('tailors.subtitle')}
               </p>
             </div>
             <Link to="/tailors" className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline">
-              <span>Browse All Tailors</span>
+              <span>{t('home.footer.exploreTailors')}</span>
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
@@ -637,7 +645,7 @@ export default function Home() {
             </div>
           ) : featuredTailors.length === 0 ? (
             <div className="card text-center py-12">
-              <p className={isDark ? 'text-gray-400' : 'text-slate-500'}>No tailors available yet.</p>
+              <p className={isDark ? 'text-gray-400' : 'text-slate-500'}>{t('tailors.empty')}</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -667,7 +675,7 @@ export default function Home() {
 
                       {tailor.basePricingMin && (
                         <p className="text-xs font-semibold text-primary-600">
-                          Base Pricing: ${Number(tailor.basePricingMin).toLocaleString()} - ${Number(tailor.basePricingMax || tailor.basePricingMin * 3).toLocaleString()}
+                          {t('tailors.startingFrom')}: ${Number(tailor.basePricingMin).toLocaleString()}
                         </p>
                       )}
 
@@ -687,7 +695,7 @@ export default function Home() {
                       </div>
                       
                       <Link to={`/tailors/${tailor.id}`} className="btn-primary text-xs px-4 py-2 inline-flex items-center space-x-1">
-                        <span>View Profile & Order</span>
+                        <span>{t('tailors.viewProfile')}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
@@ -702,20 +710,20 @@ export default function Home() {
       {/* DUAL CTA BOX */}
       <section className="py-20 bg-gradient-to-r from-primary-600 via-purple-600 to-indigo-700 text-white">
         <div className="max-w-5xl mx-auto px-4 text-center space-y-6">
-          <h2 className="text-3xl sm:text-5xl font-extrabold">Ready to Wear Clothes Fitted Perfectly to You?</h2>
+          <h2 className="text-3xl sm:text-5xl font-extrabold">{t('home.cta.title')}</h2>
           <p className="text-lg text-primary-100 max-w-2xl mx-auto font-medium">
-            Join thousands of satisfied clients or register your tailoring studio today.
+            {t('home.cta.subtitle')}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Link to="/tailors" className="bg-white text-primary-700 font-bold px-8 py-3.5 rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center justify-center space-x-2">
               <Search className="h-5 w-5" />
-              <span>Find a Tailor Now</span>
+              <span>{t('home.cta.customerBtn')}</span>
             </Link>
             {!user && (
               <Link to="/register?role=tailor" className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2">
                 <Scissors className="h-5 w-5" />
-                <span>Register as a Tailor</span>
+                <span>{t('home.cta.tailorBtn')}</span>
               </Link>
             )}
           </div>
@@ -727,12 +735,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 text-center space-y-4">
           <div className="flex items-center justify-center space-x-2">
             <Scissors className="h-6 w-6 text-primary-400" />
-            <span className="text-xl font-bold text-white tracking-tight">StitchMatch</span>
+            <span className="text-xl font-bold text-white tracking-tight">{t('nav.brand')}</span>
           </div>
           <p className="text-sm max-w-md mx-auto text-slate-400">
-            The Bespoke Custom Tailoring Platform with AI Body Scanning, Real-Time Messaging & Stage Tracking.
+            {t('home.footer.tagline')}
           </p>
-          <p className="text-xs text-slate-500 pt-4">&copy; 2026 StitchMatch Atelier Network. All rights reserved.</p>
+          <p className="text-xs text-slate-500 pt-4">{t('home.footer.copyright')}</p>
         </div>
       </footer>
     </div>

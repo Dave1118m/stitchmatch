@@ -1,22 +1,29 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { usersAPI, tailorsAPI } from '../lib/api';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { 
   Settings as SettingsIcon, Sliders, Shield, User, Scissors, 
-  Bell, Lock, CheckCircle, AlertTriangle, Percent, Power, Tag, Plus, XCircle, Save, Check
+  Bell, Lock, CheckCircle, AlertTriangle, Percent, Power, Tag, Plus, XCircle, Save, Check, Globe
 } from 'lucide-react';
 
 export default function Settings() {
-  const { user, login } = useAuth();
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
   const isDark = useDarkMode();
-  const [activeTab, setActiveTab] = useState<'platform' | 'profile' | 'notifications' | 'security'>(
+  const [activeTab, setActiveTab] = useState<'platform' | 'profile' | 'localization' | 'notifications' | 'security'>(
     user?.role === 'admin' ? 'platform' : 'profile'
   );
 
   // Status & Notifications
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Localization Preferences State
+  const [selectedCurrency, setSelectedCurrency] = useState('ETB');
+  const [selectedUnit, setSelectedUnit] = useState('cm');
 
   // Profile Form (For All Users)
   const [profileForm, setProfileForm] = useState({
@@ -101,7 +108,7 @@ export default function Settings() {
     setMessage(null);
     try {
       // Update basic user profile
-      const res = await usersAPI.updateMe({
+      await usersAPI.updateMe({
         name: profileForm.name,
         phone: profileForm.phone,
         location: profileForm.location,
@@ -118,7 +125,7 @@ export default function Settings() {
         });
       }
 
-      setMessage({ type: 'success', text: 'Profile settings updated successfully.' });
+      setMessage({ type: 'success', text: t('settings.savedSuccess') });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to update profile.' });
     } finally {
@@ -131,7 +138,7 @@ export default function Settings() {
     setSaving(true);
     setTimeout(() => {
       setSaving(false);
-      setMessage({ type: 'success', text: 'Platform configuration settings saved successfully.' });
+      setMessage({ type: 'success', text: t('settings.savedSuccess') });
     }, 400);
   };
 
@@ -152,7 +159,14 @@ export default function Settings() {
 
   const handleSavePreferences = (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage({ type: 'success', text: 'Notification preferences saved.' });
+    setMessage({ type: 'success', text: t('settings.savedSuccess') });
+  };
+
+  const handleSaveLocalization = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('stitchmatch_currency', selectedCurrency);
+    localStorage.setItem('stitchmatch_unit', selectedUnit);
+    setMessage({ type: 'success', text: t('settings.languageSection.savedSuccess') });
   };
 
   const handleSaveSecurity = (e: React.FormEvent) => {
@@ -161,7 +175,7 @@ export default function Settings() {
       setMessage({ type: 'error', text: 'New passwords do not match.' });
       return;
     }
-    setMessage({ type: 'success', text: 'Security credentials updated successfully.' });
+    setMessage({ type: 'success', text: t('settings.savedSuccess') });
     setSecurityForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
   };
 
@@ -172,10 +186,10 @@ export default function Settings() {
         <div>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center`}>
             <SettingsIcon className="h-7 w-7 mr-2 text-primary-600" />
-            System & Account Settings
+            {t('settings.title')}
           </h1>
           <p className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-            Manage your account preferences, notifications, and platform parameters
+            {t('settings.subtitle')}
           </p>
         </div>
 
@@ -216,7 +230,19 @@ export default function Settings() {
           }`}
         >
           <User className="h-4 w-4" />
-          <span>Profile Settings</span>
+          <span>{t('settings.tabs.profile')}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('localization')}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors flex items-center space-x-2 whitespace-nowrap ${
+            activeTab === 'localization'
+              ? 'border-primary-600 text-primary-600'
+              : (isDark ? 'border-transparent text-gray-400 hover:text-gray-200' : 'border-transparent text-gray-500 hover:text-gray-700')
+          }`}
+        >
+          <Globe className="h-4 w-4" />
+          <span>{t('settings.tabs.language')}</span>
         </button>
 
         <button
@@ -228,7 +254,7 @@ export default function Settings() {
           }`}
         >
           <Bell className="h-4 w-4" />
-          <span>Notification Preferences</span>
+          <span>{t('settings.tabs.notifications')}</span>
         </button>
 
         <button
@@ -240,7 +266,7 @@ export default function Settings() {
           }`}
         >
           <Lock className="h-4 w-4" />
-          <span>Security & Password</span>
+          <span>{t('settings.tabs.security')}</span>
         </button>
       </div>
 
@@ -455,7 +481,7 @@ export default function Settings() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    Base Pricing Min ($)
+                    {t('tailors.startingFrom')} ($)
                   </label>
                   <input
                     type="number"
@@ -468,7 +494,7 @@ export default function Settings() {
 
                 <div>
                   <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    Base Pricing Max ($)
+                    Max Pricing ($)
                   </label>
                   <input
                     type="number"
@@ -484,12 +510,99 @@ export default function Settings() {
 
           <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2">
             <Save className="h-4 w-4" />
-            <span>{saving ? 'Saving Profile...' : 'Save Profile Settings'}</span>
+            <span>{saving ? t('auth.loading') : t('common.save')}</span>
           </button>
         </form>
       )}
 
-      {/* TAB 3: NOTIFICATIONS */}
+      {/* TAB 3: LOCALIZATION & REGION */}
+      {activeTab === 'localization' && (
+        <form onSubmit={handleSaveLocalization} className="card space-y-6 max-w-2xl">
+          <div className="space-y-1">
+            <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Globe className="h-5 w-5 mr-2 text-primary-600" />
+              {t('settings.languageSection.title')}
+            </h2>
+            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              {t('settings.languageSection.desc')}
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-2`}>
+                {t('settings.languageSection.selectLang')}
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <LanguageSwitcher variant="inline" />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t dark:border-gray-700">
+              <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                {t('settings.languageSection.currencyTitle')}
+              </label>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                {t('settings.languageSection.currencyDesc')}
+              </p>
+              <select
+                value={selectedCurrency}
+                onChange={(e) => setSelectedCurrency(e.target.value)}
+                className="input-field text-sm max-w-xs"
+              >
+                <option value="ETB">ETB - Ethiopian Birr (ብር)</option>
+                <option value="USD">USD - US Dollar ($)</option>
+                <option value="EUR">EUR - Euro (€)</option>
+                <option value="GBP">GBP - British Pound (£)</option>
+              </select>
+            </div>
+
+            <div className="pt-2 border-t dark:border-gray-700">
+              <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                {t('settings.languageSection.unitsTitle')}
+              </label>
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                {t('settings.languageSection.unitsDesc')}
+              </p>
+              <div className="flex gap-4">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="unit"
+                    value="cm"
+                    checked={selectedUnit === 'cm'}
+                    onChange={(e) => setSelectedUnit(e.target.value)}
+                    className="text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {t('settings.languageSection.cm')}
+                  </span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="unit"
+                    value="in"
+                    checked={selectedUnit === 'in'}
+                    onChange={(e) => setSelectedUnit(e.target.value)}
+                    className="text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {t('settings.languageSection.inches')}
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="btn-primary text-sm flex items-center space-x-2">
+            <Save className="h-4 w-4" />
+            <span>{t('settings.languageSection.saveBtn')}</span>
+          </button>
+        </form>
+      )}
+
+      {/* TAB 4: NOTIFICATIONS */}
       {activeTab === 'notifications' && (
         <form onSubmit={handleSavePreferences} className="card space-y-4">
           <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -540,12 +653,12 @@ export default function Settings() {
 
           <button type="submit" className="btn-primary text-sm flex items-center space-x-2">
             <Save className="h-4 w-4" />
-            <span>Save Preferences</span>
+            <span>{t('common.save')}</span>
           </button>
         </form>
       )}
 
-      {/* TAB 4: SECURITY & PASSWORD */}
+      {/* TAB 5: SECURITY & PASSWORD */}
       {activeTab === 'security' && (
         <form onSubmit={handleSaveSecurity} className="card space-y-4 max-w-xl">
           <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -594,7 +707,7 @@ export default function Settings() {
 
           <button type="submit" className="btn-primary text-sm flex items-center space-x-2">
             <Lock className="h-4 w-4" />
-            <span>Update Password</span>
+            <span>{t('common.save')}</span>
           </button>
         </form>
       )}

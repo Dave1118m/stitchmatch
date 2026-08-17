@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { 
   Camera, 
@@ -30,6 +31,7 @@ interface AICameraScannerModalProps {
 type PoseType = 'front' | 'side' | 'back' | 'review';
 
 export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AICameraScannerModalProps) {
+  const { t } = useTranslation();
   const isDark = useDarkMode();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -267,16 +269,16 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold leading-tight flex items-center gap-2">
-                Live AI Camera Scanner
+                {t('measurements.scannerModal.title')}
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
-                  AR Alignment
+                  AR
                 </span>
               </h2>
               <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {currentPose === 'front' && 'Step 1: Capture Front Pose (Facing Camera)'}
-                {currentPose === 'side' && 'Step 2: Capture Side Profile Pose (90° Turn)'}
-                {currentPose === 'back' && 'Step 3: Capture Back Pose (Facing Away)'}
-                {currentPose === 'review' && 'Step 4: Review Captures & Submit to AI'}
+                {currentPose === 'front' && t('measurements.scannerModal.stepFront')}
+                {currentPose === 'side' && t('measurements.scannerModal.stepSide')}
+                {currentPose === 'back' && t('measurements.scannerModal.stepBack')}
+                {currentPose === 'review' && t('measurements.scannerModal.stepReview')}
               </p>
             </div>
           </div>
@@ -309,7 +311,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
           {(['front', 'side', 'back', 'review'] as const).map((pose, idx) => {
             const isActive = currentPose === pose;
             const isDone = capturedPhotos[pose === 'review' ? 'back' : pose] !== null;
-            const labels = ['1. Front Pose', '2. Side Pose', '3. Back Pose', '4. Review & AI'];
+            const labels = [
+              t('measurements.scannerModal.stepFront'),
+              t('measurements.scannerModal.stepSide'),
+              t('measurements.scannerModal.stepBack'),
+              t('measurements.scannerModal.stepReview')
+            ];
 
             return (
               <button
@@ -356,13 +363,13 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                       <AlertCircle className="w-10 h-10 mx-auto mb-2" />
                       <p className="text-sm font-medium">{cameraError}</p>
                       <button onClick={startCamera} className="btn-primary mt-4 text-xs px-4 py-2">
-                        Try Again
+                        {t('measurements.scannerModal.tryAgain')}
                       </button>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
                       <div className="w-10 h-10 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mb-3" />
-                      <p className="text-sm">Starting camera stream...</p>
+                      <p className="text-sm">{t('measurements.scannerModal.startingCamera')}</p>
                     </div>
                   )}
                 </div>
@@ -382,12 +389,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                   <span>
                     {hasGyroSupport ? (
                       isLevel ? (
-                        `✓ 90° VERTICAL LOCKED (${tiltAngle}°)`
+                        `✓ ${t('measurements.scannerModal.verticalLocked')} (${tiltAngle}°)`
                       ) : (
-                        `ALIGN VERTICAL: ${tiltAngle || 0}° (TARGET 90°)`
+                        `${t('measurements.scannerModal.alignVertical')}: ${tiltAngle || 0}° (${t('measurements.scannerModal.target90')})`
                       )
                     ) : (
-                      'Desktop/Camera Stream Ready'
+                      t('measurements.scannerModal.desktopReady')
                     )}
                   </span>
                 </div>
@@ -396,7 +403,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full backdrop-blur-md bg-black/70 border border-emerald-500/50 text-emerald-400 text-xs font-bold shadow-lg animate-pulse">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
                   <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>AR LANDMARKS LOCKED (33/33)</span>
+                  <span>{t('measurements.scannerModal.landmarksLocked')}</span>
                 </div>
               </div>
 
@@ -410,52 +417,37 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                   {currentPose === 'front' && (
                     <g className="transition-all duration-300">
                       {/* Biometric Connective Vectors */}
-                      {/* Head & Spine */}
                       <line x1="100" y1="42" x2="100" y2="70" stroke="#10b981" strokeWidth="2" />
                       <line x1="100" y1="70" x2="100" y2="135" stroke="#10b981" strokeWidth="2" strokeDasharray="3 2" />
-                      {/* Clavicle / Shoulders Span */}
                       <line x1="75" y1="70" x2="125" y2="70" stroke="#06b6d4" strokeWidth="2.5" />
-                      {/* Left Arm Vectors */}
                       <line x1="75" y1="70" x2="55" y2="110" stroke="#10b981" strokeWidth="2" />
                       <line x1="55" y1="110" x2="42" y2="152" stroke="#10b981" strokeWidth="2" />
-                      {/* Right Arm Vectors */}
                       <line x1="125" y1="70" x2="145" y2="110" stroke="#10b981" strokeWidth="2" />
                       <line x1="145" y1="110" x2="158" y2="152" stroke="#10b981" strokeWidth="2" />
-                      {/* Pelvis Span */}
                       <line x1="82" y1="135" x2="118" y2="135" stroke="#06b6d4" strokeWidth="2.5" />
-                      {/* Left Leg Vectors */}
                       <line x1="82" y1="135" x2="80" y2="200" stroke="#10b981" strokeWidth="2" />
                       <line x1="80" y1="200" x2="78" y2="265" stroke="#10b981" strokeWidth="2" />
-                      {/* Right Leg Vectors */}
                       <line x1="118" y1="135" x2="120" y2="200" stroke="#10b981" strokeWidth="2" />
                       <line x1="120" y1="200" x2="122" y2="265" stroke="#10b981" strokeWidth="2" />
 
-                      {/* 33 Biometric Radar Landmark Nodes */}
-                      {/* Facial Nodes (Nose, Eyes, Ears) */}
+                      {/* 33 Biometric Nodes */}
                       <circle cx="100" cy="38" r="3" fill="#34d399" />
                       <circle cx="95" cy="34" r="2.5" fill="#34d399" />
                       <circle cx="105" cy="34" r="2.5" fill="#34d399" />
                       <circle cx="90" cy="36" r="2" fill="#34d399" />
                       <circle cx="110" cy="36" r="2" fill="#34d399" />
-                      {/* Shoulders */}
                       <circle cx="75" cy="70" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
                       <circle cx="125" cy="70" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
-                      {/* Elbows */}
                       <circle cx="55" cy="110" r="3.5" fill="#10b981" />
                       <circle cx="145" cy="110" r="3.5" fill="#10b981" />
-                      {/* Wrists */}
                       <circle cx="42" cy="152" r="3.5" fill="#34d399" />
                       <circle cx="158" cy="152" r="3.5" fill="#34d399" />
-                      {/* Chest & Waist Center Targets */}
                       <circle cx="100" cy="95" r="3" fill="#a855f7" />
                       <circle cx="100" cy="118" r="3" fill="#a855f7" />
-                      {/* Hips */}
                       <circle cx="82" cy="135" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
                       <circle cx="118" cy="135" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
-                      {/* Knees */}
                       <circle cx="80" cy="200" r="3.5" fill="#10b981" />
                       <circle cx="120" cy="200" r="3.5" fill="#10b981" />
-                      {/* Ankles & Feet */}
                       <circle cx="78" cy="265" r="3.5" fill="#34d399" />
                       <circle cx="122" cy="265" r="3.5" fill="#34d399" />
                       <circle cx="72" cy="272" r="2.5" fill="#34d399" />
@@ -465,7 +457,6 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
 
                   {currentPose === 'side' && (
                     <g className="transition-all duration-300">
-                      {/* Side Profile Skeletal Vectors */}
                       <line x1="100" y1="40" x2="98" y2="70" stroke="#10b981" strokeWidth="2" />
                       <line x1="98" y1="70" x2="102" y2="135" stroke="#10b981" strokeWidth="2" strokeDasharray="3 2" />
                       <line x1="98" y1="70" x2="100" y2="115" stroke="#10b981" strokeWidth="2" />
@@ -474,7 +465,6 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                       <line x1="100" y1="200" x2="98" y2="265" stroke="#10b981" strokeWidth="2" />
                       <line x1="98" y1="265" x2="108" y2="272" stroke="#10b981" strokeWidth="2" />
 
-                      {/* Side Nodes */}
                       <circle cx="106" cy="38" r="3" fill="#34d399" />
                       <circle cx="98" cy="70" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
                       <circle cx="100" cy="115" r="3.5" fill="#10b981" />
@@ -483,14 +473,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                       <circle cx="100" cy="200" r="3.5" fill="#10b981" />
                       <circle cx="98" cy="265" r="3.5" fill="#34d399" />
                       <circle cx="108" cy="272" r="3" fill="#34d399" />
-                      {/* Vertical Alignment Plum Line */}
                       <line x1="100" y1="25" x2="100" y2="275" stroke="#06b6d4" strokeWidth="1" strokeDasharray="3 3" />
                     </g>
                   )}
 
                   {currentPose === 'back' && (
                     <g className="transition-all duration-300">
-                      {/* Back Spine & Shoulders Vectors */}
                       <line x1="100" y1="42" x2="100" y2="70" stroke="#10b981" strokeWidth="2" />
                       <line x1="100" y1="70" x2="100" y2="135" stroke="#10b981" strokeWidth="2" strokeDasharray="3 2" />
                       <line x1="75" y1="70" x2="125" y2="70" stroke="#06b6d4" strokeWidth="2.5" />
@@ -504,7 +492,6 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                       <line x1="118" y1="135" x2="120" y2="200" stroke="#10b981" strokeWidth="2" />
                       <line x1="120" y1="200" x2="122" y2="265" stroke="#10b981" strokeWidth="2" />
 
-                      {/* Back Nodes */}
                       <circle cx="100" cy="38" r="3" fill="#34d399" />
                       <circle cx="75" cy="70" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
                       <circle cx="125" cy="70" r="4" fill="#06b6d4" stroke="#ffffff" strokeWidth="1" />
@@ -533,7 +520,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     {countdown}
                   </div>
                   <p className="text-white text-base sm:text-lg font-bold mt-4 tracking-wide shadow-black drop-shadow">
-                    Hold Your Pose & Look Straight!
+                    {t('measurements.scannerModal.holdPose')}
                   </p>
                 </div>
               )}
@@ -543,11 +530,11 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
             <div className="w-full max-w-2xl space-y-4">
               <div className="text-center mb-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 mb-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> All 3 Poses Successfully Captured
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {t('measurements.scannerModal.allPosesCaptured')}
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold">Review Your Measurement Scans</h3>
+                <h3 className="text-lg sm:text-xl font-bold">{t('measurements.scannerModal.reviewTitle')}</h3>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Ensure your full body is visible in all 3 angles before feeding them to the AI measurement engine.
+                  {t('measurements.scannerModal.reviewDesc')}
                 </p>
               </div>
 
@@ -556,12 +543,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className={`p-2.5 rounded-2xl border flex flex-col items-center ${
                   isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs font-bold mb-1.5">1. Front Pose</span>
+                  <span className="text-xs font-bold mb-1.5">{t('measurements.scannerModal.stepFront')}</span>
                   <div className="w-full h-36 sm:h-44 rounded-xl overflow-hidden bg-black relative">
                     {capturedPhotos.front ? (
                       <img src={capturedPhotos.front} alt="Front" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs text-gray-500">Missing</span>
+                      <span className="text-xs text-gray-500">{t('measurements.scannerModal.missing')}</span>
                     )}
                   </div>
                   <button
@@ -569,7 +556,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     className="mt-2 text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Retake</span>
+                    <span>{t('measurements.scannerModal.retake')}</span>
                   </button>
                 </div>
 
@@ -577,12 +564,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className={`p-2.5 rounded-2xl border flex flex-col items-center ${
                   isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs font-bold mb-1.5">2. Side Pose</span>
+                  <span className="text-xs font-bold mb-1.5">{t('measurements.scannerModal.stepSide')}</span>
                   <div className="w-full h-36 sm:h-44 rounded-xl overflow-hidden bg-black relative">
                     {capturedPhotos.side ? (
                       <img src={capturedPhotos.side} alt="Side" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs text-gray-500">Missing</span>
+                      <span className="text-xs text-gray-500">{t('measurements.scannerModal.missing')}</span>
                     )}
                   </div>
                   <button
@@ -590,7 +577,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     className="mt-2 text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Retake</span>
+                    <span>{t('measurements.scannerModal.retake')}</span>
                   </button>
                 </div>
 
@@ -598,12 +585,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className={`p-2.5 rounded-2xl border flex flex-col items-center ${
                   isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs font-bold mb-1.5">3. Back Pose</span>
+                  <span className="text-xs font-bold mb-1.5">{t('measurements.scannerModal.stepBack')}</span>
                   <div className="w-full h-36 sm:h-44 rounded-xl overflow-hidden bg-black relative">
                     {capturedPhotos.back ? (
                       <img src={capturedPhotos.back} alt="Back" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs text-gray-500">Missing</span>
+                      <span className="text-xs text-gray-500">{t('measurements.scannerModal.missing')}</span>
                     )}
                   </div>
                   <button
@@ -611,7 +598,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     className="mt-2 text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Retake</span>
+                    <span>{t('measurements.scannerModal.retake')}</span>
                   </button>
                 </div>
               </div>
@@ -621,7 +608,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 isDark ? 'bg-emerald-950/40 border border-emerald-800/40 text-emerald-300' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
               }`}>
                 <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-500 flex-shrink-0" />
-                <span>Photos are encrypted and processed securely by our tailoring measurement models.</span>
+                <span>{t('measurements.scannerModal.privacyNote')}</span>
               </div>
             </div>
           )}
@@ -638,7 +625,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-secondary text-xs sm:text-sm px-4 py-2.5 rounded-full flex items-center space-x-1.5"
               >
                 <Camera className="w-4 h-4" />
-                <span>Snap Immediately</span>
+                <span>{t('measurements.scannerModal.snapImmediately')}</span>
               </button>
 
               <button
@@ -647,7 +634,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-primary text-sm sm:text-base px-6 sm:px-8 py-2.5 rounded-full font-bold shadow-lg flex items-center space-x-2 animate-pulse"
               >
                 <Timer className="w-5 h-5" />
-                <span>{countdown !== null ? `Capturing in ${countdown}s...` : 'Start 5s Hands-Free Timer'}</span>
+                <span>{countdown !== null ? t('measurements.scannerModal.capturingIn', { count: countdown }) : t('measurements.scannerModal.startTimer')}</span>
               </button>
             </>
           ) : (
@@ -657,7 +644,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-secondary text-xs sm:text-sm px-5 py-2.5 rounded-full flex items-center space-x-1.5"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                <span>Back to Camera</span>
+                <span>{t('measurements.scannerModal.backToCamera')}</span>
               </button>
 
               <button
@@ -665,7 +652,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-primary text-sm sm:text-base px-7 sm:px-9 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2"
               >
                 <Sparkles className="w-5 h-5" />
-                <span>Process with AI Engine</span>
+                <span>{t('measurements.scannerModal.processWithAI')}</span>
                 <ChevronRight className="w-4 h-4 ml-1 -mr-1" />
               </button>
             </>

@@ -8,11 +8,20 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-gray-50 text-gray-900 antialiased font-sans;
   }
   
   .dark body {
-    @apply bg-gray-900 text-gray-100 antialiased;
+    @apply bg-gray-900 text-gray-100 antialiased font-sans;
+  }
+
+  html[lang="am"],
+  html[lang="am"] body,
+  html[lang="am"] button,
+  html[lang="am"] input,
+  html[lang="am"] select,
+  html[lang="am"] textarea {
+    font-family: 'Noto Sans Ethiopic', 'Outfit', system-ui, sans-serif;
   }
 
   ::-webkit-scrollbar {
