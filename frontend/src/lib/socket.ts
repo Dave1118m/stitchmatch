@@ -5,7 +5,8 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
   if (!socket) {
     const token = localStorage.getItem('token');
-    socket = io('/', {
+    const socketUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, '') || '/';
+    socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
     });

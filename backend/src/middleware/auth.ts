@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../utils/secrets';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -19,7 +20,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
 
   const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as JwtPayload;
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
     req.userId = decoded.userId;
     req.userRole = decoded.role;
     next();
@@ -35,4 +36,4 @@ export const authorize = (...roles: string[]) => {
     }
     next();
   };
-};
+};

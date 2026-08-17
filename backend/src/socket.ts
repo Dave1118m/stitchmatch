@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from './utils/secrets';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -16,7 +17,7 @@ export function setupSocketHandlers(io: Server, prisma: PrismaClient) {
     }
 
     try {
-      const decoded = jwt.verify(token as string, process.env.JWT_SECRET || 'fallback-secret') as any;
+      const decoded = jwt.verify(token as string, JWT_SECRET) as any;
       socket.userId = decoded.userId;
       socket.userRole = decoded.role;
       next();

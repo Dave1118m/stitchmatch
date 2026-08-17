@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { validateBody } from '../middleware/validate';
 import { RegisterSchema, LoginSchema, OAuthSchema } from '../utils/schemas';
+import { JWT_SECRET } from '../utils/secrets';
 
 const router = Router();
 
@@ -52,9 +53,9 @@ router.post('/register', validateBody(RegisterSchema), async (req: Request, res:
       });
     }
 
-        const token = jwt.sign(
+    const token = jwt.sign(
       { userId: user.id, role: user.role },
-      (process.env.JWT_SECRET || 'fallback-secret') as string,
+      JWT_SECRET,
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
@@ -103,9 +104,9 @@ router.post('/login', validateBody(LoginSchema), async (req: Request, res: Respo
       return res.status(403).json({ error: 'Account has been deactivated' });
     }
 
-        const token = jwt.sign(
+    const token = jwt.sign(
       { userId: user.id, role: user.role },
-      (process.env.JWT_SECRET || 'fallback-secret') as string,
+      JWT_SECRET,
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
@@ -162,9 +163,9 @@ router.post('/oauth', validateBody(OAuthSchema), async (req: Request, res: Respo
       }
     }
 
-        const token = jwt.sign(
+    const token = jwt.sign(
       { userId: user.id, role: user.role },
-      (process.env.JWT_SECRET || 'fallback-secret') as string,
+      JWT_SECRET,
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 
