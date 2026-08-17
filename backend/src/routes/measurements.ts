@@ -7,6 +7,7 @@ import { parseJson, parseJsonArray, serializeJson } from '../utils/jsonHelpers';
 import { validateBody } from '../middleware/validate';
 import { MeasurementPhotoSchema, MeasurementAdjustmentSchema } from '../utils/schemas';
 import { createNotification } from '../helpers/notificationHelper';
+import { analyzeBodyMeasurementsWithGemini } from '../services/geminiMeasurementService';
 
 const router = Router();
 
@@ -204,21 +205,27 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string, io
       return;
     }
 
-    // Generate accurate anthropometric estimated measurements (in cm)
-    const measurements = {
-      chest: Math.round((96 + (Math.random() * 8 - 4)) * 10) / 10,
-      waist: Math.round((82 + (Math.random() * 6 - 3)) * 10) / 10,
-      hip: Math.round((98 + (Math.random() * 6 - 3)) * 10) / 10,
-      inseam: Math.round((79 + (Math.random() * 4 - 2)) * 10) / 10,
-      shoulderWidth: Math.round((45 + (Math.random() * 3 - 1.5)) * 10) / 10,
-      armLength: Math.round((62 + (Math.random() * 3 - 1.5)) * 10) / 10,
-      aiConfidence: Math.round((94 + Math.random() * 5) * 10) / 10,
-    };
+    // User calibrated reference height defaults to 175cm unless specified
+    const calibratedHeight = 175;
+
+    // Execute Gemini Pro Vision Multimodal Measurement Engine
+    const aiResult = await analyzeBodyMeasurementsWithGemini(
+      measurement.frontPhotoUrl!,
+      measurement.sidePhotoUrl,
+      measurement.backPhotoUrl,
+      calibratedHeight
+    );
 
     await prisma.measurement.update({
       where: { requestId },
       data: {
-        ...measurements,
+        chest: aiResult.chest,
+        waist: aiResult.waist,
+        hip: aiResult.hip,
+        inseam: aiResult.inseam,
+        shoulderWidth: aiResult.shoulderWidth,
+        armLength: aiResult.armLength,
+        aiConfidence: aiResult.aiConfidence,
         aiStatus: 'completed',
       },
     });
@@ -241,7 +248,7 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string, io
         prisma,
         serviceRequest.customerId,
         'AI Scan Processed',
-        `Your AI body scan for ${serviceRequest.garmentType} has been calculated with ${measurements.aiConfidence}% confidence!`,
+        `Your AI body scan for ${serviceRequest.garmentType} has been calculated with ${aiResult.aiConfidence}% confidence!`,
         'order',
         io
       );
