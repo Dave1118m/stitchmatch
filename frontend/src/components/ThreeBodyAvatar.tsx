@@ -3,14 +3,14 @@ import * as THREE from 'three';
 import { RotateCw, ZoomIn, ZoomOut, Layers, Eye, Sparkles, Move3d } from 'lucide-react';
 
 interface ThreeBodyAvatarProps {
-  measurements: {
-    chest?: number;
-    waist?: number;
-    hip?: number;
-    inseam?: number;
-    shoulderWidth?: number;
-    armLength?: number;
-    height?: number;
+  measurements?: {
+    chest?: number | string | any;
+    waist?: number | string | any;
+    hip?: number | string | any;
+    inseam?: number | string | any;
+    shoulderWidth?: number | string | any;
+    armLength?: number | string | any;
+    height?: number | string | any;
   };
   isDark?: boolean;
 }
@@ -30,13 +30,20 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
   const isDraggingRef = useRef(false);
   const previousMousePositionRef = useRef({ x: 0, y: 0 });
 
+  // Safe numerical parser with fallback defaults
+  const parseVal = (val: any, fallback: number): number => {
+    if (val === null || val === undefined) return fallback;
+    const num = typeof val === 'number' ? val : parseFloat(String(val));
+    return isNaN(num) || num <= 0 ? fallback : num;
+  };
+
   // Default fallback anthropometric baselines (cm)
-  const chestVal = measurements.chest || 96;
-  const waistVal = measurements.waist || 82;
-  const hipVal = measurements.hip || 98;
-  const shoulderVal = measurements.shoulderWidth || 45;
-  const inseamVal = measurements.inseam || 79;
-  const armVal = measurements.armLength || 62;
+  const chestVal = parseVal(measurements?.chest, 96);
+  const waistVal = parseVal(measurements?.waist, 82);
+  const hipVal = parseVal(measurements?.hip, 98);
+  const shoulderVal = parseVal(measurements?.shoulderWidth, 45);
+  const inseamVal = parseVal(measurements?.inseam, 79);
+  const armVal = parseVal(measurements?.armLength, 62);
 
   useEffect(() => {
     if (!mountRef.current) return;

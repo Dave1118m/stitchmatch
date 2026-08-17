@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDarkMode } from '../hooks/useDarkMode';
+import joinCustomerImg from '../assets/join_customer_client.jpg';
+import joinTailorImg from '../assets/join_tailor_artisan.jpg';
 import { Scissors, User, ArrowRight } from 'lucide-react';
 
 export default function Join() {
@@ -49,7 +51,7 @@ export default function Join() {
             >
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=800&auto=format&fit=crop&q=80" 
+                  src={joinCustomerImg} 
                   alt="Customer looking at bespoke clothes" 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -82,13 +84,13 @@ export default function Join() {
                 selectedRole === 'tailor' 
                   ? 'border-primary-600 shadow-xl shadow-primary-900/20 scale-[1.02]' 
                   : isDark 
-                    ? 'border-gray-700 bg-gray-800 hover:border-gray-500 hover:shadow-lg' 
-                    : 'border-slate-200 bg-white hover:border-primary-300 hover:shadow-lg'
+                  ? 'border-gray-700 bg-gray-800 hover:border-gray-500 hover:shadow-lg' 
+                  : 'border-slate-200 bg-white hover:border-primary-300 hover:shadow-lg'
               }`}
             >
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src="https://images.unsplash.com/photo-1556228720-192a6af4e86e?w=800&auto=format&fit=crop&q=80" 
+                  src={joinTailorImg} 
                   alt="Tailor working in atelier" 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />

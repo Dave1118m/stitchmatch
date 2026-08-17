@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { tailorsAPI } from '../lib/api';
+import heroModelImg from '../assets/hero_model_transparent.png';
 import { 
   Scissors, Search, MessageSquare, ArrowRight, LogIn, 
   UserPlus, Camera, CheckCircle, Star, Sparkles, MapPin, 
   Ruler, Clock, Award, ChevronRight, Lock, Eye, Image as ImageIcon,
-  Menu, X
+  Menu, X, Sun, Moon
 } from 'lucide-react';
 
 export default function Home() {
@@ -45,6 +46,17 @@ export default function Home() {
     } else {
       navigate('/tailors');
     }
+  };
+
+  const toggleDarkMode = () => {
+    const isCurrentlyDark = document.documentElement.classList.contains('dark');
+    const newMode = !isCurrentlyDark;
+    if (newMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', String(newMode));
   };
 
   // High quality Unsplash imagery showing tailor works
@@ -99,8 +111,22 @@ export default function Home() {
             <a href="#tailors" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>Master Tailors</a>
           </nav>
 
-          {/* User Auth CTAs */}
+          {/* User Auth CTAs & Theme Toggle */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Dark / Light Mode Switcher */}
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-xl border transition-all duration-200 flex items-center justify-center ${
+                isDark
+                  ? 'bg-gray-800 border-gray-700 text-amber-400 hover:bg-gray-700 hover:text-amber-300 shadow-xs'
+                  : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 hover:text-slate-900 shadow-xs'
+              }`}
+              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
             {user ? (
               <Link to="/dashboard" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1.5 sm:space-x-2 shadow-md">
                 <span>Dashboard</span>
@@ -165,6 +191,24 @@ export default function Home() {
             >
               Master Tailors
             </a>
+
+            {/* Mobile Theme Toggle */}
+            <div className={`pt-2 border-t flex items-center justify-between px-3 ${isDark ? 'border-gray-800' : 'border-slate-100'}`}>
+              <span className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                Appearance
+              </span>
+              <button
+                onClick={toggleDarkMode}
+                className={`px-3 py-1.5 rounded-lg border flex items-center gap-1.5 text-xs font-medium ${
+                  isDark
+                    ? 'bg-gray-800 border-gray-700 text-amber-400'
+                    : 'bg-slate-100 border-slate-200 text-slate-700'
+                }`}
+              >
+                {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+            </div>
           </div>
         )}
       </header>
@@ -205,128 +249,99 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Side Image & Glassmorphism Cards */}
-          <div className="flex-1 relative w-full max-w-sm sm:max-w-lg mx-auto lg:max-w-none mt-8 lg:mt-0">
-            {/* The main subject image container */}
-            <div className="relative z-10 mx-auto w-[90%] sm:w-[85%] lg:w-[90%] xl:w-[85%] group">
+          {/* Right Side Transparent Cutout Model & AI Overlay */}
+          <div className="flex-1 relative w-full max-w-sm sm:max-w-lg mx-auto lg:max-w-none mt-8 lg:mt-0 flex items-center justify-center">
+            
+            {/* Ambient Soft Glow Behind the Model */}
+            <div className="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-blue-500/20 dark:bg-blue-600/25 blur-3xl -z-10 pointer-events-none animate-pulse"></div>
+            <div className="absolute w-60 h-60 sm:w-80 sm:h-80 rounded-full bg-indigo-500/15 dark:bg-purple-600/20 blur-2xl top-1/4 -z-10 pointer-events-none"></div>
+
+            {/* Model Container */}
+            <div className="relative z-10 w-[85%] sm:w-[75%] lg:w-[85%] xl:w-[78%] flex flex-col items-center group">
               
-              {/* Image Container with Framing & Overlays */}
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/40 dark:border-gray-700/60 bg-slate-900">
-                {/* Subject Image */}
-                <img 
-                  src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=80" 
-                  alt="AI Body Scanning" 
-                  className="w-full h-auto object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                />
+              {/* Transparent Cutout Model Photo */}
+              <img 
+                src={heroModelImg} 
+                alt="Bespoke AI Body Measurement" 
+                className="w-full h-auto max-h-[580px] object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.3)] dark:drop-shadow-[0_20px_45px_rgba(37,99,235,0.3)] transition-transform duration-700 group-hover:scale-[1.02]"
+              />
 
-                {/* Layer 1: Ambient High-Tech Color Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/25 to-transparent pointer-events-none"></div>
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 via-transparent to-indigo-500/15 mix-blend-overlay pointer-events-none"></div>
+              {/* Laser Scan Horizontal Beam over Model */}
+              <div className="absolute top-[46%] inset-x-2 sm:inset-x-6 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_14px_rgba(6,182,212,0.9)] animate-pulse pointer-events-none"></div>
 
-                {/* Layer 2: Grid Scanner Overlay Pattern */}
-                <div 
-                  className="absolute inset-0 opacity-20 pointer-events-none"
-                  style={{
-                    backgroundImage: 'linear-gradient(to right, rgba(59, 130, 246, 0.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.35) 1px, transparent 1px)',
-                    backgroundSize: '24px 24px'
-                  }}
-                ></div>
-
-                {/* Layer 3: Viewfinder Corner Brackets */}
-                <div className="absolute top-4 left-4 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-l-2 border-blue-400/90 rounded-tl-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                <div className="absolute top-4 right-4 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-r-2 border-blue-400/90 rounded-tr-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                <div className="absolute bottom-4 left-4 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-l-2 border-blue-400/90 rounded-bl-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-                <div className="absolute bottom-4 right-4 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-r-2 border-blue-400/90 rounded-br-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
-
-                {/* Layer 4: Laser Scan Horizontal Beam */}
-                <div className="absolute top-[48%] inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_rgba(6,182,212,0.9)] animate-pulse pointer-events-none"></div>
-
-                {/* Layer 5: Anatomical Measurement Landmark Points */}
-                {/* Shoulder Point */}
-                <div className="absolute top-[28%] left-[22%] z-10 flex items-center gap-1.5 pointer-events-none">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border border-white"></span>
-                  </span>
-                  <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-950/80 text-blue-300 border border-blue-400/40 backdrop-blur-xs">
-                    P1: 41.2cm
-                  </span>
-                </div>
-
-                {/* Chest Center Point */}
-                <div className="absolute top-[46%] left-[48%] z-10 pointer-events-none">
-                  <span className="relative flex h-3.5 w-3.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500 border-2 border-white shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
-                  </span>
-                </div>
-
-                {/* Waist Point */}
-                <div className="absolute top-[62%] right-[24%] z-10 flex items-center gap-1.5 pointer-events-none">
-                  <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-950/80 text-cyan-300 border border-cyan-400/40 backdrop-blur-xs">
-                    P2: 74.8cm
-                  </span>
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-white"></span>
-                  </span>
-                </div>
-
-                {/* Layer 6: Top Scanner Status Badge Overlay */}
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                  <div className="bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-400/40 text-[11px] font-semibold text-blue-200 flex items-center gap-2 shadow-lg whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>AI Landmark Scan • 32 Points Active</span>
-                  </div>
-                </div>
-
-                {/* Layer 7: Bottom Metrics HUD Strip */}
-                <div className="absolute bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-4 bg-slate-950/75 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/10 flex items-center justify-between text-white pointer-events-none">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400">
-                      <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">3D Vision Neural Mesh</p>
-                      <p className="text-xs sm:text-sm font-bold text-white">Sub-millimeter Precision</p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                    CONFIDENCE 99.4%
-                  </span>
+              {/* Top AI Scanner Status Badge */}
+              <div className="absolute top-1 sm:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+                <div className="bg-slate-950/80 dark:bg-gray-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-400/40 text-[11px] font-semibold text-blue-200 flex items-center gap-2 shadow-lg whitespace-nowrap">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>AI Body Mesh • 32 Landmarks Active</span>
                 </div>
               </div>
-            
+
+              {/* Anatomical Landmark Points floating on Model */}
+              {/* Shoulder Landmark */}
+              <div className="absolute top-[28%] left-[20%] z-20 flex items-center gap-1.5 pointer-events-none">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border border-white"></span>
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-900/85 text-blue-300 border border-blue-400/40 backdrop-blur-md shadow-md">
+                  Shoulder: 41.2 cm
+                </span>
+              </div>
+
+              {/* Chest Core Point */}
+              <div className="absolute top-[44%] left-[44%] -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
+                <span className="relative flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500 border-2 border-white shadow-[0_0_10px_rgba(6,182,212,0.8)]"></span>
+                </span>
+              </div>
+
+              {/* Waist Landmark */}
+              <div className="absolute top-[62%] left-[24%] z-20 flex items-center gap-1.5 pointer-events-none">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-white"></span>
+                </span>
+                <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-900/85 text-cyan-300 border border-cyan-400/40 backdrop-blur-md shadow-md">
+                  Waist: 74.8 cm
+                </span>
+              </div>
+
               {/* Floating Glassmorphism UI - Card 1 (Chest Size) */}
-              <div className={`absolute top-[10%] sm:top-[15%] left-0 sm:-left-[10%] lg:-left-[15%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
-                  <Ruler className={`h-4 w-4 sm:h-5 sm:w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+              <div className={`absolute top-[8%] sm:top-[12%] -left-3 sm:-left-[8%] lg:-left-[14%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 flex items-center justify-center flex-shrink-0 text-blue-600 dark:text-blue-400">
+                  <Ruler className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
-                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Chest Size</p>
-                  <p className={`text-base sm:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>42.5 in</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>Chest Size</p>
+                  <p className="text-base sm:text-xl font-bold">42.5 in</p>
                 </div>
               </div>
 
               {/* Floating Glassmorphism UI - Card 2 (Accuracy) */}
-              <div className={`absolute top-[40%] sm:top-[45%] right-0 sm:-right-[10%] lg:-right-[15%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+              <div className={`absolute top-[34%] sm:top-[38%] -right-3 sm:-right-[8%] lg:-right-[14%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>
-                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Fit Accuracy</p>
-                  <p className={`text-base sm:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>99.4%</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>Fit Accuracy</p>
+                  <p className="text-base sm:text-xl font-bold">99.4%</p>
                 </div>
               </div>
 
-              {/* Floating Glassmorphism UI - Card 3 (Status) */}
-              <div className={`absolute bottom-[8%] sm:bottom-[10%] left-0 sm:-left-[8%] lg:-left-[10%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border w-40 sm:w-48 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
-                <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase mb-2 sm:mb-3 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Scan Progress</p>
-                <div className="w-full bg-slate-300/50 dark:bg-gray-700/50 rounded-full h-1.5 mb-1.5 sm:mb-2">
-                  <div className="bg-blue-600 h-1.5 rounded-full w-full"></div>
+              {/* Floating Glassmorphism UI - Card 3 (Scan Progress) */}
+              <div className={`absolute bottom-[4%] sm:bottom-[6%] -left-3 sm:-left-[6%] lg:-left-[10%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border w-44 sm:w-52 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>AI Scan Progress</p>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                 </div>
-                <p className={`text-xs font-bold text-right ${isDark ? 'text-white' : 'text-slate-900'}`}>100%</p>
+                <div className="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-1.5 mb-1.5">
+                  <div className="bg-gradient-to-r from-blue-600 to-cyan-500 h-1.5 rounded-full w-full"></div>
+                </div>
+                <p className="text-xs font-bold text-right text-blue-600 dark:text-blue-400">100% Calibrated</p>
               </div>
+
             </div>
           </div>
         </div>

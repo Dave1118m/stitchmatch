@@ -10,6 +10,7 @@ import { ArrowLeft, Send, Menu, Paperclip, MoreHorizontal, Reply, Edit2, Trash2,
 import ChatSidebar from '../components/ChatSidebar';
 import { MessageListSkeleton } from '../components/SkeletonLoaders';
 import VideoCallModal from '../components/VideoCallModal';
+import { validateImageFile } from '../utils/fileValidation';
 
 const playIncomingChime = () => {
   try {
@@ -196,6 +197,14 @@ export default function Messages() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side pre-validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Invalid image file');
+      e.target.value = '';
+      return;
+    }
+
     setUploadingImage(true);
     try {
       const uploadRes = await uploadsAPI.uploadImage(file);
@@ -206,10 +215,12 @@ export default function Messages() {
       });
       setReplyToMessage(null);
       scrollToBottom();
+      toast.success('Image sent');
     } catch (err: any) {
-      alert('Failed to upload image');
+      toast.error(err.response?.data?.error || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 

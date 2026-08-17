@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useDarkMode } from '../../hooks/useDarkMode';
+import { useToast } from '../../context/ToastContext';
 import { tailorsAPI, uploadsAPI } from '../../lib/api';
 import ProductManager from '../../components/ProductManager';
+import { validateImageFile } from '../../utils/fileValidation';
 import { User, Scissors, Save, UploadCloud } from 'lucide-react';
 
 const safeArray = (val: any): any[] => {
@@ -20,6 +22,7 @@ const safeArray = (val: any): any[] => {
 
 export default function TailorProfileSettings() {
   const { user, updateUser } = useAuth();
+  const { toast } = useToast();
   const [form, setForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -61,6 +64,13 @@ export default function TailorProfileSettings() {
     }
     if (!file) return;
 
+    // Client-side pre-validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Invalid image file');
+      return;
+    }
+
     setUploadingAvatar(true);
     try {
       const res = await uploadsAPI.uploadImage(file);
@@ -68,9 +78,11 @@ export default function TailorProfileSettings() {
       setForm({ ...form, avatarUrl: newAvatarUrl });
       
       await updateUser({ ...form, avatarUrl: newAvatarUrl });
+      toast.success('Profile photo updated successfully!');
       setMessage('Profile photo updated successfully!');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.response?.data?.error || 'Failed to upload avatar image');
       setMessage('Failed to upload avatar image');
     } finally {
       setUploadingAvatar(false);

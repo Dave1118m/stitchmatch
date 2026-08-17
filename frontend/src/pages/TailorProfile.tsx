@@ -122,7 +122,7 @@ export default function TailorProfile() {
               <div className="flex items-center justify-center md:justify-start mt-2">
                 <Star className="h-5 w-5 text-yellow-400 fill-current" />
                 <span className={`text-lg font-semibold ml-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {tailor.averageRating ? tailor.averageRating.toFixed(1) : 'New'}
+                  {tailor.averageRating ? Number(tailor.averageRating).toFixed(1) : 'New'}
                 </span>
                 <span className={isDark ? 'text-gray-500 ml-1' : 'text-gray-500 ml-1'}>({tailor.reviewCount || 0} reviews)</span>
               </div>

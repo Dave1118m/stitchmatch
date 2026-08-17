@@ -15,13 +15,13 @@ export default function ReviewStats({ averageRating, totalReviews, distribution 
       <div className="flex items-center space-x-4">
         <div className="text-center">
           <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {averageRating.toFixed(1)}
+            {Number(averageRating || 0).toFixed(1)}
           </div>
           <div className="flex items-center justify-center mt-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`h-4 w-4 ${star <= Math.round(averageRating) ? 'text-yellow-400 fill-current' : (isDark ? 'text-gray-600' : 'text-gray-300')}`}
+                className={`h-4 w-4 ${star <= Math.round(Number(averageRating || 0)) ? 'text-yellow-400 fill-current' : (isDark ? 'text-gray-600' : 'text-gray-300')}`}
               />
             ))}
           </div>

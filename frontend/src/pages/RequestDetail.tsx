@@ -34,6 +34,7 @@ import { RequestDetailSkeleton } from '../components/SkeletonLoaders';
 import MeasurementInstructionsModal from '../components/MeasurementInstructionsModal';
 import AICameraScannerModal from '../components/AICameraScannerModal';
 import ThreeBodyAvatar from '../components/ThreeBodyAvatar';
+import { validateImageFile } from '../utils/fileValidation';
 
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
@@ -155,14 +156,24 @@ export default function RequestDetail() {
   const handleFileUpload = async (field: 'front' | 'side' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side pre-validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Invalid photo file');
+      e.target.value = '';
+      return;
+    }
+
     setUploadingPhotoField(field);
     try {
       const res = await uploadsAPI.uploadImage(file);
       if (field === 'front') setPhotos((prev) => ({ ...prev, frontPhotoUrl: res.data.url }));
       if (field === 'side') setPhotos((prev) => ({ ...prev, sidePhotoUrl: res.data.url }));
       if (field === 'back') setPhotos((prev) => ({ ...prev, backPhotoUrl: res.data.url }));
+      toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} angle photo selected!`);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to upload photo file');
+      toast.error(err.response?.data?.error || 'Failed to upload photo file');
     } finally {
       setUploadingPhotoField(null);
     }

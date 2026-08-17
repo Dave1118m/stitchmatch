@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { useToast } from '../context/ToastContext';
 import { productsAPI, uploadsAPI } from '../lib/api';
+import { validateImageFile } from '../utils/fileValidation';
 import { Package, Plus, Trash2, Edit2, Image as ImageIcon, UploadCloud } from 'lucide-react';
 
 export default function ProductManager() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const isDark = useDarkMode();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,13 +39,21 @@ export default function ProductManager() {
     }
     if (!file) return;
 
+    // Client-side pre-validation
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast.error(validation.error || 'Invalid product image');
+      return;
+    }
+
     setUploadingImage(true);
     try {
       const res = await uploadsAPI.uploadImage(file);
       setForm({ ...form, images: [...form.images, { url: res.data.url, isPrimary: form.images.length === 0 }] });
-    } catch (err) {
+      toast.success('Product image uploaded');
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to upload image');
+      toast.error(err.response?.data?.error || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
     }

@@ -227,7 +227,7 @@ export default function Tailors() {
                     </div>
                     <div className="flex items-center mt-1">
                       <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className={`text-sm font-medium ml-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{tailor.averageRating?.toFixed(1) || 'New'}</span>
+                      <span className={`text-sm font-medium ml-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{tailor.averageRating ? Number(tailor.averageRating).toFixed(1) : 'New'}</span>
                       <span className={`text-xs ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>({tailor.reviewCount || 0})</span>
                     </div>
                   </div>
