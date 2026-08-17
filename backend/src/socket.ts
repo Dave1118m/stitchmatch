@@ -137,6 +137,49 @@ export function setupSocketHandlers(io: Server, prisma: PrismaClient) {
       }
     });
 
+    // ==========================================
+    // WebRTC 1-on-1 Video Fitting Call Signaling
+    // ==========================================
+    socket.on('call_user', ({ userToCall, signalData, fromName, fromAvatar, conversationId }) => {
+      console.log(`Video call initiated: from ${socket.userId} (${fromName}) to ${userToCall}`);
+      io.to(`user:${userToCall}`).emit('incoming_call', {
+        signal: signalData,
+        from: socket.userId,
+        fromName,
+        fromAvatar,
+        conversationId,
+      });
+    });
+
+    socket.on('answer_call', ({ to, signal }) => {
+      console.log(`Video call answered: from ${socket.userId} to ${to}`);
+      io.to(`user:${to}`).emit('call_accepted', {
+        signal,
+        from: socket.userId,
+      });
+    });
+
+    socket.on('ice_candidate', ({ to, candidate }) => {
+      io.to(`user:${to}`).emit('receive_ice_candidate', {
+        candidate,
+        from: socket.userId,
+      });
+    });
+
+    socket.on('reject_call', ({ to }) => {
+      console.log(`Video call rejected: from ${socket.userId} to ${to}`);
+      io.to(`user:${to}`).emit('call_rejected', {
+        from: socket.userId,
+      });
+    });
+
+    socket.on('end_call', ({ to }) => {
+      console.log(`Video call ended: by ${socket.userId} for ${to}`);
+      io.to(`user:${to}`).emit('call_ended', {
+        from: socket.userId,
+      });
+    });
+
     // Handle disconnect
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.userId}`);

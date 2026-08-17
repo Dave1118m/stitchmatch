@@ -19,7 +19,7 @@ interface Conversation {
   unreadCount: number;
 }
 
-export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function ChatSidebar({ isOpen, onClose, isInline = false }: { isOpen: boolean; onClose: () => void; isInline?: boolean }) {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,8 +49,8 @@ export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
 
   return (
     <>
-      {/* Overlay for mobile */}
-      {isOpen && (
+      {/* Overlay for mobile drawer */}
+      {!isInline && isOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={onClose}
@@ -59,12 +59,14 @@ export default function ChatSidebar({ isOpen, onClose }: { isOpen: boolean; onCl
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 w-80 max-w-[85vw] ${
+        className={`${
+          isInline
+            ? 'w-full h-full rounded-2xl border shadow-sm'
+            : `fixed inset-y-0 left-0 w-80 max-w-[85vw] shadow-2xl transform transition-transform duration-300 z-50 ${
+                isOpen ? 'translate-x-0' : '-translate-x-full'
+              } lg:translate-x-0 lg:static lg:w-full lg:h-full lg:shadow-none lg:rounded-2xl lg:border`
+        } ${
           isDark ? 'bg-slate-900 border-slate-700/60' : 'bg-slate-100/90 border-slate-200/90'
-        } shadow-2xl transform transition-transform duration-300 z-50 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:w-full lg:h-full lg:shadow-none lg:rounded-2xl lg:border ${
-          isDark ? 'lg:border-slate-700/60' : 'lg:border-slate-200/90'
         } flex flex-col overflow-hidden p-2 sm:p-3`}
       >
         {/* Header */}

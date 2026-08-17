@@ -204,7 +204,7 @@ router.put('/profile', authenticate, authorize('tailor'), validateBody(UpdateTai
   }
 });
 
-// Add portfolio image with title/description
+// Add portfolio item (tailor only)
 router.post('/portfolio', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
@@ -214,47 +214,37 @@ router.post('/portfolio', authenticate, authorize('tailor'), async (req: AuthReq
       return res.status(400).json({ error: 'Image URL is required' });
     }
 
-    const tailor = await prisma.tailor.findUnique({ where: { id: req.userId } });
-    if (!tailor) return res.status(404).json({ error: 'Tailor not found' });
-
-    const portfolio = parseJsonArray(tailor.portfolioImages);
-    const newItem = JSON.stringify({ imageUrl, title: title || '', description: description || '' });
-    portfolio.push(newItem);
-
-    const updated = await prisma.tailor.update({
-      where: { id: req.userId },
-      data: { portfolioImages: serializeJson(portfolio) },
+    const product = await prisma.product.create({
+      data: {
+        name: title || 'Custom Tailoring Portfolio',
+        description: description || '',
+        basePrice: 0,
+        tailorId: req.userId!,
+        images: {
+          create: [{ url: imageUrl, isPrimary: true }],
+        },
+      },
+      include: { images: true },
     });
 
-    res.json({ portfolio: parseJsonArray(updated.portfolioImages) });
+    res.json({ product });
   } catch (error) {
     console.error('Add portfolio error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Delete portfolio image by index
-router.delete('/portfolio/:index', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
+// Delete portfolio item by ID
+router.delete('/portfolio/:id', authenticate, authorize('tailor'), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
-    const index = parseInt(req.params.index);
+    const { id } = req.params;
 
-    const tailor = await prisma.tailor.findUnique({ where: { id: req.userId } });
-    if (!tailor) return res.status(404).json({ error: 'Tailor not found' });
-
-    const portfolio = parseJsonArray(tailor.portfolioImages);
-    if (index < 0 || index >= portfolio.length) {
-      return res.status(400).json({ error: 'Invalid portfolio index' });
-    }
-
-    portfolio.splice(index, 1);
-
-    const updated = await prisma.tailor.update({
-      where: { id: req.userId },
-      data: { portfolioImages: serializeJson(portfolio) },
+    await prisma.product.deleteMany({
+      where: { id, tailorId: req.userId },
     });
 
-    res.json({ portfolio: parseJsonArray(updated.portfolioImages) });
+    res.json({ success: true });
   } catch (error) {
     console.error('Delete portfolio error:', error);
     res.status(500).json({ error: 'Internal server error' });

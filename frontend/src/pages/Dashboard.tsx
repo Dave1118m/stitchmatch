@@ -103,26 +103,26 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-4">
           {requests.map((request: any) => (
-            <Link key={request.id} to={`/requests/${request.id}`} className="card block hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 ${isDark ? 'bg-gray-700' : 'bg-primary-100'} rounded-full flex items-center justify-center`}>
-                    <Scissors className={`h-6 w-6 ${isDark ? 'text-primary-400' : 'text-primary-600'}`} />
+            <Link key={request.id} to={`/requests/${request.id}`} className="card block hover:shadow-md transition-all">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 ${isDark ? 'bg-gray-700' : 'bg-primary-100'} rounded-full flex items-center justify-center flex-shrink-0`}>
+                    <Scissors className={`h-5 w-5 sm:h-6 sm:w-6 ${isDark ? 'text-primary-400' : 'text-primary-600'}`} />
                   </div>
-                  <div>
-                    <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h3>
-                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <div className="min-w-0">
+                    <h3 className={`font-semibold text-sm sm:text-base truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h3>
+                    <p className={`text-xs sm:text-sm truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {user?.role === 'customer' ? `Tailor: ${request.tailor.name}` : `Customer: ${request.customer.name}`}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${isDark ? statusColorsDark[request.status] : statusColors[request.status]}`}>
+                <div className="flex items-center space-x-3 sm:space-x-4 self-start sm:self-auto">
+                  <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${isDark ? statusColorsDark[request.status] : statusColors[request.status]}`}>
                     {statusLabels[request.status]}
                   </span>
-                  <div className={`flex items-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <div className={`flex items-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     <MessageSquare className="h-4 w-4 mr-1" />
-                    <span className="text-xs">{request.conversation?._count?.messages || 0}</span>
+                    <span className="text-xs font-medium">{request.conversation?._count?.messages || 0}</span>
                   </div>
                 </div>
               </div>

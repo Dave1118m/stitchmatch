@@ -1,12 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { requestsAPI, measurementsAPI, ordersAPI, reviewsAPI, negotiationsAPI } from '../lib/api';
+import { requestsAPI, measurementsAPI, ordersAPI, reviewsAPI, negotiationsAPI, uploadsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useToast } from '../context/ToastContext';
-import { ArrowLeft, MessageSquare, CheckCircle, XCircle, Star, Camera, Scissors, DollarSign, Calendar, FileText, Printer } from 'lucide-react';
+import { showBrowserNotification } from '../lib/pushNotifications';
+import { 
+  ArrowLeft, 
+  MessageSquare, 
+  CheckCircle, 
+  XCircle, 
+  Star, 
+  Camera, 
+  Scissors, 
+  DollarSign, 
+  Calendar, 
+  FileText, 
+  Printer, 
+  Sparkles, 
+  Sliders, 
+  UploadCloud, 
+  Info,
+  Layers,
+  ShieldCheck,
+  CheckCircle2,
+  Upload,
+  Image as ImageIcon,
+  Move3d,
+  AlertCircle
+} from 'lucide-react';
 import ImageModal from '../components/ImageModal';
 import { RequestDetailSkeleton } from '../components/SkeletonLoaders';
+import MeasurementInstructionsModal from '../components/MeasurementInstructionsModal';
+import AICameraScannerModal from '../components/AICameraScannerModal';
+import ThreeBodyAvatar from '../components/ThreeBodyAvatar';
 
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
@@ -19,13 +46,33 @@ export default function RequestDetail() {
   const [request, setRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState({ frontPhotoUrl: '', sidePhotoUrl: '', backPhotoUrl: '' });
+  const [uploadingPhotoField, setUploadingPhotoField] = useState<'front' | 'side' | 'back' | null>(null);
   const [orderStatus, setOrderStatus] = useState('');
+  const [measurementViewTab, setMeasurementViewTab] = useState<'3d' | 'photos'>('3d');
   const [orderNotes, setOrderNotes] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [reviewReply, setReviewReply] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [modalImage, setModalImage] = useState<{ src: string; title: string } | null>(null);
+
+  // Measurement Guides & Camera Scanner State
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
+  const [showManualPhotoUpload, setShowManualPhotoUpload] = useState(false);
+  const [hasAgreedToInstructions, setHasAgreedToInstructions] = useState(false);
+
+  // Tailor Adjustments State
+  const [showAdjustmentsPanel, setShowAdjustmentsPanel] = useState(false);
+  const [adjustmentsForm, setAdjustmentsForm] = useState({
+    chest: '',
+    waist: '',
+    hip: '',
+    inseam: '',
+    shoulderWidth: '',
+    armLength: '',
+    note: '',
+  });
 
   // Negotiation state
   const [negotiations, setNegotiations] = useState<any[]>([]);
@@ -43,11 +90,8 @@ export default function RequestDetail() {
 
   const loadRequest = async () => {
     try {
-      console.log('Loading request with ID:', id);
       const res = await requestsAPI.getById(id!);
-      console.log('Request response:', res.data);
       setRequest(res.data.request);
-      // Load negotiations
       loadNegotiations();
     } catch (err) {
       console.error('Failed to load request', err);
@@ -67,12 +111,9 @@ export default function RequestDetail() {
 
   const handleAccept = async () => {
     try {
-      console.log('Accepting request:', id);
-      const res = await requestsAPI.accept(id!);
-      console.log('Accept response:', res.data);
+      await requestsAPI.accept(id!);
       loadRequest();
     } catch (err: any) {
-      console.error('Failed to accept:', err);
       alert(err.response?.data?.error || 'Failed to accept');
     }
   };
@@ -110,14 +151,89 @@ export default function RequestDetail() {
     }
   };
 
+  // Handle direct file upload from user device (phone gallery / computer)
+  const handleFileUpload = async (field: 'front' | 'side' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhotoField(field);
+    try {
+      const res = await uploadsAPI.uploadImage(file);
+      if (field === 'front') setPhotos((prev) => ({ ...prev, frontPhotoUrl: res.data.url }));
+      if (field === 'side') setPhotos((prev) => ({ ...prev, sidePhotoUrl: res.data.url }));
+      if (field === 'back') setPhotos((prev) => ({ ...prev, backPhotoUrl: res.data.url }));
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to upload photo file');
+    } finally {
+      setUploadingPhotoField(null);
+    }
+  };
+
+  // Upload Photos (Manual URL form / Selected Files)
   const handleUploadPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Duplicate pose check
+    if (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.frontPhotoUrl === photos.sidePhotoUrl) {
+      alert('⚠️ Photo Validation Error: The Front and Side photos appear to be identical. The AI requires 1 distinct Front pose and 1 separate 90° Side profile to measure chest and waist depth accurately.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await measurementsAPI.uploadPhotos(id!, photos);
+      setShowManualPhotoUpload(false);
+      showBrowserNotification('AI Measurement Processing', {
+        body: 'Your body scan photos are being analyzed by our tailoring AI engine.',
+      });
       loadRequest();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to upload photos');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Live Camera Scan Completion Handler
+  const handleCameraScanComplete = async (captured: { frontPhotoUrl: string; sidePhotoUrl: string; backPhotoUrl: string }) => {
+    setSubmitting(true);
+    try {
+      await measurementsAPI.uploadPhotos(id!, captured);
+      showBrowserNotification('AI Measurement Extraction Started', {
+        body: 'All 3 live camera angles received! Estimating tailoring dimensions.',
+      });
+      loadRequest();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to process camera scan');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Tailor Saves Measurement Adjustments
+  const handleSaveTailorAdjustments = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const adjustmentItem: any = {
+        note: adjustmentsForm.note || 'Tailor ease adjustment',
+        timestamp: new Date().toISOString(),
+      };
+      if (adjustmentsForm.chest) adjustmentItem.chest = Number(adjustmentsForm.chest);
+      if (adjustmentsForm.waist) adjustmentItem.waist = Number(adjustmentsForm.waist);
+      if (adjustmentsForm.hip) adjustmentItem.hip = Number(adjustmentsForm.hip);
+      if (adjustmentsForm.inseam) adjustmentItem.inseam = Number(adjustmentsForm.inseam);
+      if (adjustmentsForm.shoulderWidth) adjustmentItem.shoulderWidth = Number(adjustmentsForm.shoulderWidth);
+      if (adjustmentsForm.armLength) adjustmentItem.armLength = Number(adjustmentsForm.armLength);
+
+      await measurementsAPI.addAdjustments(id!, {
+        adjustments: [adjustmentItem],
+      });
+
+      setShowAdjustmentsPanel(false);
+      setAdjustmentsForm({ chest: '', waist: '', hip: '', inseam: '', shoulderWidth: '', armLength: '', note: '' });
+      loadRequest();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to save adjustments');
     } finally {
       setSubmitting(false);
     }
@@ -151,6 +267,7 @@ export default function RequestDetail() {
       setSubmitting(false);
     }
   };
+
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -229,11 +346,29 @@ export default function RequestDetail() {
       </Link>
 
       {/* Image Modal Lightbox */}
-      <ImageModal
-        isOpen={!!modalImage}
-        src={modalImage?.src || null}
-        title={modalImage?.title}
-        onClose={() => setModalImage(null)}
+      <ImageModal 
+        isOpen={!!modalImage} 
+        onClose={() => setModalImage(null)} 
+        src={modalImage?.src || null} 
+        title={modalImage?.title || ''} 
+      />
+
+      {/* Measurement Instructions Guide Modal */}
+      <MeasurementInstructionsModal
+        isOpen={showInstructions}
+        onClose={() => setShowInstructions(false)}
+        onComplete={() => {
+          setShowInstructions(false);
+          setHasAgreedToInstructions(true);
+          setShowCameraScanner(true);
+        }}
+      />
+
+      {/* Live AI Camera Scanner Modal with Gyroscope Sensor */}
+      <AICameraScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onComplete={handleCameraScanComplete}
       />
 
       {/* Status Progress */}
@@ -256,19 +391,19 @@ export default function RequestDetail() {
         </div>
         <div className="flex items-center justify-between">
           {statusFlow.map((status, index) => (
-            <div key={status} className="flex items-center">
-              <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                index <= currentStep ? 'bg-primary-600 text-white' : (isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500')
+            <div key={status} className="flex items-center flex-1 last:flex-none">
+              <div className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-semibold flex-shrink-0 ${
+                index <= currentStep ? 'bg-primary-600 text-white shadow-sm' : (isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500')
               }`}>
-                {index < currentStep ? <CheckCircle className="h-5 w-5" /> : index + 1}
+                {index < currentStep ? <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" /> : index + 1}
               </div>
               {index < statusFlow.length - 1 && (
-                <div className={`w-12 md:w-20 h-1 mx-1 ${index < currentStep ? 'bg-primary-600' : (isDark ? 'bg-gray-700' : 'bg-gray-200')}`} />
+                <div className={`flex-1 h-1 mx-1 sm:mx-2 rounded-full transition-all ${index < currentStep ? 'bg-primary-600' : (isDark ? 'bg-gray-700' : 'bg-gray-200')}`} />
               )}
             </div>
           ))}
         </div>
-        <div className={`flex justify-between mt-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+        <div className={`flex justify-between mt-2 text-[10px] sm:text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           <span>Pending</span><span>Discuss</span><span>Agreed</span><span>Progress</span><span>Done</span>
         </div>
       </div>
@@ -336,123 +471,526 @@ export default function RequestDetail() {
           {/* AI Body Measurement Section */}
           {(isCustomer || isTailor) && (request.status === 'Agreed' || request.status === 'In_Progress' || request.measurement) && (
             <div className="card">
-              <h2 className={`font-semibold mb-3 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                <Camera className="h-5 w-5 mr-2 text-primary-600" />
-                AI Body Measurements & Specs
-              </h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className={`font-semibold flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  <Camera className="h-5 w-5 mr-2 text-primary-600" />
+                  AI Body Measurements & Specs
+                </h2>
+                {request.measurement && (
+                  <button 
+                    onClick={() => setShowInstructions(true)}
+                    className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center"
+                  >
+                    <Info className="w-3.5 h-3.5 mr-1" />
+                    <span>View Guide</span>
+                  </button>
+                )}
+              </div>
 
               {request.measurement ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize ${
-                      request.measurement.aiStatus === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
-                      request.measurement.aiStatus === 'processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' :
-                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+                  {/* AI Status & Confidence Banner */}
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${
+                      request.measurement.aiStatus === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' :
+                      request.measurement.aiStatus === 'processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 animate-pulse' :
+                      'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300'
                     }`}>
-                      AI Status: {request.measurement.aiStatus}
+                      {request.measurement.aiStatus === 'processing' ? 'AI Analyzing Contours...' : `AI Status: ${request.measurement.aiStatus}`}
                     </span>
-                    {request.measurement.aiConfidence && (
-                      <span className="text-xs font-semibold text-primary-600">
+                    {request.measurement.aiConfidence && request.measurement.aiStatus === 'completed' && (
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
+                        <Sparkles className="w-3.5 h-3.5 mr-1" />
                         Confidence: {Math.round(Number(request.measurement.aiConfidence))}%
                       </span>
                     )}
                   </div>
 
+                  {/* AI Needs Retake / Rejection Notice */}
+                  {(request.measurement.aiStatus === 'needs_retake' || request.measurement.aiStatus === 'failed') && (
+                    <div className={`p-4 rounded-2xl border space-y-2.5 animate-fadeIn ${
+                      isDark ? 'bg-amber-950/30 border-amber-500/40 text-amber-200' : 'bg-amber-50 border-amber-300 text-amber-900'
+                    }`}>
+                      <div className="flex items-center space-x-2 font-bold text-sm">
+                        <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                        <span>AI Scan Alert: Pose Inconsistency Detected</span>
+                      </div>
+                      <p className="text-xs leading-relaxed opacity-90">
+                        The AI engine could not calculate 3D measurements because the uploaded photos appear to be duplicates (such as submitting the front pose twice instead of a 90° side profile). A distinct side angle is required to estimate depth and posture slope.
+                      </p>
+                      {isCustomer && (
+                        <div className="flex items-center space-x-2 pt-1">
+                          <button
+                            onClick={() => setShowCameraScanner(true)}
+                            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs flex items-center space-x-1.5 shadow-md transition-all"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Retake with Live Camera</span>
+                          </button>
+                          <button
+                            onClick={() => setShowManualPhotoUpload(true)}
+                            className="px-3.5 py-2 rounded-xl border border-amber-400/50 hover:bg-amber-900/20 text-xs font-semibold transition-all"
+                          >
+                            Re-upload Distinct Photos
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 6 Core AI Measurement Metrics Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-sm">
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chest</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.chest ? `${Number(request.measurement.chest).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chest</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.chest ? `${Number(request.measurement.chest).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Waist</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.waist ? `${Number(request.measurement.waist).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Waist</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.waist ? `${Number(request.measurement.waist).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Hip</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.hip ? `${Number(request.measurement.hip).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Hip</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.hip ? `${Number(request.measurement.hip).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Inseam</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.inseam ? `${Number(request.measurement.inseam).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Inseam</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.inseam ? `${Number(request.measurement.inseam).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Shoulders</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.shoulderWidth ? `${Number(request.measurement.shoulderWidth).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Shoulders</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.shoulderWidth ? `${Number(request.measurement.shoulderWidth).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
-                    <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
-                      <span className={`block text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Arm Length</span>
-                      <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.measurement.armLength ? `${Number(request.measurement.armLength).toFixed(1)} cm` : 'Pending'}</span>
+                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
+                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Arm Length</span>
+                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.measurement.armLength ? `${Number(request.measurement.armLength).toFixed(1)} cm` : 'Pending'}
+                      </span>
                     </div>
                   </div>
 
-                  {(request.measurement.frontPhotoUrl || request.measurement.sidePhotoUrl || request.measurement.backPhotoUrl) && (
-                    <div>
-                      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1 font-medium`}>Measurement Photos (Click to Zoom):</p>
-                      <div className="flex gap-2.5 pt-1.5 border-t border-gray-200 dark:border-gray-700">
-                        {request.measurement.frontPhotoUrl && (
-                          <img
-                            src={request.measurement.frontPhotoUrl}
-                            alt="Front View"
-                            onClick={() => setModalImage({ src: request.measurement.frontPhotoUrl, title: 'Front Measurement View' })}
-                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
-                          />
-                        )}
-                        {request.measurement.sidePhotoUrl && (
-                          <img
-                            src={request.measurement.sidePhotoUrl}
-                            alt="Side View"
-                            onClick={() => setModalImage({ src: request.measurement.sidePhotoUrl, title: 'Side Measurement View' })}
-                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
-                          />
-                        )}
-                        {request.measurement.backPhotoUrl && (
-                          <img
-                            src={request.measurement.backPhotoUrl}
-                            alt="Back View"
-                            onClick={() => setModalImage({ src: request.measurement.backPhotoUrl, title: 'Back Measurement View' })}
-                            className="w-16 h-20 object-cover rounded-xl border border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-200"
-                          />
+                  {/* View Tabs: 3D Body Avatar Visualizer VS Scanned Photos */}
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-1 p-1 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-semibold">
+                        <button
+                          onClick={() => setMeasurementViewTab('3d')}
+                          className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+                            measurementViewTab === '3d'
+                              ? 'bg-primary-600 text-white shadow-sm'
+                              : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <Move3d className="w-3.5 h-3.5" />
+                          <span>3D Interactive Avatar</span>
+                        </button>
+
+                        <button
+                          onClick={() => setMeasurementViewTab('photos')}
+                          className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 ${
+                            measurementViewTab === 'photos'
+                              ? 'bg-primary-600 text-white shadow-sm'
+                              : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <ImageIcon className="w-3.5 h-3.5" />
+                          <span>Scanned Photos</span>
+                        </button>
+                      </div>
+
+                      <span className={`text-[11px] font-medium hidden sm:inline ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {measurementViewTab === '3d' ? '360° Touch / Drag to rotate avatar' : 'Click photos to zoom'}
+                      </span>
+                    </div>
+
+                    {/* Tab 1: 3D Body Avatar Visualizer */}
+                    {measurementViewTab === '3d' && (
+                      <div className="animate-fadeIn">
+                        <ThreeBodyAvatar
+                          measurements={{
+                            chest: request.measurement.chest,
+                            waist: request.measurement.waist,
+                            hip: request.measurement.hip,
+                            inseam: request.measurement.inseam,
+                            shoulderWidth: request.measurement.shoulderWidth,
+                            armLength: request.measurement.armLength,
+                          }}
+                          isDark={isDark}
+                        />
+                      </div>
+                    )}
+
+                    {/* Tab 2: Customer Measurement Photos Gallery */}
+                    {measurementViewTab === 'photos' && (
+                      <div className="animate-fadeIn">
+                        {(request.measurement.frontPhotoUrl || request.measurement.sidePhotoUrl || request.measurement.backPhotoUrl) ? (
+                          <div className="grid grid-cols-3 gap-2.5">
+                            {request.measurement.frontPhotoUrl && (
+                              <div 
+                                onClick={() => setModalImage({ src: request.measurement.frontPhotoUrl, title: 'Front Measurement View' })}
+                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                              >
+                                <img
+                                  src={request.measurement.frontPhotoUrl}
+                                  alt="Front View"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                />
+                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
+                                  1. Front
+                                </span>
+                              </div>
+                            )}
+                            {request.measurement.sidePhotoUrl && (
+                              <div 
+                                onClick={() => setModalImage({ src: request.measurement.sidePhotoUrl, title: 'Side Measurement View' })}
+                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                              >
+                                <img
+                                  src={request.measurement.sidePhotoUrl}
+                                  alt="Side View"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                />
+                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
+                                  2. Side
+                                </span>
+                              </div>
+                            )}
+                            {request.measurement.backPhotoUrl && (
+                              <div 
+                                onClick={() => setModalImage({ src: request.measurement.backPhotoUrl, title: 'Back Measurement View' })}
+                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                              >
+                                <img
+                                  src={request.measurement.backPhotoUrl}
+                                  alt="Back View"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                />
+                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
+                                  3. Back
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className={`text-xs text-center py-6 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No photos attached to this measurement record.</p>
                         )}
                       </div>
+                    )}
+                  </div>
+
+                  {/* Tailor Manual Fit Adjustments Workspace */}
+                  {isTailor && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                          Tailor Manual Ease Adjustments
+                        </span>
+                        <button
+                          onClick={() => setShowAdjustmentsPanel(!showAdjustmentsPanel)}
+                          className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 font-semibold flex items-center space-x-1"
+                        >
+                          <Sliders className="w-3.5 h-3.5 mr-1" />
+                          <span>{showAdjustmentsPanel ? 'Hide Adjustments' : '+ Adjust Specs'}</span>
+                        </button>
+                      </div>
+
+                      {showAdjustmentsPanel && (
+                        <form onSubmit={handleSaveTailorAdjustments} className={`mt-3 p-3.5 rounded-xl border space-y-3 ${
+                          isDark ? 'bg-gray-800/90 border-gray-700' : 'bg-gray-50 border-gray-200'
+                        }`}>
+                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Enter custom ease/allowances (+/- cm) or custom fit adjustments:
+                          </p>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Chest (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="+1.5"
+                                value={adjustmentsForm.chest}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, chest: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Waist (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="+2.0"
+                                value={adjustmentsForm.waist}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, waist: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Hip (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="+1.0"
+                                value={adjustmentsForm.hip}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, hip: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Inseam (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="-0.5"
+                                value={adjustmentsForm.inseam}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, inseam: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Shoulders (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="+1.0"
+                                value={adjustmentsForm.shoulderWidth}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, shoulderWidth: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] uppercase font-bold text-gray-500">Arm Length (+/- cm)</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                placeholder="+1.5"
+                                value={adjustmentsForm.armLength}
+                                onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, armLength: e.target.value })}
+                                className="input-field text-xs py-1.5"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] uppercase font-bold text-gray-500">Tailoring Notes</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., Added extra ease for structured tuxedo drape"
+                              value={adjustmentsForm.note}
+                              onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, note: e.target.value })}
+                              className="input-field text-xs py-1.5"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            disabled={submitting}
+                            className="btn-primary w-full text-xs py-2 font-semibold flex items-center justify-center space-x-1"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Save Tailor Adjustments</span>
+                          </button>
+                        </form>
+                      )}
                     </div>
                   )}
                 </div>
               ) : isCustomer ? (
-                <form onSubmit={handleUploadPhotos} className="space-y-3">
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Provide Front, Side, and Back photos to calculate precise 3D body measurements.
-                  </p>
-                  <input
-                    type="url"
-                    placeholder="Front Photo URL (e.g., https://...)"
-                    value={photos.frontPhotoUrl}
-                    onChange={(e) => setPhotos({ ...photos, frontPhotoUrl: e.target.value })}
-                    className="input-field text-xs"
-                    required
-                  />
-                  <input
-                    type="url"
-                    placeholder="Side Photo URL"
-                    value={photos.sidePhotoUrl}
-                    onChange={(e) => setPhotos({ ...photos, sidePhotoUrl: e.target.value })}
-                    className="input-field text-xs"
-                    required
-                  />
-                  <input
-                    type="url"
-                    placeholder="Back Photo URL"
-                    value={photos.backPhotoUrl}
-                    onChange={(e) => setPhotos({ ...photos, backPhotoUrl: e.target.value })}
-                    className="input-field text-xs"
-                    required
-                  />
-                  <button type="submit" disabled={submitting} className="btn-primary w-full text-xs flex items-center justify-center space-x-2">
-                    <Camera className="h-4 w-4" />
-                    <span>{submitting ? 'Analyzing Photos...' : 'Submit Body Photos for AI Scan'}</span>
-                  </button>
-                </form>
+                /* Customer has not submitted measurements yet */
+                <div className="space-y-4 py-2">
+                  <div className="text-center">
+                    <div className={`p-3 rounded-full inline-flex mb-3 ${isDark ? 'bg-primary-950 text-primary-400' : 'bg-primary-50 text-primary-600'}`}>
+                      <Camera className="w-8 h-8" />
+                    </div>
+                    <h3 className={`text-base sm:text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      Ready for AI Body Measurement?
+                    </h3>
+                    <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Scan your body using your camera or upload 3 reference photos to extract millimeter-accurate dimensions for your tailor.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons: Live AI Camera Scan OR Upload */}
+                  <div className="space-y-2.5">
+                    <button
+                      onClick={() => setShowCameraScanner(true)}
+                      className="btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Camera className="w-5 h-5" />
+                      <span>Launch Live AI Camera Scan</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white">
+                        Gyroscope 90° Level
+                      </span>
+                    </button>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setShowInstructions(true)}
+                        className="btn-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center space-x-1"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                        <span>View Photo Guide</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowManualPhotoUpload(!showManualPhotoUpload)}
+                        className="btn-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center space-x-1"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>{showManualPhotoUpload ? 'Hide Uploader' : 'Upload Photos (Files / URLs)'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Photo Upload Form: Direct File Browser + URL Inputs */}
+                  {showManualPhotoUpload && (
+                    <form onSubmit={handleUploadPhotos} className={`p-4 rounded-xl border space-y-4 ${
+                      isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div>
+                        <p className={`text-xs font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                          Select or Upload 3 Required Poses:
+                        </p>
+                        <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          You can browse photos directly from your phone/computer or paste image URLs.
+                        </p>
+                      </div>
+
+                      {/* 3 Photo Upload Cards Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Front Photo Card */}
+                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <span className="text-xs font-bold mb-1.5">1. Front Pose</span>
+                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                            {photos.frontPhotoUrl ? (
+                              <img src={photos.frontPhotoUrl} alt="Front Preview" className="w-full h-full object-cover" />
+                            ) : uploadingPhotoField === 'front' ? (
+                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="text-gray-400 flex flex-col items-center">
+                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                <span className="text-[10px]">No file selected</span>
+                              </div>
+                            )}
+                          </div>
+                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                            <Upload className="w-3 h-3" />
+                            <span>Browse File</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload('front', e)}
+                            />
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="or paste URL"
+                            value={photos.frontPhotoUrl}
+                            onChange={(e) => setPhotos({ ...photos, frontPhotoUrl: e.target.value })}
+                            className="input-field text-[10px] py-1 mt-1.5 w-full"
+                          />
+                        </div>
+
+                        {/* Side Photo Card */}
+                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <span className="text-xs font-bold mb-1.5">2. Side Pose</span>
+                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                            {photos.sidePhotoUrl ? (
+                              <img src={photos.sidePhotoUrl} alt="Side Preview" className="w-full h-full object-cover" />
+                            ) : uploadingPhotoField === 'side' ? (
+                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="text-gray-400 flex flex-col items-center">
+                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                <span className="text-[10px]">No file selected</span>
+                              </div>
+                            )}
+                          </div>
+                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                            <Upload className="w-3 h-3" />
+                            <span>Browse File</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload('side', e)}
+                            />
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="or paste URL"
+                            value={photos.sidePhotoUrl}
+                            onChange={(e) => setPhotos({ ...photos, sidePhotoUrl: e.target.value })}
+                            className="input-field text-[10px] py-1 mt-1.5 w-full"
+                          />
+                        </div>
+
+                        {/* Back Photo Card */}
+                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <span className="text-xs font-bold mb-1.5">3. Back Pose</span>
+                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                            {photos.backPhotoUrl ? (
+                              <img src={photos.backPhotoUrl} alt="Back Preview" className="w-full h-full object-cover" />
+                            ) : uploadingPhotoField === 'back' ? (
+                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="text-gray-400 flex flex-col items-center">
+                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                <span className="text-[10px]">No file selected</span>
+                              </div>
+                            )}
+                          </div>
+                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                            <Upload className="w-3 h-3" />
+                            <span>Browse File</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload('back', e)}
+                            />
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="or paste URL"
+                            value={photos.backPhotoUrl}
+                            onChange={(e) => setPhotos({ ...photos, backPhotoUrl: e.target.value })}
+                            className="input-field text-[10px] py-1 mt-1.5 w-full"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl || !photos.backPhotoUrl}
+                        className="btn-primary w-full text-xs py-2.5 flex items-center justify-center space-x-2 font-bold disabled:opacity-50"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        <span>{submitting ? 'Analyzing Photos...' : 'Submit 3 Poses to AI Measurement Engine'}</span>
+                      </button>
+                    </form>
+                  )}
+                </div>
               ) : (
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Awaiting customer photo upload for AI measurement extraction.</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Awaiting customer body scan or photo upload for AI measurement extraction.
+                </p>
               )}
             </div>
           )}

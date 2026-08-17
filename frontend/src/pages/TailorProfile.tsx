@@ -16,7 +16,7 @@ export default function TailorProfile() {
   const [tailor, setTailor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showRequest, setShowRequest] = useState(false);
-  const [requestForm, setRequestForm] = useState({ garmentType: '', fabricPreference: '', deadline: '', budget: '', notes: '' });
+  const [requestForm, setRequestForm] = useState({ garmentType: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,34 +168,46 @@ export default function TailorProfile() {
 
         {/* Request Form */}
         {showRequest && (
-          <div className="card mb-6">
-            <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Send Service Request</h2>
-            {error && <div className={`mb-4 rounded-md ${isDark ? 'bg-red-900/30 border border-red-800 p-3 text-sm text-red-300' : 'bg-red-50 border border-red-200 p-3 text-sm text-red-700'}`}>{error}</div>}
+          <div className="card mb-6 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Send Custom Request</h2>
+              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Pricing & deadlines will be discussed directly via chat or call
+              </span>
+            </div>
+            {error && <div className={`mb-4 rounded-xl ${isDark ? 'bg-red-900/30 border border-red-800 p-3 text-sm text-red-300' : 'bg-red-50 border border-red-200 p-3 text-sm text-red-700'}`}>{error}</div>}
             <form onSubmit={handleSubmitRequest} className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Garment Type *</label>
-                <input required value={requestForm.garmentType} onChange={(e) => setRequestForm({ ...requestForm, garmentType: e.target.value })} className="input-field" placeholder="e.g. Suit, Dress, Shirt" />
+                <label className={`block text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                  Garment / Request Title *
+                </label>
+                <input 
+                  required 
+                  value={requestForm.garmentType} 
+                  onChange={(e) => setRequestForm({ ...requestForm, garmentType: e.target.value })} 
+                  className="input-field" 
+                  placeholder="e.g., Custom 3-Piece Tuxedo, Evening Silk Dress, Tailored Blazer..." 
+                />
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Fabric Preference</label>
-                <input value={requestForm.fabricPreference} onChange={(e) => setRequestForm({ ...requestForm, fabricPreference: e.target.value })} className="input-field" placeholder="e.g. Cotton, Wool, Silk" />
+                <label className={`block text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                  Request Details & Instructions *
+                </label>
+                <textarea 
+                  required
+                  value={requestForm.notes} 
+                  onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })} 
+                  className="input-field" 
+                  rows={4} 
+                  placeholder="Describe what you want made, your preferred style, fit requirements, fabric ideas, or any questions you'd like to discuss with the tailor..." 
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Deadline</label>
-                  <input type="date" value={requestForm.deadline} onChange={(e) => setRequestForm({ ...requestForm, deadline: e.target.value })} className="input-field" />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Budget ($)</label>
-                  <input type="number" value={requestForm.budget} onChange={(e) => setRequestForm({ ...requestForm, budget: e.target.value })} className="input-field" />
-                </div>
-              </div>
-              <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Notes</label>
-                <textarea value={requestForm.notes} onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })} className="input-field" rows={3} placeholder="Any specific requirements..." />
-              </div>
-              <button type="submit" disabled={submitting} className="btn-primary w-full">
-                {submitting ? 'Sending...' : 'Send Request'}
+              <button 
+                type="submit" 
+                disabled={submitting || !requestForm.garmentType.trim() || !requestForm.notes.trim()} 
+                className="btn-primary w-full py-3 font-bold rounded-xl flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all"
+              >
+                {submitting ? 'Sending Request...' : 'Send Request to Tailor'}
               </button>
             </form>
           </div>

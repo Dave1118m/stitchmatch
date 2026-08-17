@@ -20,6 +20,7 @@ export default function ProductManager() {
     options: [] as { name: string; values: string[] }[],
   });
 
+
   const [colorName, setColorName] = useState('');
   const [colorHex, setColorHex] = useState('#000000');
   const [optName, setOptName] = useState('');
@@ -143,17 +144,17 @@ export default function ProductManager() {
           <form onSubmit={handleSave} className="space-y-4">
             <div>
               <label className="block text-sm mb-1">Name</label>
-              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input-field" required />
+              <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-field" required />
             </div>
             <div>
               <label className="block text-sm mb-1">Description</label>
-              <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input-field" rows={2} />
+              <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-field" rows={2} />
             </div>
-            
+
             {/* Images */}
             <div>
               <label className="block text-sm font-medium mb-1">Images</label>
-              <div 
+              <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleImageUpload}
                 className={`border-2 border-dashed rounded-lg p-3 text-center ${isDark ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'} cursor-pointer mb-3 transition-colors flex items-center justify-center gap-3`}
@@ -170,7 +171,7 @@ export default function ProductManager() {
                 {form.images.map((img, i) => (
                   <div key={i} className="relative w-16 h-16 border rounded overflow-hidden">
                     <img src={img.url} className="w-full h-full object-cover" />
-                    <button type="button" onClick={() => setForm({...form, images: form.images.filter((_, idx) => idx !== i)})} className="absolute top-0 right-0 bg-red-500 text-white rounded-bl p-0.5">
+                    <button type="button" onClick={() => setForm({ ...form, images: form.images.filter((_, idx) => idx !== i) })} className="absolute top-0 right-0 bg-red-500 text-white rounded-bl p-0.5">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
@@ -186,7 +187,7 @@ export default function ProductManager() {
                 <input type="color" value={colorHex} onChange={e => setColorHex(e.target.value)} className="h-10 w-10 border-none p-0 cursor-pointer" />
                 <button type="button" onClick={() => {
                   if (colorName) {
-                    setForm({...form, colors: [...form.colors, { name: colorName, hexCode: colorHex }]});
+                    setForm({ ...form, colors: [...form.colors, { name: colorName, hexCode: colorHex }] });
                     setColorName('');
                   }
                 }} className="btn-secondary">Add</button>
@@ -195,7 +196,7 @@ export default function ProductManager() {
                 {form.colors.map((c, i) => (
                   <span key={i} className={`flex items-center gap-1 px-2 py-1 rounded text-sm ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: c.hexCode }}></span> {c.name}
-                    <button type="button" onClick={() => setForm({...form, colors: form.colors.filter((_, idx) => idx !== i)})} className="ml-1 text-red-500 hover:text-red-700">&times;</button>
+                    <button type="button" onClick={() => setForm({ ...form, colors: form.colors.filter((_, idx) => idx !== i) })} className="ml-1 text-red-500 hover:text-red-700">&times;</button>
                   </span>
                 ))}
               </div>
@@ -209,7 +210,7 @@ export default function ProductManager() {
                 <input value={optVals} onChange={e => setOptVals(e.target.value)} placeholder="Values (comma separated)" className="input-field flex-1" />
                 <button type="button" onClick={() => {
                   if (optName && optVals) {
-                    setForm({...form, options: [...form.options, { name: optName, values: optVals.split(',').map(s=>s.trim()) }]});
+                    setForm({ ...form, options: [...form.options, { name: optName, values: optVals.split(',').map(s => s.trim()) }] });
                     setOptName(''); setOptVals('');
                   }
                 }} className="btn-secondary">Add</button>
@@ -218,7 +219,7 @@ export default function ProductManager() {
                 {form.options.map((o, i) => (
                   <div key={i} className={`text-sm p-2 rounded flex justify-between ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
                     <span><strong>{o.name}:</strong> {o.values.join(', ')}</span>
-                    <button type="button" onClick={() => setForm({...form, options: form.options.filter((_, idx) => idx !== i)})} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => setForm({ ...form, options: form.options.filter((_, idx) => idx !== i) })} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
               </div>
@@ -243,7 +244,7 @@ export default function ProductManager() {
               products.map(p => (
                 <div key={p.id} className={`flex items-start gap-4 p-3 rounded-lg border ${isDark ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white'}`}>
                   {p.images && p.images.length > 0 ? (
-                    <img src={p.images.find((i:any)=>i.isPrimary)?.url || p.images[0].url} alt={p.name} className="w-20 h-20 object-cover rounded" />
+                    <img src={p.images.find((i: any) => i.isPrimary)?.url || p.images[0].url} alt={p.name} className="w-20 h-20 object-cover rounded" />
                   ) : (
                     <div className="w-20 h-20 bg-gray-200 flex items-center justify-center rounded">
                       <ImageIcon className="text-gray-400" />

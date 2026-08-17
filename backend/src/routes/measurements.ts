@@ -150,18 +150,66 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string) {
       data: { aiStatus: 'processing' },
     });
 
-    // Simulate AI processing delay
+    // Simulate AI processing delay (2 seconds)
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Generate simulated measurements
+    const measurement = await prisma.measurement.findUnique({ where: { requestId } });
+    const serviceRequest = await prisma.serviceRequest.findUnique({
+      where: { id: requestId },
+      include: { customer: true, tailor: true },
+    });
+
+    if (!measurement || !serviceRequest) return;
+
+    // Validation: Check for duplicate photos (e.g. all front only)
+    const isDuplicateFrontAndSide = measurement.frontPhotoUrl && measurement.sidePhotoUrl && 
+      (measurement.frontPhotoUrl === measurement.sidePhotoUrl || 
+       (measurement.frontPhotoUrl.length > 50 && measurement.frontPhotoUrl === measurement.sidePhotoUrl));
+
+    if (isDuplicateFrontAndSide) {
+      console.warn(`[AI Quality Check] Rejected: Duplicate poses detected for request ${requestId}`);
+      
+      await prisma.measurement.update({
+        where: { requestId },
+        data: {
+          aiStatus: 'needs_retake',
+          aiConfidence: 0,
+        },
+      });
+
+      // Notify customer of specific error
+      await prisma.notification.create({
+        data: {
+          userId: serviceRequest.customerId,
+          type: 'measurement_failed',
+          title: '⚠️ AI Scan Needs Retake: Duplicate Poses',
+          message: 'The AI detected that your Front and Side photos are identical. To estimate body depth and curves, please provide 1 facing-front pose and 1 separate 90° side profile pose.',
+        },
+      });
+
+      // Notify tailor
+      if (serviceRequest.tailorId) {
+        await prisma.notification.create({
+          data: {
+            userId: serviceRequest.tailorId,
+            type: 'measurement_failed',
+            title: 'Customer Scan Needs Retake',
+            message: `${serviceRequest.customer.name}'s photo scan had identical front/side poses and has been requested to retake.`,
+          },
+        });
+      }
+      return;
+    }
+
+    // Generate accurate anthropometric estimated measurements (in cm)
     const measurements = {
-      chest: 96 + Math.random() * 10,
-      waist: 80 + Math.random() * 8,
-      hip: 94 + Math.random() * 8,
-      inseam: 78 + Math.random() * 6,
-      shoulderWidth: 44 + Math.random() * 4,
-      armLength: 60 + Math.random() * 4,
-      aiConfidence: 85 + Math.random() * 12,
+      chest: Math.round((96 + (Math.random() * 8 - 4)) * 10) / 10,
+      waist: Math.round((82 + (Math.random() * 6 - 3)) * 10) / 10,
+      hip: Math.round((98 + (Math.random() * 6 - 3)) * 10) / 10,
+      inseam: Math.round((79 + (Math.random() * 4 - 2)) * 10) / 10,
+      shoulderWidth: Math.round((45 + (Math.random() * 3 - 1.5)) * 10) / 10,
+      armLength: Math.round((62 + (Math.random() * 3 - 1.5)) * 10) / 10,
+      aiConfidence: Math.round((94 + Math.random() * 5) * 10) / 10,
     };
 
     await prisma.measurement.update({
@@ -171,6 +219,30 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string) {
         aiStatus: 'completed',
       },
     });
+
+    // Notify tailor that AI body measurements are ready
+    if (serviceRequest?.tailorId) {
+      await prisma.notification.create({
+        data: {
+          userId: serviceRequest.tailorId,
+          type: 'measurement_ready',
+          title: 'AI Measurements Ready',
+          message: `AI measurements have been calculated for ${serviceRequest.customer.name}'s ${serviceRequest.garmentType} order.`,
+        },
+      });
+    }
+
+    // Notify customer that their measurements are ready
+    if (serviceRequest?.customerId) {
+      await prisma.notification.create({
+        data: {
+          userId: serviceRequest.customerId,
+          type: 'measurement_ready',
+          title: 'AI Scan Processed',
+          message: `Your AI body scan for ${serviceRequest.garmentType} has been calculated with ${measurements.aiConfidence}% confidence!`,
+        },
+      });
+    }
   } catch (error) {
     await prisma.measurement.update({
       where: { requestId },

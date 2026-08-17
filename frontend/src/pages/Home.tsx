@@ -6,7 +6,8 @@ import { tailorsAPI } from '../lib/api';
 import { 
   Scissors, Search, MessageSquare, ArrowRight, LogIn, 
   UserPlus, Camera, CheckCircle, Star, Sparkles, MapPin, 
-  Ruler, Clock, Award, ChevronRight, Lock, Eye, Image as ImageIcon
+  Ruler, Clock, Award, ChevronRight, Lock, Eye, Image as ImageIcon,
+  Menu, X
 } from 'lucide-react';
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredTailors, setFeaturedTailors] = useState<any[]>([]);
   const [loadingTailors, setLoadingTailors] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     loadFeaturedTailors();
@@ -89,7 +91,7 @@ export default function Home() {
             </span>
           </Link>
 
-          {/* Nav Links */}
+          {/* Nav Links - Desktop */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
             <a href="#how-it-works" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>How It Works</a>
             <a href="#features" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>Capabilities</a>
@@ -98,58 +100,105 @@ export default function Home() {
           </nav>
 
           {/* User Auth CTAs */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {user ? (
-              <Link to="/dashboard" className="btn-primary text-sm px-5 py-2 flex items-center space-x-2 shadow-md">
-                <span>Go to Dashboard</span>
+              <Link to="/dashboard" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1.5 sm:space-x-2 shadow-md">
+                <span>Dashboard</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
             ) : (
               <>
-                <Link to="/login" className="btn-secondary text-sm px-4 py-2 flex items-center space-x-1.5">
-                  <LogIn className="h-4 w-4" />
+                <Link to="/login" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
+                  <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Sign In</span>
                 </Link>
-                <Link to="/join" className="btn-primary text-sm px-5 py-2 flex items-center space-x-1.5 shadow-md">
-                  <UserPlus className="h-4 w-4" />
+                <Link to="/join" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
+                  <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Get Started</span>
                 </Link>
               </>
             )}
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              className={`p-2 rounded-xl md:hidden transition-colors ${
+                isDark ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-slate-600'
+              }`}
+              aria-label="Toggle navigation"
+            >
+              {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Nav Menu */}
+        {mobileNavOpen && (
+          <div className={`md:hidden px-4 pt-2 pb-4 border-t space-y-2 ${
+            isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-slate-100'
+          }`}>
+            <a 
+              href="#how-it-works" 
+              onClick={() => setMobileNavOpen(false)}
+              className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
+            >
+              How It Works
+            </a>
+            <a 
+              href="#features" 
+              onClick={() => setMobileNavOpen(false)}
+              className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
+            >
+              Capabilities
+            </a>
+            <a 
+              href="#portfolio" 
+              onClick={() => setMobileNavOpen(false)}
+              className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
+            >
+              Work Showcase
+            </a>
+            <a 
+              href="#tailors" 
+              onClick={() => setMobileNavOpen(false)}
+              className={`block px-3 py-2 rounded-lg text-sm font-medium ${isDark ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-slate-50 text-slate-700'}`}
+            >
+              Master Tailors
+            </a>
+          </div>
+        )}
       </header>
 
       {/* NEW TWO-COLUMN HERO SECTION (3DLOOK Style) */}
-      <section className={`relative overflow-hidden pt-20 pb-24 lg:pt-32 lg:pb-32 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+      <section className={`relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24 lg:pt-32 lg:pb-32 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         {/* Dotted Background Pattern */}
         <div className={`absolute inset-0 z-0 ${isDark ? 'opacity-10' : 'opacity-40'}`} style={{
           backgroundImage: `radial-gradient(${isDark ? '#475569' : '#cbd5e1'} 2px, transparent 2px)`,
           backgroundSize: '40px 40px'
         }}></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row items-center gap-16 lg:gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
           
           {/* Left Side Text Content */}
-          <div className="flex-1 text-center lg:text-left pt-10 lg:pt-0">
-            <h2 className="text-[#2563eb] font-medium text-xl sm:text-2xl mb-4 tracking-tight">StitchMatch</h2>
-            <h1 className={`text-4xl sm:text-5xl lg:text-[64px] font-medium tracking-tight leading-[1.15] mb-6 ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>
-              Real-Time Tailoring<br className="hidden lg:block"/>
-              Measurements,<br className="hidden lg:block"/>
+          <div className="flex-1 text-center lg:text-left pt-6 lg:pt-0">
+            <h2 className="text-[#2563eb] font-medium text-lg sm:text-2xl mb-3 sm:mb-4 tracking-tight">StitchMatch</h2>
+            <h1 className={`text-3xl sm:text-5xl lg:text-[64px] font-medium tracking-tight leading-[1.15] mb-4 sm:mb-6 ${isDark ? 'text-white' : 'text-[#0f172a]'}`}>
+              Real-Time Tailoring<br className="hidden sm:block lg:block"/>
+              Measurements,<br className="hidden sm:block lg:block"/>
               Powered by AI
             </h1>
-            <p className={`text-lg sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-10 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+            <p className={`text-base sm:text-xl max-w-2xl mx-auto lg:mx-0 mb-8 sm:mb-10 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
               Integrate AI-driven body scanning into your bespoke tailoring process to improve fit accuracy, boost client engagement, and reduce return rates while ensuring accurate insights for better garment construction.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6">
-              <Link to="/join" className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3.5 px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-lg">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6">
+              <Link to="/join" className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3 sm:py-3.5 px-8 sm:px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-base sm:text-lg">
                 Let's talk
               </Link>
-              <a href="#how-it-works" className={`flex items-center justify-center gap-3 py-3.5 px-6 rounded font-medium transition-all w-full sm:w-auto text-lg ${isDark ? 'text-white hover:bg-gray-800' : 'text-slate-900 hover:bg-slate-50'}`}>
-                <div className="w-10 h-10 rounded-full border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+              <a href="#how-it-works" className={`flex items-center justify-center gap-3 py-3 sm:py-3.5 px-6 rounded font-medium transition-all w-full sm:w-auto text-base sm:text-lg ${isDark ? 'text-white hover:bg-gray-800' : 'text-slate-900 hover:bg-slate-50'}`}>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
                   {/* Play Icon */}
-                  <div className="w-0 h-0 border-t-[6px] border-t-transparent border-l-[8px] border-l-current border-b-[6px] border-b-transparent ml-1"></div>
+                  <div className="w-0 h-0 border-t-[5px] sm:border-t-[6px] border-t-transparent border-l-[7px] sm:border-l-[8px] border-l-current border-b-[5px] sm:border-b-[6px] border-b-transparent ml-1"></div>
                 </div>
                 How it works
               </a>
@@ -157,9 +206,9 @@ export default function Home() {
           </div>
 
           {/* Right Side Image & Glassmorphism Cards */}
-          <div className="flex-1 relative w-full max-w-lg mx-auto lg:max-w-none mt-12 lg:mt-0">
+          <div className="flex-1 relative w-full max-w-sm sm:max-w-lg mx-auto lg:max-w-none mt-8 lg:mt-0">
             {/* The main subject image */}
-            <div className="relative z-10 mx-auto w-[85%] lg:w-[90%] xl:w-[85%]">
+            <div className="relative z-10 mx-auto w-[90%] sm:w-[85%] lg:w-[90%] xl:w-[85%]">
               <img 
                 src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=80" 
                 alt="AI Body Scanning" 
@@ -167,31 +216,31 @@ export default function Home() {
               />
             
               {/* Floating Glassmorphism UI - Card 1 (Chest Size) */}
-              <div className={`absolute top-[15%] -left-[15%] sm:-left-[20%] lg:-left-[15%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-4 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
-                <div className="w-10 h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center">
-                  <Ruler className={`h-5 w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+              <div className={`absolute top-[10%] sm:top-[15%] left-0 sm:-left-[10%] lg:-left-[15%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                  <Ruler className={`h-4 w-4 sm:h-5 sm:w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
                 </div>
                 <div>
-                  <p className={`text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Chest Size</p>
-                  <p className={`text-xl font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>42.5 in</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Chest Size</p>
+                  <p className={`text-base sm:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>42.5 in</p>
                 </div>
               </div>
 
               {/* Floating Glassmorphism UI - Card 2 (Accuracy) */}
-              <div className={`absolute top-[45%] -right-[15%] sm:-right-[20%] lg:-right-[15%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-4 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
-                <div className="w-10 h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center">
-                  <CheckCircle className={`h-5 w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
+              <div className={`absolute top-[40%] sm:top-[45%] right-0 sm:-right-[10%] lg:-right-[15%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded bg-transparent border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${isDark ? 'text-white' : 'text-slate-800'}`} />
                 </div>
                 <div>
-                  <p className={`text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Fit Accuracy</p>
-                  <p className={`text-xl font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>99.4%</p>
+                  <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Fit Accuracy</p>
+                  <p className={`text-base sm:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>99.4%</p>
                 </div>
               </div>
 
               {/* Floating Glassmorphism UI - Card 3 (Status) */}
-              <div className={`absolute bottom-[10%] -left-[10%] sm:-left-[15%] lg:-left-[10%] z-20 px-5 py-4 rounded-xl backdrop-blur-md shadow-2xl border w-48 ${isDark ? 'bg-gray-900/80 border-gray-700/50' : 'bg-white/90 border-white/40'}`}>
-                <p className={`text-[11px] font-semibold tracking-wide uppercase mb-3 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Scan Progress</p>
-                <div className="w-full bg-slate-300/50 dark:bg-gray-700/50 rounded-full h-1.5 mb-2">
+              <div className={`absolute bottom-[8%] sm:bottom-[10%] left-0 sm:-left-[8%] lg:-left-[10%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border w-40 sm:w-48 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
+                <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase mb-2 sm:mb-3 ${isDark ? 'text-gray-300' : 'text-slate-600'}`}>Scan Progress</p>
+                <div className="w-full bg-slate-300/50 dark:bg-gray-700/50 rounded-full h-1.5 mb-1.5 sm:mb-2">
                   <div className="bg-blue-600 h-1.5 rounded-full w-full"></div>
                 </div>
                 <p className={`text-xs font-bold text-right ${isDark ? 'text-white' : 'text-slate-900'}`}>100%</p>

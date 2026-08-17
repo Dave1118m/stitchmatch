@@ -69,9 +69,9 @@ export const ProposeNegotiationSchema = z.object({
 
 // Measurement Schemas
 export const MeasurementPhotoSchema = z.object({
-  frontPhotoUrl: z.string().url({ message: 'Invalid front photo URL' }).optional().or(z.literal('')),
-  sidePhotoUrl: z.string().url({ message: 'Invalid side photo URL' }).optional().or(z.literal('')),
-  backPhotoUrl: z.string().url({ message: 'Invalid back photo URL' }).optional().or(z.literal('')),
+  frontPhotoUrl: z.string().min(1, { message: 'Front photo is required' }).optional().or(z.literal('')),
+  sidePhotoUrl: z.string().min(1, { message: 'Side photo is required' }).optional().or(z.literal('')),
+  backPhotoUrl: z.string().min(1, { message: 'Back photo is required' }).optional().or(z.literal('')),
 });
 
 export const MeasurementAdjustmentSchema = z.object({
