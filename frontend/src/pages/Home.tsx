@@ -207,13 +207,95 @@ export default function Home() {
 
           {/* Right Side Image & Glassmorphism Cards */}
           <div className="flex-1 relative w-full max-w-sm sm:max-w-lg mx-auto lg:max-w-none mt-8 lg:mt-0">
-            {/* The main subject image */}
-            <div className="relative z-10 mx-auto w-[90%] sm:w-[85%] lg:w-[90%] xl:w-[85%]">
-              <img 
-                src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=80" 
-                alt="AI Body Scanning" 
-                className="w-full h-auto object-cover object-top rounded-3xl shadow-2xl"
-              />
+            {/* The main subject image container */}
+            <div className="relative z-10 mx-auto w-[90%] sm:w-[85%] lg:w-[90%] xl:w-[85%] group">
+              
+              {/* Image Container with Framing & Overlays */}
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/40 dark:border-gray-700/60 bg-slate-900">
+                {/* Subject Image */}
+                <img 
+                  src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&auto=format&fit=crop&q=80" 
+                  alt="AI Body Scanning" 
+                  className="w-full h-auto object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                />
+
+                {/* Layer 1: Ambient High-Tech Color Gradients */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-900/25 to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 via-transparent to-indigo-500/15 mix-blend-overlay pointer-events-none"></div>
+
+                {/* Layer 2: Grid Scanner Overlay Pattern */}
+                <div 
+                  className="absolute inset-0 opacity-20 pointer-events-none"
+                  style={{
+                    backgroundImage: 'linear-gradient(to right, rgba(59, 130, 246, 0.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(59, 130, 246, 0.35) 1px, transparent 1px)',
+                    backgroundSize: '24px 24px'
+                  }}
+                ></div>
+
+                {/* Layer 3: Viewfinder Corner Brackets */}
+                <div className="absolute top-4 left-4 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-l-2 border-blue-400/90 rounded-tl-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                <div className="absolute top-4 right-4 w-5 h-5 sm:w-7 sm:h-7 border-t-2 border-r-2 border-blue-400/90 rounded-tr-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                <div className="absolute bottom-4 left-4 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-l-2 border-blue-400/90 rounded-bl-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                <div className="absolute bottom-4 right-4 w-5 h-5 sm:w-7 sm:h-7 border-b-2 border-r-2 border-blue-400/90 rounded-br-lg shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+
+                {/* Layer 4: Laser Scan Horizontal Beam */}
+                <div className="absolute top-[48%] inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_rgba(6,182,212,0.9)] animate-pulse pointer-events-none"></div>
+
+                {/* Layer 5: Anatomical Measurement Landmark Points */}
+                {/* Shoulder Point */}
+                <div className="absolute top-[28%] left-[22%] z-10 flex items-center gap-1.5 pointer-events-none">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border border-white"></span>
+                  </span>
+                  <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-950/80 text-blue-300 border border-blue-400/40 backdrop-blur-xs">
+                    P1: 41.2cm
+                  </span>
+                </div>
+
+                {/* Chest Center Point */}
+                <div className="absolute top-[46%] left-[48%] z-10 pointer-events-none">
+                  <span className="relative flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500 border-2 border-white shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+                  </span>
+                </div>
+
+                {/* Waist Point */}
+                <div className="absolute top-[62%] right-[24%] z-10 flex items-center gap-1.5 pointer-events-none">
+                  <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-950/80 text-cyan-300 border border-cyan-400/40 backdrop-blur-xs">
+                    P2: 74.8cm
+                  </span>
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-white"></span>
+                  </span>
+                </div>
+
+                {/* Layer 6: Top Scanner Status Badge Overlay */}
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                  <div className="bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-400/40 text-[11px] font-semibold text-blue-200 flex items-center gap-2 shadow-lg whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>AI Landmark Scan • 32 Points Active</span>
+                  </div>
+                </div>
+
+                {/* Layer 7: Bottom Metrics HUD Strip */}
+                <div className="absolute bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-4 bg-slate-950/75 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/10 flex items-center justify-between text-white pointer-events-none">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-500/20 border border-blue-400/40 flex items-center justify-center text-blue-400">
+                      <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">3D Vision Neural Mesh</p>
+                      <p className="text-xs sm:text-sm font-bold text-white">Sub-millimeter Precision</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                    CONFIDENCE 99.4%
+                  </span>
+                </div>
+              </div>
             
               {/* Floating Glassmorphism UI - Card 1 (Chest Size) */}
               <div className={`absolute top-[10%] sm:top-[15%] left-0 sm:-left-[10%] lg:-left-[15%] z-20 px-3.5 sm:px-5 py-2.5 sm:py-4 rounded-xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 ${isDark ? 'bg-gray-900/85 border-gray-700/60' : 'bg-white/90 border-white/50'}`}>
