@@ -4,8 +4,48 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { notificationsAPI } from '../lib/api';
+import { getSocket } from '../lib/socket';
+import { showBrowserNotification } from '../lib/pushNotifications';
 import LanguageSwitcher from './LanguageSwitcher';
-import { Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, Bell, ClipboardList, Shield, ChevronDown, Check } from 'lucide-react';
+import { 
+  Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, 
+  Bell, ClipboardList, Shield, ChevronDown, Check, CheckCheck, Trash2, 
+  Star, ShoppingBag, ShieldCheck, AlertCircle, Clock
+} from 'lucide-react';
+
+function playNotificationChime() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    const now = ctx.currentTime;
+    
+    // Melodic two-tone glass chime
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(659.25, now); // E5
+    gain1.gain.setValueAtTime(0.12, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(987.77, now + 0.1); // B5
+    gain2.gain.setValueAtTime(0.15, now + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.1);
+    osc2.stop(now + 0.55);
+  } catch (e) {
+    // Autoplay policy fallback
+  }
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -21,6 +61,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [switchingRole, setSwitchingRole] = useState<string | null>(null);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+  const notificationsDropdownRef = useRef<HTMLDivElement>(null);
   const isDark = useDarkMode();
 
   useEffect(() => {
@@ -31,20 +72,58 @@ export default function Layout({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Handle outside click for both dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
         setRoleDropdownOpen(false);
+      }
+      if (notificationsDropdownRef.current && !notificationsDropdownRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Load initial notification unread count
   useEffect(() => {
     if (user) {
       loadUnreadCount();
     }
+  }, [user]);
+
+  // Real-Time Socket.IO Notification Listener
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = getSocket();
+
+    const handleNewNotification = (newNotif: any) => {
+      console.log('[Real-Time Notification Received]:', newNotif);
+      
+      // 1. Play audio chime
+      playNotificationChime();
+
+      // 2. Increment badge count
+      setUnreadCount((prev) => prev + 1);
+
+      // 3. Prepend to active list
+      setNotifications((prev) => [newNotif, ...prev.filter((n) => n.id !== newNotif.id)]);
+
+      // 4. Trigger Web Push / OS Notification if backgrounded or visible
+      showBrowserNotification(newNotif.title || 'StitchMatch Notification', {
+        body: newNotif.message || 'You have an update regarding your order.',
+        icon: '/favicon.ico',
+        tag: `notif-${newNotif.id}`,
+      });
+    };
+
+    socket.on('notification', handleNewNotification);
+
+    return () => {
+      socket.off('notification', handleNewNotification);
+    };
   }, [user]);
 
   const loadUnreadCount = async () => {
@@ -66,19 +145,85 @@ export default function Layout({ children }: { children: ReactNode }) {
   };
 
   const handleNotificationClick = () => {
-    setShowNotifications(!showNotifications);
-    if (!showNotifications) {
+    const nextState = !showNotifications;
+    setShowNotifications(nextState);
+    if (nextState) {
       loadNotifications();
+      loadUnreadCount();
     }
   };
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     try {
       await notificationsAPI.markAsRead(id);
-      loadNotifications();
-      loadUnreadCount();
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error('Failed to mark as read', err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all as read', err);
+    }
+  };
+
+  const deleteNotification = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await notificationsAPI.delete(id);
+      const target = notifications.find((n) => n.id === id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      if (target && !target.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Failed to delete notification', err);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await notificationsAPI.clearAll();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to clear notifications', err);
+    }
+  };
+
+  const handleNotificationItemClick = (notification: any) => {
+    if (!notification.read) {
+      markAsRead(notification.id);
+    }
+    setShowNotifications(false);
+
+    // Route dynamically based on notification type
+    switch (notification.type) {
+      case 'message':
+        navigate('/messages');
+        break;
+      case 'request':
+      case 'order':
+      case 'measurement_ready':
+      case 'measurement_failed':
+        navigate('/dashboard');
+        break;
+      case 'approval':
+      case 'review':
+        navigate('/profile');
+        break;
+      default:
+        navigate('/dashboard');
+        break;
     }
   };
 
@@ -379,52 +524,171 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </button>
 
                 {/* Notifications */}
-                <div className="relative">
+                <div className="relative" ref={notificationsDropdownRef}>
                   <button 
                     onClick={handleNotificationClick}
                     aria-label={t('nav.notifications')}
-                    className={`p-2 rounded-lg ${darkMode ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-100 text-gray-600'} transition-colors relative`}
+                    className={`p-2 rounded-xl border transition-all relative ${
+                      showNotifications
+                        ? 'bg-purple-50 border-purple-300 dark:bg-purple-950/50 dark:border-purple-800 text-purple-600 dark:text-purple-400'
+                        : darkMode 
+                        ? 'border-gray-700 bg-gray-800/80 hover:bg-gray-700 text-gray-300' 
+                        : 'border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700'
+                    }`}
                   >
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
-                        {unreadCount > 9 ? '9+' : unreadCount}
+                      <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 bg-gradient-to-r from-red-500 to-rose-600 rounded-full text-white text-[10px] font-bold flex items-center justify-center shadow-md animate-pulse">
+                        {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
                   </button>
                   
                   {/* Notification Dropdown */}
                   {showNotifications && (
-                    <div className={`absolute right-0 mt-2 w-80 rounded-lg shadow-lg border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} z-50`}>
-                      <div className={`p-3 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                        <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('nav.notifications')}</h3>
-                      </div>
-                      <div className="max-h-96 overflow-y-auto">
-                        {notifications.length === 0 ? (
-                          <div className={`p-4 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{t('nav.noNotifications')}</div>
-                        ) : (
-                          notifications.map((notification) => (
-                            <div
-                              key={notification.id}
-                              onClick={() => markAsRead(notification.id)}
-                              className={`p-3 border-b last:border-b-0 cursor-pointer hover:bg-opacity-50 transition-colors ${
-                                !notification.read 
-                                  ? darkMode ? 'bg-blue-900/20 border-gray-700' : 'bg-blue-50 border-gray-200' 
-                                  : darkMode ? 'border-gray-700' : 'border-gray-200'
-                              } ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'}`}
+                    <div className={`absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl shadow-2xl border overflow-hidden z-50 transition-all ${
+                      darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'
+                    }`}>
+                      {/* Dropdown Header */}
+                      <div className={`p-3.5 border-b flex items-center justify-between ${
+                        darkMode ? 'border-gray-700 bg-gray-900/60' : 'border-gray-100 bg-gray-50/80'
+                      }`}>
+                        <div className="flex items-center space-x-2">
+                          <Bell className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                          <h3 className="font-bold text-sm">{t('nav.notifications')}</h3>
+                          {unreadCount > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
+                        
+                        {notifications.length > 0 && (
+                          <div className="flex items-center space-x-1">
+                            {unreadCount > 0 && (
+                              <button
+                                onClick={markAllAsRead}
+                                title={t('nav.markAllRead')}
+                                className={`p-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1 transition-colors ${
+                                  darkMode 
+                                    ? 'hover:bg-gray-700 text-purple-400' 
+                                    : 'hover:bg-purple-50 text-purple-600'
+                                }`}
+                              >
+                                <CheckCheck className="w-3.5 h-3.5" />
+                                <span className="text-[11px] hidden sm:inline">{t('nav.markAllRead')}</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={clearAllNotifications}
+                              title="Clear all notifications"
+                              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                                darkMode ? 'hover:bg-gray-700 text-gray-400 hover:text-red-400' : 'hover:bg-gray-100 text-gray-500 hover:text-red-600'
+                              }`}
                             >
-                              <div className="flex items-start space-x-3">
-                                <div className={`w-2 h-2 mt-2 rounded-full ${!notification.read ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                                <div className="flex-1">
-                                  <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{notification.title}</p>
-                                  <p className={`text-xs mt-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{notification.message}</p>
-                                  <p className={`text-xs mt-2 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                                    {new Date(notification.createdAt).toLocaleString()}
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Dropdown List */}
+                      <div className="max-h-[380px] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700/50">
+                        {notifications.length === 0 ? (
+                          <div className="py-10 px-4 text-center">
+                            <div className={`w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ${
+                              darkMode ? 'bg-gray-700/50 text-gray-500' : 'bg-gray-100 text-gray-400'
+                            }`}>
+                              <Bell className="w-6 h-6" />
+                            </div>
+                            <p className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              {t('nav.noNotifications')}
+                            </p>
+                            <p className={`text-xs mt-1 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                              Live updates about orders, messages, and requests will appear here.
+                            </p>
+                          </div>
+                        ) : (
+                          notifications.map((notification) => {
+                            const isUnread = !notification.read;
+                            const type = notification.type;
+
+                            return (
+                              <div
+                                key={notification.id}
+                                onClick={() => handleNotificationItemClick(notification)}
+                                className={`p-3.5 cursor-pointer transition-all flex items-start space-x-3 group relative ${
+                                  isUnread 
+                                    ? darkMode ? 'bg-purple-950/20 hover:bg-purple-950/40' : 'bg-purple-50/60 hover:bg-purple-50' 
+                                    : darkMode ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'
+                                }`}
+                              >
+                                {/* Type Icon Badge */}
+                                <div className={`p-2 rounded-xl flex-shrink-0 mt-0.5 ${
+                                  type === 'message'
+                                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
+                                    : type === 'review'
+                                    ? 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
+                                    : type === 'approval'
+                                    ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400'
+                                    : type === 'order'
+                                    ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
+                                    : 'bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-400'
+                                }`}>
+                                  {type === 'message' && <MessageSquare className="w-4 h-4" />}
+                                  {type === 'review' && <Star className="w-4 h-4" />}
+                                  {type === 'approval' && <ShieldCheck className="w-4 h-4" />}
+                                  {type === 'order' && <ShoppingBag className="w-4 h-4" />}
+                                  {(type === 'request' || !type || type === 'general') && <Scissors className="w-4 h-4" />}
+                                  {type?.startsWith('measurement') && <Scissors className="w-4 h-4" />}
+                                </div>
+
+                                <div className="flex-1 min-w-0 pr-6">
+                                  <div className="flex items-center space-x-1.5">
+                                    {isUnread && (
+                                      <span className="w-2 h-2 rounded-full bg-purple-600 flex-shrink-0" />
+                                    )}
+                                    <p className={`text-xs sm:text-sm font-semibold truncate ${
+                                      isUnread 
+                                        ? (darkMode ? 'text-white' : 'text-gray-900') 
+                                        : (darkMode ? 'text-gray-300' : 'text-gray-700')
+                                    }`}>
+                                      {notification.title}
+                                    </p>
+                                  </div>
+                                  <p className={`text-xs mt-1 leading-relaxed ${
+                                    darkMode ? 'text-gray-400' : 'text-gray-600'
+                                  }`}>
+                                    {notification.message}
                                   </p>
+                                  <div className="flex items-center space-x-1 mt-2 text-[10px] text-gray-400 dark:text-gray-500">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{new Date(notification.createdAt).toLocaleString()}</span>
+                                  </div>
+                                </div>
+
+                                {/* Item Action Buttons */}
+                                <div className="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1">
+                                  {isUnread && (
+                                    <button
+                                      onClick={(e) => markAsRead(notification.id, e)}
+                                      title="Mark as read"
+                                      className="p-1 rounded-md text-gray-400 hover:text-purple-600 dark:hover:text-purple-400"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={(e) => deleteNotification(notification.id, e)}
+                                    title="Delete notification"
+                                    className="p-1 rounded-md text-gray-400 hover:text-red-500"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
-                            </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
                     </div>

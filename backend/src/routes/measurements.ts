@@ -1,10 +1,12 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { Server } from 'socket.io';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { generatePhotoToken } from '../utils/photoLinks';
 import { parseJson, parseJsonArray, serializeJson } from '../utils/jsonHelpers';
 import { validateBody } from '../middleware/validate';
 import { MeasurementPhotoSchema, MeasurementAdjustmentSchema } from '../utils/schemas';
+import { createNotification } from '../helpers/notificationHelper';
 
 const router = Router();
 
@@ -44,7 +46,8 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
 
     // Simulate AI measurement processing
     // In production, this would call an external AI API
-    simulateAIMeasurement(prisma, requestId);
+    const io = req.app.get('io');
+    simulateAIMeasurement(prisma, requestId, io);
 
     res.json({ measurement });
   } catch (error) {
@@ -142,7 +145,7 @@ router.put('/:requestId/adjustments', authenticate, authorize('tailor'), validat
 });
 
 // Simulate AI measurement processing
-async function simulateAIMeasurement(prisma: PrismaClient, requestId: string) {
+async function simulateAIMeasurement(prisma: PrismaClient, requestId: string, io?: Server) {
   try {
     // Update status to processing
     await prisma.measurement.update({
@@ -178,25 +181,25 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string) {
       });
 
       // Notify customer of specific error
-      await prisma.notification.create({
-        data: {
-          userId: serviceRequest.customerId,
-          type: 'measurement_failed',
-          title: '⚠️ AI Scan Needs Retake: Duplicate Poses',
-          message: 'The AI detected that your Front and Side photos are identical. To estimate body depth and curves, please provide 1 facing-front pose and 1 separate 90° side profile pose.',
-        },
-      });
+      await createNotification(
+        prisma,
+        serviceRequest.customerId,
+        '⚠️ AI Scan Needs Retake: Duplicate Poses',
+        'The AI detected that your Front and Side photos are identical. To estimate body depth and curves, please provide 1 facing-front pose and 1 separate 90° side profile pose.',
+        'request',
+        io
+      );
 
       // Notify tailor
       if (serviceRequest.tailorId) {
-        await prisma.notification.create({
-          data: {
-            userId: serviceRequest.tailorId,
-            type: 'measurement_failed',
-            title: 'Customer Scan Needs Retake',
-            message: `${serviceRequest.customer.name}'s photo scan had identical front/side poses and has been requested to retake.`,
-          },
-        });
+        await createNotification(
+          prisma,
+          serviceRequest.tailorId,
+          'Customer Scan Needs Retake',
+          `${serviceRequest.customer.name}'s photo scan had identical front/side poses and has been requested to retake.`,
+          'request',
+          io
+        );
       }
       return;
     }
@@ -222,26 +225,26 @@ async function simulateAIMeasurement(prisma: PrismaClient, requestId: string) {
 
     // Notify tailor that AI body measurements are ready
     if (serviceRequest?.tailorId) {
-      await prisma.notification.create({
-        data: {
-          userId: serviceRequest.tailorId,
-          type: 'measurement_ready',
-          title: 'AI Measurements Ready',
-          message: `AI measurements have been calculated for ${serviceRequest.customer.name}'s ${serviceRequest.garmentType} order.`,
-        },
-      });
+      await createNotification(
+        prisma,
+        serviceRequest.tailorId,
+        'AI Measurements Ready',
+        `AI measurements have been calculated for ${serviceRequest.customer.name}'s ${serviceRequest.garmentType} order.`,
+        'order',
+        io
+      );
     }
 
     // Notify customer that their measurements are ready
     if (serviceRequest?.customerId) {
-      await prisma.notification.create({
-        data: {
-          userId: serviceRequest.customerId,
-          type: 'measurement_ready',
-          title: 'AI Scan Processed',
-          message: `Your AI body scan for ${serviceRequest.garmentType} has been calculated with ${measurements.aiConfidence}% confidence!`,
-        },
-      });
+      await createNotification(
+        prisma,
+        serviceRequest.customerId,
+        'AI Scan Processed',
+        `Your AI body scan for ${serviceRequest.garmentType} has been calculated with ${measurements.aiConfidence}% confidence!`,
+        'order',
+        io
+      );
     }
   } catch (error) {
     await prisma.measurement.update({

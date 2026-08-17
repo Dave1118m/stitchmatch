@@ -120,6 +120,9 @@ export const negotiationsAPI = {
 export const notificationsAPI = {
   getAll: () => api.get('/notifications'),
   markAsRead: (id: string) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put('/notifications/read-all'),
+  delete: (id: string) => api.delete(`/notifications/${id}`),
+  clearAll: () => api.delete('/notifications/clear-all'),
   getUnreadCount: () => api.get('/notifications/count/unread'),
 };
 

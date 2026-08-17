@@ -94,16 +94,17 @@ router.post('/:requestId/propose', authenticate, validateBody(ProposeNegotiation
       ? serviceRequest.customerId // will be resolved from user object
       : serviceRequest.tailorId;
 
+    const io = req.app.get('io');
     await createNotification(
       prisma,
       recipientId,
       'New Counter-Offer',
       `A new counter-offer has been proposed for request: ${serviceRequest.garmentType}`,
-      'request'
+      'request',
+      io
     );
 
     // Emit socket event for real-time notification
-    const io = req.app.get('io');
     if (io) {
       io.to(`user:${recipientId}`).emit('new_negotiation', {
         requestId,
@@ -162,16 +163,17 @@ router.put('/:id/accept', authenticate, async (req: AuthRequest, res: Response) 
       });
     }
 
+    const io = req.app.get('io');
     // Notify the proposer
     await createNotification(
       prisma,
       negotiation.proposedById,
       'Counter-Offer Accepted',
       'Your counter-offer was accepted! Please confirm the agreement.',
-      'request'
+      'request',
+      io
     );
 
-    const io = req.app.get('io');
     if (io) {
       io.to(`user:${negotiation.proposedById}`).emit('negotiation_accepted', {
         requestId: negotiation.requestId,
@@ -216,15 +218,16 @@ router.put('/:id/decline', authenticate, async (req: AuthRequest, res: Response)
       },
     });
 
+    const io = req.app.get('io');
     await createNotification(
       prisma,
       negotiation.proposedById,
       'Counter-Offer Declined',
       'Your counter-offer was declined. You can propose a new one.',
-      'request'
+      'request',
+      io
     );
 
-    const io = req.app.get('io');
     if (io) {
       io.to(`user:${negotiation.proposedById}`).emit('negotiation_declined', {
         requestId: negotiation.requestId,

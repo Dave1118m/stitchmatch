@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import { CreateReviewSchema, ReplyReviewSchema } from '../utils/schemas';
+import { notifyNewReview, notifyReviewReply } from '../helpers/notificationHelper';
 
 const router = Router();
 
@@ -40,6 +41,10 @@ router.post('/:requestId', authenticate, authorize('customer'), validateBody(Cre
       },
     });
 
+    // Notify tailor of new review
+    const io = req.app.get('io');
+    await notifyNewReview(prisma, review.tailorId, review.rating, review.customer?.name, io);
+
     res.status(201).json({ review });
   } catch (error) {
     console.error('Create review error:', error);
@@ -58,7 +63,13 @@ router.put('/:id/reply', authenticate, authorize('tailor'), validateBody(ReplyRe
       return res.status(400).json({ error: 'Reply content is required' });
     }
 
-    const review = await prisma.review.findUnique({ where: { id } });
+    const review = await prisma.review.findUnique({
+      where: { id },
+      include: {
+        customer: { select: { id: true, name: true } },
+        tailor: { select: { id: true, name: true } },
+      },
+    });
     if (!review) return res.status(404).json({ error: 'Review not found' });
     if (review.tailorId !== req.userId) return res.status(403).json({ error: 'Access denied' });
 
@@ -69,6 +80,10 @@ router.put('/:id/reply', authenticate, authorize('tailor'), validateBody(ReplyRe
         replyAt: new Date(),
       },
     });
+
+    // Notify customer that tailor replied
+    const io = req.app.get('io');
+    await notifyReviewReply(prisma, review.customerId, review.tailor?.name, io);
 
     res.json({ review: updated });
   } catch (error) {

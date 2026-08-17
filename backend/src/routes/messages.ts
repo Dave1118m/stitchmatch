@@ -51,6 +51,10 @@ router.post('/conversation/:conversationId', authenticate, async (req: AuthReque
     // Verify access
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
+      include: {
+        customer: { select: { id: true, name: true } },
+        tailor: { select: { id: true, name: true } },
+      },
     });
 
     if (!conversation) {
@@ -96,7 +100,8 @@ router.post('/conversation/:conversationId', authenticate, async (req: AuthReque
 
     // Notify recipient
     const recipientId = req.userId === conversation.customerId ? conversation.tailorId : conversation.customerId;
-    await notifyNewMessage(prisma, conversationId, req.userId!, recipientId);
+    const senderName = req.userId === conversation.customerId ? conversation.customer.name : conversation.tailor.name;
+    await notifyNewMessage(prisma, conversationId, senderName, recipientId, io);
 
     res.status(201).json({ message });
   } catch (error) {

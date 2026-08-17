@@ -63,7 +63,8 @@ router.post('/', authenticate, authorize('customer'), validateBody(CreateRequest
     console.log('Request created:', { id: request.id, customerId: request.customerId, tailorId: request.tailorId, status: request.status });
 
     // Create notification for tailor
-    await notifyRequestStatus(prisma, request.id, 'Pending', tailorId);
+    const io = req.app.get('io');
+    await notifyRequestStatus(prisma, request.id, 'Pending', tailorId, io);
 
     res.status(201).json({ request });
   } catch (error) {
@@ -193,7 +194,8 @@ router.put('/:id/accept', authenticate, authorize('tailor'), async (req: AuthReq
     console.log('Request updated to Under_Discussion:', { id: updated.id, status: updated.status });
 
     // Notify customer
-    await notifyRequestStatus(prisma, id, 'Under_Discussion', updated.customerId);
+    const io = req.app.get('io');
+    await notifyRequestStatus(prisma, id, 'Under_Discussion', updated.customerId, io);
 
     res.json({ request: updated });
   } catch (error) {
@@ -222,7 +224,8 @@ router.put('/:id/reject', authenticate, authorize('tailor'), async (req: AuthReq
     });
 
     // Notify customer
-    await notifyRequestStatus(prisma, id, 'Rejected', updated.customerId);
+    const io = req.app.get('io');
+    await notifyRequestStatus(prisma, id, 'Rejected', updated.customerId, io);
 
     res.json({ request: updated });
   } catch (error) {
@@ -280,8 +283,9 @@ router.put('/:id/confirm-customer', authenticate, authorize('customer'), async (
       });
 
       // Notify both parties when agreed
-      await notifyRequestStatus(prisma, id, 'Agreed', request.customerId);
-      await notifyRequestStatus(prisma, id, 'Agreed', request.tailorId);
+      const io = req.app.get('io');
+      await notifyRequestStatus(prisma, id, 'Agreed', request.customerId, io);
+      await notifyRequestStatus(prisma, id, 'Agreed', request.tailorId, io);
     }
 
     finalRequest = await prisma.serviceRequest.findUnique({
@@ -354,8 +358,9 @@ router.put('/:id/confirm-tailor', authenticate, authorize('tailor'), async (req:
       console.log('Agreement snapshot created, notifying parties');
 
       // Notify both parties when agreed
-      await notifyRequestStatus(prisma, id, 'Agreed', request.customerId);
-      await notifyRequestStatus(prisma, id, 'Agreed', request.tailorId);
+      const io = req.app.get('io');
+      await notifyRequestStatus(prisma, id, 'Agreed', request.customerId, io);
+      await notifyRequestStatus(prisma, id, 'Agreed', request.tailorId, io);
     }
 
     finalRequest = await prisma.serviceRequest.findUnique({

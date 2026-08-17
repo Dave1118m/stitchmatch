@@ -42,6 +42,8 @@ router.post('/:requestId/events', authenticate, authorize('tailor'), async (req:
       },
     });
 
+    const io = req.app.get('io');
+
     // Update service request status if moving to completed
     if (status === 'completed') {
       await prisma.serviceRequest.update({
@@ -50,7 +52,7 @@ router.post('/:requestId/events', authenticate, authorize('tailor'), async (req:
       });
 
       // Notify customer about completion
-      await notifyOrderStatus(prisma, requestId, 'Completed', serviceRequest.customerId);
+      await notifyOrderStatus(prisma, requestId, 'Completed', serviceRequest.customerId, io);
     } else if (serviceRequest.status === 'Agreed') {
       await prisma.serviceRequest.update({
         where: { id: requestId },
@@ -59,7 +61,7 @@ router.post('/:requestId/events', authenticate, authorize('tailor'), async (req:
     }
 
     // Notify customer about status update
-    await notifyOrderStatus(prisma, requestId, status, serviceRequest.customerId);
+    await notifyOrderStatus(prisma, requestId, status, serviceRequest.customerId, io);
 
     res.status(201).json({ event });
   } catch (error) {

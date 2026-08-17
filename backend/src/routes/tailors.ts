@@ -288,7 +288,8 @@ router.put('/admin/:id/approval', authenticate, authorize('admin'), async (req: 
     });
 
     // Send notification to tailor
-    await notifyTailorApproval(prisma, id, approvalStatus === 'approved');
+    const io = req.app.get('io');
+    await notifyTailorApproval(prisma, id, approvalStatus === 'approved', io);
 
     res.json({ tailor: normalizeTailor(tailor) });
   } catch (error) {
