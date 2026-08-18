@@ -69,6 +69,10 @@ router.get('/', async (req: Request, res: Response) => {
             location: true,
           },
         },
+        products: {
+          include: { images: true },
+          take: 6,
+        },
         _count: {
           select: { serviceRequests: true },
         },
@@ -77,18 +81,25 @@ router.get('/', async (req: Request, res: Response) => {
 
     console.log('Found tailors:', tailors.length);
 
-    // Get average ratings for tailors
+    // Get average ratings and completed count for tailors
     const tailorsWithRatings = await Promise.all(
       tailors.map(async (tailor) => {
-        const ratings = await prisma.review.aggregate({
-          where: { tailorId: tailor.id, isFlagged: false },
-          _avg: { rating: true },
-          _count: true,
-        });
+        const [ratings, completedCount] = await Promise.all([
+          prisma.review.aggregate({
+            where: { tailorId: tailor.id, isFlagged: false },
+            _avg: { rating: true },
+            _count: true,
+          }),
+          prisma.serviceRequest.count({
+            where: { tailorId: tailor.id, status: 'Completed' },
+          }),
+        ]);
+
         return {
           ...normalizeTailor(tailor),
           averageRating: ratings._avg.rating || 0,
           reviewCount: ratings._count,
+          completedCount,
         };
       })
     );
@@ -128,6 +139,16 @@ router.get('/:id', async (req: Request, res: Response) => {
             phone: true,
           },
         },
+        products: {
+          include: {
+            images: true,
+            colors: true,
+            options: true,
+          },
+        },
+        _count: {
+          select: { serviceRequests: true },
+        },
       },
     });
 
@@ -138,31 +159,34 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     console.log('Tailor found:', tailor.user.name);
 
-    const ratings = await prisma.review.aggregate({
-      where: { tailorId: id, isFlagged: false },
-      _avg: { rating: true },
-      _count: true,
-    });
-
-    const ratingDistribution = await prisma.review.groupBy({
-      by: ['rating'],
-      where: { tailorId: id, isFlagged: false },
-      _count: true,
-    });
+    const [ratings, completedCount, ratingDistribution, reviews] = await Promise.all([
+      prisma.review.aggregate({
+        where: { tailorId: id, isFlagged: false },
+        _avg: { rating: true },
+        _count: true,
+      }),
+      prisma.serviceRequest.count({
+        where: { tailorId: id, status: 'Completed' },
+      }),
+      prisma.review.groupBy({
+        by: ['rating'],
+        where: { tailorId: id, isFlagged: false },
+        _count: true,
+      }),
+      prisma.review.findMany({
+        where: { tailorId: id, isFlagged: false },
+        include: {
+          customer: {
+            select: { id: true, name: true, avatarUrl: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
 
     const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     ratingDistribution.forEach((r) => {
       distribution[r.rating] = r._count;
-    });
-
-    const reviews = await prisma.review.findMany({
-      where: { tailorId: id, isFlagged: false },
-      include: {
-        customer: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
     });
 
     res.json({
@@ -170,6 +194,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         ...normalizeTailor(tailor),
         averageRating: ratings._avg.rating || 0,
         reviewCount: ratings._count,
+        completedCount,
         ratingDistribution: distribution,
         reviews,
       },

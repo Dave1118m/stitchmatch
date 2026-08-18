@@ -100,6 +100,9 @@ export const measurementsAPI = {
   uploadPhotos: (requestId: string, data: any) => api.post(`/measurements/${requestId}/photos`, data),
   getByRequest: (requestId: string) => api.get(`/measurements/${requestId}`),
   addAdjustments: (requestId: string, data: any) => api.put(`/measurements/${requestId}/adjustments`, data),
+  getVaultLatest: () => api.get('/measurements/vault/latest'),
+  applyVault: (requestId: string, data?: any) => api.post(`/measurements/${requestId}/apply-vault`, data || {}),
+  updateVaultManual: (data: any) => api.put('/measurements/vault/manual', data),
 };
 
 // Orders API
@@ -144,3 +147,11 @@ export const uploadsAPI = {
     });
   },
 };
+
+// Settings API
+export const settingsAPI = {
+  getPublic: () => api.get('/settings/public'),
+  getAll: () => api.get('/settings'),
+  update: (data: Record<string, any>) => api.put('/settings', data),
+};
+

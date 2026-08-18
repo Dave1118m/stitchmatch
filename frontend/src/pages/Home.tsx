@@ -44,10 +44,15 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/tailors?search=${encodeURIComponent(searchQuery.trim())}`);
+    if (user) {
+      if (searchQuery.trim()) {
+        navigate(`/tailors?search=${encodeURIComponent(searchQuery.trim())}`);
+      } else {
+        navigate('/tailors');
+      }
     } else {
-      navigate('/tailors');
+      // Unauthenticated visitors are routed to Customer Registration
+      navigate(`/register?role=customer`);
     }
   };
 
@@ -106,7 +111,7 @@ export default function Home() {
             </span>
           </Link>
 
-          {/* Nav Links - Desktop */}
+          {/* Nav Links - Desktop Anchor Scrolls */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
             <a href="#how-it-works" className={`transition-colors ${isDark ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-primary-600'}`}>
               {t('home.howItWorks.badge')}
@@ -148,11 +153,11 @@ export default function Home() {
               </Link>
             ) : (
               <>
-                <Link to="/login" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
+                <Link to="/login?role=customer" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
                   <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>{t('nav.signIn')}</span>
                 </Link>
-                <Link to="/join" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
+                <Link to="/register?role=customer" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
                   <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>{t('nav.joinNow')}</span>
                 </Link>
@@ -235,7 +240,7 @@ export default function Home() {
         )}
       </header>
 
-      {/* NEW TWO-COLUMN HERO SECTION (3DLOOK Style) */}
+      {/* HERO SECTION */}
       <section className={`relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24 lg:pt-32 lg:pb-32 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
         {/* Dotted Background Pattern */}
         <div className={`absolute inset-0 z-0 ${isDark ? 'opacity-10' : 'opacity-40'}`} style={{
@@ -257,12 +262,14 @@ export default function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6">
-              <Link to="/join" className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3 sm:py-3.5 px-8 sm:px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-base sm:text-lg">
+              <Link
+                to={user ? '/dashboard' : '/register?role=customer'}
+                className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3 sm:py-3.5 px-8 sm:px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-base sm:text-lg"
+              >
                 {t('home.getStartedBtn')}
               </Link>
               <a href="#how-it-works" className={`flex items-center justify-center gap-3 py-3 sm:py-3.5 px-6 rounded font-medium transition-all w-full sm:w-auto text-base sm:text-lg ${isDark ? 'text-white hover:bg-gray-800' : 'text-slate-900 hover:bg-slate-50'}`}>
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-slate-300 dark:border-gray-600 flex items-center justify-center flex-shrink-0">
-                  {/* Play Icon */}
                   <div className="w-0 h-0 border-t-[5px] sm:border-t-[6px] border-t-transparent border-l-[7px] sm:border-l-[8px] border-l-current border-b-[5px] sm:border-b-[6px] border-b-transparent ml-1"></div>
                 </div>
                 {t('home.howItWorks.title')}
@@ -299,7 +306,6 @@ export default function Home() {
               </div>
 
               {/* Anatomical Landmark Points floating on Model */}
-              {/* Shoulder Landmark */}
               <div className="absolute top-[28%] left-[20%] z-20 flex items-center gap-1.5 pointer-events-none">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -310,7 +316,6 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* Chest Core Point */}
               <div className="absolute top-[44%] left-[44%] -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center">
                 <span className="relative flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -318,7 +323,6 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* Waist Landmark */}
               <div className="absolute top-[62%] left-[24%] z-20 flex items-center gap-1.5 pointer-events-none">
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -329,7 +333,7 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* Floating Glassmorphism UI - Card 1 (Chest Size) */}
+              {/* Floating Glassmorphism UI - Card 1 */}
               <div className={`absolute top-[8%] sm:top-[12%] -left-3 sm:-left-[8%] lg:-left-[14%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700/50 flex items-center justify-center flex-shrink-0 text-blue-600 dark:text-blue-400">
                   <Ruler className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -340,7 +344,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating Glassmorphism UI - Card 2 (Accuracy) */}
+              {/* Floating Glassmorphism UI - Card 2 */}
               <div className={`absolute top-[34%] sm:top-[38%] -right-3 sm:-right-[8%] lg:-right-[14%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border flex items-center gap-3 sm:gap-4 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 flex items-center justify-center flex-shrink-0 text-emerald-600 dark:text-emerald-400">
                   <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -351,7 +355,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating Glassmorphism UI - Card 3 (Scan Progress) */}
+              {/* Floating Glassmorphism UI - Card 3 */}
               <div className={`absolute bottom-[4%] sm:bottom-[6%] -left-3 sm:-left-[6%] lg:-left-[10%] z-30 px-3.5 sm:px-5 py-2.5 sm:py-3.5 rounded-2xl backdrop-blur-md shadow-2xl border w-44 sm:w-52 transition-transform duration-300 hover:scale-105 ${isDark ? 'bg-gray-900/85 border-gray-700/60 text-white' : 'bg-white/90 border-slate-200/80 text-slate-900'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <p className={`text-[10px] sm:text-[11px] font-semibold tracking-wide uppercase ${isDark ? 'text-gray-300' : 'text-slate-500'}`}>{t('home.aiHud.liveScanner')}</p>
@@ -385,7 +389,7 @@ export default function Home() {
                   className={`w-full py-3 bg-transparent outline-none text-base ${isDark ? 'text-white placeholder-gray-500' : 'text-slate-900 placeholder-slate-400'}`}
                 />
               </div>
-              <button type="submit" className="bg-[#2563eb] hover:bg-blue-700 text-white w-full sm:w-auto text-sm font-medium px-8 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors">
+              <button type="submit" className="bg-[#2563eb] hover:bg-blue-700 text-white w-full sm:w-auto text-sm font-medium px-8 py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer">
                 <Search className="h-4 w-4" />
                 <span>{t('home.searchBtn')}</span>
               </button>
@@ -463,7 +467,6 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-purple-950/40 via-gray-800 to-gray-800 border-purple-800/60' 
@@ -480,7 +483,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 2 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-emerald-950/40 via-gray-800 to-gray-800 border-emerald-800/60' 
@@ -497,7 +499,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 3 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-blue-950/40 via-gray-800 to-gray-800 border-blue-800/60' 
@@ -514,7 +515,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 4 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-amber-950/40 via-gray-800 to-gray-800 border-amber-800/60' 
@@ -531,7 +531,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 5 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-indigo-950/40 via-gray-800 to-gray-800 border-indigo-800/60' 
@@ -548,7 +547,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 6 */}
             <div className={`p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
               isDark 
                 ? 'bg-gradient-to-br from-rose-950/40 via-gray-800 to-gray-800 border-rose-800/60' 
@@ -567,6 +565,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       {/* PORTFOLIO & TAILOR WORK SHOWCASE SECTION */}
       <section id="portfolio" className={`py-20 ${isDark ? 'bg-gray-800' : 'bg-slate-50/70'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -583,7 +582,10 @@ export default function Home() {
                 {t('home.features.subtitle')}
               </p>
             </div>
-            <Link to="/tailors" className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline">
+            <Link
+              to={user ? '/tailors' : '/register?role=customer'}
+              className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline"
+            >
               <span>{t('home.footer.exploreTailors')}</span>
               <ChevronRight className="h-4 w-4" />
             </Link>
@@ -633,7 +635,10 @@ export default function Home() {
                 {t('tailors.subtitle')}
               </p>
             </div>
-            <Link to="/tailors" className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline">
+            <Link
+              to={user ? '/tailors' : '/register?role=customer'}
+              className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline"
+            >
               <span>{t('home.footer.exploreTailors')}</span>
               <ChevronRight className="h-4 w-4" />
             </Link>
@@ -694,7 +699,10 @@ export default function Home() {
                         <span>{tailor.averageRating ? Number(tailor.averageRating).toFixed(1) : '5.0'}</span>
                       </div>
                       
-                      <Link to={`/tailors/${tailor.id}`} className="btn-primary text-xs px-4 py-2 inline-flex items-center space-x-1">
+                      <Link
+                        to={user ? `/tailors/${tailor.id}` : '/register?role=customer'}
+                        className="btn-primary text-xs px-4 py-2 inline-flex items-center space-x-1"
+                      >
                         <span>{t('tailors.viewProfile')}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
@@ -716,12 +724,18 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-            <Link to="/tailors" className="bg-white text-primary-700 font-bold px-8 py-3.5 rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center justify-center space-x-2">
+            <Link
+              to={user ? '/tailors' : '/register?role=customer'}
+              className="bg-white text-primary-700 font-bold px-8 py-3.5 rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center justify-center space-x-2"
+            >
               <Search className="h-5 w-5" />
               <span>{t('home.cta.customerBtn')}</span>
             </Link>
             {!user && (
-              <Link to="/register?role=tailor" className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2">
+              <Link
+                to="/register?role=tailor"
+                className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2"
+              >
                 <Scissors className="h-5 w-5" />
                 <span>{t('home.cta.tailorBtn')}</span>
               </Link>

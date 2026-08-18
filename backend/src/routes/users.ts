@@ -5,6 +5,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { parseJsonArray } from '../utils/jsonHelpers';
 import { validateBody } from '../middleware/validate';
 import { UpdateUserSchema, SwitchRoleSchema } from '../utils/schemas';
+import { JWT_SECRET } from '../utils/secrets';
 
 const router = Router();
 
@@ -106,7 +107,7 @@ router.put('/switch-role', authenticate, validateBody(SwitchRoleSchema), async (
     // Generate new token with updated role
     const token = jwt.sign(
       { userId: req.userId, role: role },
-      (process.env.JWT_SECRET || 'fallback-secret') as string,
+      JWT_SECRET,
       { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any }
     );
 

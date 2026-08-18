@@ -21,6 +21,7 @@ import notificationRoutes from './routes/notifications';
 import photosRoutes from './routes/photos';
 import productRoutes from './routes/products';
 import uploadRoutes from './routes/uploads';
+import settingsRoutes from './routes/settings';
 import { setupSocketHandlers } from './socket';
 
 dotenv.config();
@@ -157,6 +158,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check endpoint (for cloud monitoring / uptime checks)
 app.get('/api/health', (_req, res) => {

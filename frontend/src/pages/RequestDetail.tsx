@@ -27,14 +27,18 @@ import {
   Upload,
   Image as ImageIcon,
   Move3d,
-  AlertCircle
+  AlertCircle,
+  RotateCcw,
+  RefreshCw
 } from 'lucide-react';
 import ImageModal from '../components/ImageModal';
 import { RequestDetailSkeleton } from '../components/SkeletonLoaders';
 import MeasurementInstructionsModal from '../components/MeasurementInstructionsModal';
 import AICameraScannerModal from '../components/AICameraScannerModal';
 import ThreeBodyAvatar from '../components/ThreeBodyAvatar';
+import CuttersSpecSheetModal from '../components/CuttersSpecSheetModal';
 import { validateImageFile } from '../utils/fileValidation';
+import { validateTriplePoseImages } from '../utils/imagePoseValidator';
 
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
@@ -75,6 +79,15 @@ export default function RequestDetail() {
     note: '',
   });
 
+  // Measurement Vault & Spec Sheet Modal State
+  const [vaultMeasurement, setVaultMeasurement] = useState<any | null>(null);
+  const [showSpecSheetModal, setShowSpecSheetModal] = useState(false);
+  const [selectedFileFingerprints, setSelectedFileFingerprints] = useState<{
+    front?: string;
+    side?: string;
+    back?: string;
+  }>({});
+
   // Negotiation state
   const [negotiations, setNegotiations] = useState<any[]>([]);
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
@@ -87,7 +100,46 @@ export default function RequestDetail() {
 
   useEffect(() => {
     loadRequest();
+    loadVaultMeasurement();
   }, [id]);
+
+  // Real-time Auto-Polling when AI Measurement is in Processing or Pending state
+  useEffect(() => {
+    let intervalId: any = null;
+    const aiStatus = request?.measurement?.aiStatus;
+    if (aiStatus === 'processing' || aiStatus === 'pending') {
+      intervalId = setInterval(() => {
+        loadRequest();
+      }, 1500);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [request?.measurement?.aiStatus]);
+
+  const loadVaultMeasurement = async () => {
+    try {
+      const res = await measurementsAPI.getVaultLatest();
+      if (res.data?.measurement) {
+        setVaultMeasurement(res.data.measurement);
+      }
+    } catch (err) {
+      console.error('Failed to load vault measurements', err);
+    }
+  };
+
+  const handleApplyVaultMeasurements = async () => {
+    setSubmitting(true);
+    try {
+      await measurementsAPI.applyVault(id!);
+      toast.success('3D body measurements applied from your personal vault!');
+      loadRequest();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to apply saved measurements');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const loadRequest = async () => {
     try {
@@ -152,7 +204,7 @@ export default function RequestDetail() {
     }
   };
 
-  // Handle direct file upload from user device (phone gallery / computer)
+  // Handle direct file upload from user device (phone gallery / computer) with strict duplicate prevention
   const handleFileUpload = async (field: 'front' | 'side' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -165,9 +217,21 @@ export default function RequestDetail() {
       return;
     }
 
+    // Strict duplicate detection across poses
+    const fingerprint = `${file.name}-${file.size}-${file.lastModified}`;
+    const otherSlots = Object.entries(selectedFileFingerprints).filter(([slot]) => slot !== field);
+    for (const [slotKey, existingFp] of otherSlots) {
+      if (existingFp === fingerprint) {
+        toast.error(`⚠️ Duplicate Photo Rejected: You selected the same image for both ${field.toUpperCase()} and ${slotKey.toUpperCase()}. The AI measurement engine requires 1 distinct Front pose, 1 separate 90° Side profile, and 1 Back pose.`);
+        e.target.value = '';
+        return;
+      }
+    }
+
     setUploadingPhotoField(field);
     try {
       const res = await uploadsAPI.uploadImage(file);
+      setSelectedFileFingerprints((prev) => ({ ...prev, [field]: fingerprint }));
       if (field === 'front') setPhotos((prev) => ({ ...prev, frontPhotoUrl: res.data.url }));
       if (field === 'side') setPhotos((prev) => ({ ...prev, sidePhotoUrl: res.data.url }));
       if (field === 'back') setPhotos((prev) => ({ ...prev, backPhotoUrl: res.data.url }));
@@ -183,14 +247,36 @@ export default function RequestDetail() {
   const handleUploadPhotos = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Duplicate pose check
-    if (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.frontPhotoUrl === photos.sidePhotoUrl) {
-      alert('⚠️ Photo Validation Error: The Front and Side photos appear to be identical. The AI requires 1 distinct Front pose and 1 separate 90° Side profile to measure chest and waist depth accurately.');
+    // Strict Duplicate pose check
+    const isDuplicate = 
+      (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.frontPhotoUrl === photos.sidePhotoUrl) ||
+      (photos.frontPhotoUrl && photos.backPhotoUrl && photos.frontPhotoUrl === photos.backPhotoUrl) ||
+      (photos.sidePhotoUrl && photos.backPhotoUrl && photos.sidePhotoUrl === photos.backPhotoUrl) ||
+      (selectedFileFingerprints.front && selectedFileFingerprints.side && selectedFileFingerprints.front === selectedFileFingerprints.side) ||
+      (selectedFileFingerprints.front && selectedFileFingerprints.back && selectedFileFingerprints.front === selectedFileFingerprints.back) ||
+      (selectedFileFingerprints.side && selectedFileFingerprints.back && selectedFileFingerprints.side === selectedFileFingerprints.back);
+
+    if (isDuplicate) {
+      toast.error('⚠️ Duplicate Photo Error: Front, Side, and Back photos must be separate poses. The AI requires 1 distinct Front pose and 1 separate 90° Side profile to measure chest and waist depth accurately.');
       return;
     }
 
     setSubmitting(true);
     try {
+      // Run Client-Side Pixel Computer Vision Verification (Person Identity & Distance/Framing)
+      if (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.backPhotoUrl) {
+        const visionResult = await validateTriplePoseImages(
+          photos.frontPhotoUrl,
+          photos.sidePhotoUrl,
+          photos.backPhotoUrl
+        );
+        if (!visionResult.isValid && visionResult.error) {
+          toast.error(visionResult.error);
+          setSubmitting(false);
+          return;
+        }
+      }
+
       await measurementsAPI.uploadPhotos(id!, photos);
       setShowManualPhotoUpload(false);
       showBrowserNotification('AI Measurement Processing', {
@@ -198,7 +284,7 @@ export default function RequestDetail() {
       });
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to upload photos');
+      toast.error(err.response?.data?.error || 'Failed to upload photos');
     } finally {
       setSubmitting(false);
     }
@@ -208,13 +294,27 @@ export default function RequestDetail() {
   const handleCameraScanComplete = async (captured: { frontPhotoUrl: string; sidePhotoUrl: string; backPhotoUrl: string }) => {
     setSubmitting(true);
     try {
+      // Run Client-Side Pixel Computer Vision Verification (Person Identity & Distance/Framing)
+      if (captured.frontPhotoUrl && captured.sidePhotoUrl && captured.backPhotoUrl) {
+        const visionResult = await validateTriplePoseImages(
+          captured.frontPhotoUrl,
+          captured.sidePhotoUrl,
+          captured.backPhotoUrl
+        );
+        if (!visionResult.isValid && visionResult.error) {
+          toast.error(visionResult.error);
+          setSubmitting(false);
+          return;
+        }
+      }
+
       await measurementsAPI.uploadPhotos(id!, captured);
       showBrowserNotification('AI Measurement Extraction Started', {
         body: 'All 3 live camera angles received! Estimating tailoring dimensions.',
       });
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to process camera scan');
+      toast.error(err.response?.data?.error || 'Failed to process camera scan');
     } finally {
       setSubmitting(false);
     }
@@ -388,9 +488,9 @@ export default function RequestDetail() {
           <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h1>
           <div className="flex items-center space-x-2 print:hidden">
             <button
-              onClick={() => window.print()}
-              className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium flex items-center space-x-2 transition-colors"
-              title="Print or Save Order Spec Sheet PDF"
+              onClick={() => setShowSpecSheetModal(true)}
+              className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium flex items-center space-x-2 transition-colors cursor-pointer"
+              title="Print or Save Atelier Technical Spec Sheet PDF"
             >
               <Printer className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               <span className="hidden sm:inline">Print Spec Sheet</span>
@@ -452,29 +552,56 @@ export default function RequestDetail() {
             </div>
           )}
 
-          {/* Confirm Agreement */}
+          {/* Agreement Status & Confirmation */}
           {request.status === 'Under_Discussion' && (
             <div className="card">
-              <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Confirm Agreement</h2>
+              <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Agreement Status</h2>
+              
+              {/* Dual Party Status Pills */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className={`p-2.5 rounded-xl border text-center ${
+                  request.customerConfirmed
+                    ? (isDark ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
+                    : (isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-500')
+                }`}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider">Customer</p>
+                  <p className="text-xs font-semibold mt-0.5 flex items-center justify-center">
+                    {request.customerConfirmed ? (
+                      <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Agreed</>
+                    ) : 'Pending Approval'}
+                  </p>
+                </div>
+
+                <div className={`p-2.5 rounded-xl border text-center ${
+                  request.tailorConfirmed
+                    ? (isDark ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
+                    : (isDark ? 'bg-gray-800 border-gray-700 text-gray-400' : 'bg-gray-50 border-gray-200 text-gray-500')
+                }`}>
+                  <p className="text-[10px] font-bold uppercase tracking-wider">Tailor</p>
+                  <p className="text-xs font-semibold mt-0.5 flex items-center justify-center">
+                    {request.tailorConfirmed ? (
+                      <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Agreed</>
+                    ) : 'Pending Approval'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Single Action Button for Party Awaiting Confirmation */}
               {isCustomer && !request.customerConfirmed && (
-                <button onClick={handleConfirmCustomer} disabled={submitting} className="btn-primary w-full">
-                  {submitting ? 'Confirming...' : 'Confirm Agreement'}
+                <button onClick={handleConfirmCustomer} disabled={submitting} className="btn-primary w-full text-xs sm:text-sm font-bold py-2.5 shadow-md">
+                  {submitting ? 'Confirming...' : 'Approve & Confirm Final Terms'}
                 </button>
               )}
               {isTailor && !request.tailorConfirmed && (
-                <button onClick={handleConfirmTailor} disabled={submitting} className="btn-primary w-full">
-                  {submitting ? 'Confirming...' : 'Confirm Agreement'}
+                <button onClick={handleConfirmTailor} disabled={submitting} className="btn-primary w-full text-xs sm:text-sm font-bold py-2.5 shadow-md">
+                  {submitting ? 'Confirming...' : 'Approve & Confirm Final Terms'}
                 </button>
               )}
+
               {request.customerConfirmed && request.tailorConfirmed && (
-                <p className="text-green-600 flex items-center"><CheckCircle className="h-4 w-4 mr-2" />Both parties confirmed</p>
-              )}
-              {!request.customerConfirmed && !request.tailorConfirmed && (
-                <div className="mt-3">
-                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
-                    Use the Negotiation section below to discuss and agree on price, deadline, and specs before confirming.
-                  </p>
-                </div>
+                <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center justify-center pt-1">
+                  <CheckCircle className="h-4 w-4 mr-1.5" /> Both parties have approved the agreement
+                </p>
               )}
             </div>
           )}
@@ -482,20 +609,32 @@ export default function RequestDetail() {
           {/* AI Body Measurement Section */}
           {(isCustomer || isTailor) && (request.status === 'Agreed' || request.status === 'In_Progress' || request.measurement) && (
             <div className="card">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                 <h2 className={`font-semibold flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   <Camera className="h-5 w-5 mr-2 text-primary-600" />
                   AI Body Measurements & Specs
                 </h2>
-                {request.measurement && (
-                  <button 
-                    onClick={() => setShowInstructions(true)}
-                    className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center"
-                  >
-                    <Info className="w-3.5 h-3.5 mr-1" />
-                    <span>View Guide</span>
-                  </button>
-                )}
+                <div className="flex items-center space-x-2">
+                  {isCustomer && request.measurement && (
+                    <button
+                      onClick={() => setShowManualPhotoUpload(!showManualPhotoUpload)}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-primary-500/40 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950/40 flex items-center space-x-1.5 transition-all font-semibold cursor-pointer"
+                      title="Retake camera scan or upload new photos"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>{showManualPhotoUpload ? 'Close Retake Panel' : 'Retake / New Scan'}</span>
+                    </button>
+                  )}
+                  {request.measurement && (
+                    <button 
+                      onClick={() => setShowInstructions(true)}
+                      className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 flex items-center"
+                    >
+                      <Info className="w-3.5 h-3.5 mr-1" />
+                      <span>View Guide</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {request.measurement ? (
@@ -505,9 +644,12 @@ export default function RequestDetail() {
                     <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${
                       request.measurement.aiStatus === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' :
                       request.measurement.aiStatus === 'processing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 animate-pulse' :
+                      request.measurement.aiStatus === 'needs_retake' ? 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300' :
                       'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300'
                     }`}>
-                      {request.measurement.aiStatus === 'processing' ? 'AI Analyzing Contours...' : `AI Status: ${request.measurement.aiStatus}`}
+                      {request.measurement.aiStatus === 'processing' ? 'AI Analyzing Contours...' : 
+                       request.measurement.aiStatus === 'needs_retake' ? '⚠️ Retake Needed' :
+                       `AI Status: ${request.measurement.aiStatus}`}
                     </span>
                     {request.measurement.aiConfidence && request.measurement.aiStatus === 'completed' && (
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center">
@@ -517,6 +659,144 @@ export default function RequestDetail() {
                     )}
                   </div>
 
+                  {/* Retake / Re-upload Panel if toggled by customer */}
+                  {showManualPhotoUpload && isCustomer && (
+                    <div className={`p-4 rounded-2xl border space-y-4 animate-fadeIn ${
+                      isDark ? 'bg-gray-800/90 border-gray-700' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400 flex items-center gap-1.5">
+                          <RotateCcw className="w-4 h-4" />
+                          <span>Retake Body Scan / Upload New Photos</span>
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhotos({ frontPhotoUrl: '', sidePhotoUrl: '', backPhotoUrl: '' });
+                            setSelectedFileFingerprints({});
+                            toast.success('Photo inputs cleared. You can select new files now.');
+                          }}
+                          className="text-[11px] text-gray-500 hover:text-red-500 flex items-center gap-1"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          <span>Clear Selection</span>
+                        </button>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowCameraScanner(true)}
+                          className="btn-primary flex-1 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 shadow-md cursor-pointer"
+                        >
+                          <Camera className="w-4 h-4" />
+                          <span>Launch Live AI Camera</span>
+                        </button>
+                      </div>
+
+                      {/* Photo Upload Form: Direct File Browser */}
+                      <form onSubmit={handleUploadPhotos} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {/* Front Photo Card */}
+                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                          }`}>
+                            <span className="text-xs font-bold mb-1.5">1. Front Pose</span>
+                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                              {photos.frontPhotoUrl ? (
+                                <img src={photos.frontPhotoUrl} alt="Front Preview" className="w-full h-full object-cover" />
+                              ) : uploadingPhotoField === 'front' ? (
+                                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <div className="text-gray-400 flex flex-col items-center">
+                                  <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                  <span className="text-[10px]">No file selected</span>
+                                </div>
+                              )}
+                            </div>
+                            <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                              <Upload className="w-3 h-3" />
+                              <span>Browse File</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleFileUpload('front', e)}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Side Photo Card */}
+                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                          }`}>
+                            <span className="text-xs font-bold mb-1.5">2. 90° Side Profile</span>
+                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                              {photos.sidePhotoUrl ? (
+                                <img src={photos.sidePhotoUrl} alt="Side Preview" className="w-full h-full object-cover" />
+                              ) : uploadingPhotoField === 'side' ? (
+                                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <div className="text-gray-400 flex flex-col items-center">
+                                  <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                  <span className="text-[10px]">No file selected</span>
+                                </div>
+                              )}
+                            </div>
+                            <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                              <Upload className="w-3 h-3" />
+                              <span>Browse File</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleFileUpload('side', e)}
+                              />
+                            </label>
+                          </div>
+
+                          {/* Back Photo Card */}
+                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                          }`}>
+                            <span className="text-xs font-bold mb-1.5">3. Back Pose</span>
+                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                              {photos.backPhotoUrl ? (
+                                <img src={photos.backPhotoUrl} alt="Back Preview" className="w-full h-full object-cover" />
+                              ) : uploadingPhotoField === 'back' ? (
+                                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <div className="text-gray-400 flex flex-col items-center">
+                                  <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
+                                  <span className="text-[10px]">No file selected</span>
+                                </div>
+                              )}
+                            </div>
+                            <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
+                              <Upload className="w-3 h-3" />
+                              <span>Browse File</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleFileUpload('back', e)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl || !photos.backPhotoUrl}
+                          className="btn-primary w-full text-xs py-2.5 flex items-center justify-center space-x-2 font-bold disabled:opacity-50 cursor-pointer shadow-md"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span>{submitting ? 'Analyzing Photos...' : 'Submit New Scan to AI Engine'}</span>
+                        </button>
+                      </form>
+                    </div>
+                  )}
+
                   {/* AI Needs Retake / Rejection Notice */}
                   {(request.measurement.aiStatus === 'needs_retake' || request.measurement.aiStatus === 'failed') && (
                     <div className={`p-4 rounded-2xl border space-y-2.5 animate-fadeIn ${
@@ -524,23 +804,33 @@ export default function RequestDetail() {
                     }`}>
                       <div className="flex items-center space-x-2 font-bold text-sm">
                         <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-                        <span>AI Scan Alert: Pose Inconsistency Detected</span>
+                        <span>AI Scan Alert: Pose Angle Mismatch Detected</span>
                       </div>
-                      <p className="text-xs leading-relaxed opacity-90">
-                        The AI engine could not calculate 3D measurements because the uploaded photos appear to be duplicates (such as submitting the front pose twice instead of a 90° side profile). A distinct side angle is required to estimate depth and posture slope.
+                      <p className="text-xs leading-relaxed opacity-95 font-medium">
+                        {(() => {
+                          try {
+                            const parsed = typeof request.measurement.adjustments === 'string'
+                              ? JSON.parse(request.measurement.adjustments)
+                              : request.measurement.adjustments;
+                            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.orientationError) {
+                              return parsed[0].orientationError;
+                            }
+                          } catch (e) {}
+                          return 'The AI engine detected that the uploaded photo angles do not match the required poses (e.g. uploading a Back or Front pose in the Side Profile slot). The AI requires 1 facing-front pose, 1 separate 90° Side profile, and 1 Back pose.';
+                        })()}
                       </p>
                       {isCustomer && (
                         <div className="flex items-center space-x-2 pt-1">
                           <button
                             onClick={() => setShowCameraScanner(true)}
-                            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs flex items-center space-x-1.5 shadow-md transition-all"
+                            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs flex items-center space-x-1.5 shadow-md transition-all cursor-pointer"
                           >
                             <Camera className="w-3.5 h-3.5" />
                             <span>Retake with Live Camera</span>
                           </button>
                           <button
                             onClick={() => setShowManualPhotoUpload(true)}
-                            className="px-3.5 py-2 rounded-xl border border-amber-400/50 hover:bg-amber-900/20 text-xs font-semibold transition-all"
+                            className="px-3.5 py-2 rounded-xl border border-amber-400/50 hover:bg-amber-900/20 text-xs font-semibold transition-all cursor-pointer"
                           >
                             Re-upload Distinct Photos
                           </button>
@@ -818,12 +1108,78 @@ export default function RequestDetail() {
               ) : isCustomer ? (
                 /* Customer has not submitted measurements yet */
                 <div className="space-y-4 py-2">
+                  
+                  {/* 1-CLICK APPLY SAVED MEASUREMENTS VAULT CARD */}
+                  {vaultMeasurement && (
+                    <div className={`p-4 rounded-2xl border space-y-3 ${
+                      isDark 
+                        ? 'bg-gradient-to-r from-purple-950/40 via-gray-800 to-gray-800 border-purple-800/60' 
+                        : 'bg-gradient-to-r from-purple-50 via-slate-50 to-white border-purple-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          <div className="p-1.5 rounded-lg bg-purple-600 text-white shadow-xs">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                              Saved 3D Measurements Found in Your Vault
+                            </h4>
+                            <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                              Apply your verified body profile with 1 click without rescanning.
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          1-Click Ready
+                        </span>
+                      </div>
+
+                      {/* Quick Metric Pills */}
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs font-mono">
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Chest</span>
+                          <strong>{Number(vaultMeasurement.chest || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Waist</span>
+                          <strong>{Number(vaultMeasurement.waist || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Hip</span>
+                          <strong>{Number(vaultMeasurement.hip || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Inseam</span>
+                          <strong>{Number(vaultMeasurement.inseam || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Shoulder</span>
+                          <strong>{Number(vaultMeasurement.shoulderWidth || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Arm</span>
+                          <strong>{Number(vaultMeasurement.armLength || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleApplyVaultMeasurements}
+                        disabled={submitting}
+                        className="btn-primary w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{submitting ? 'Applying Profile...' : 'Apply Saved 3D Measurements to This Order'}</span>
+                      </button>
+                    </div>
+                  )}
+
                   <div className="text-center">
                     <div className={`p-3 rounded-full inline-flex mb-3 ${isDark ? 'bg-primary-950 text-primary-400' : 'bg-primary-50 text-primary-600'}`}>
                       <Camera className="w-8 h-8" />
                     </div>
                     <h3 className={`text-base sm:text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      Ready for AI Body Measurement?
+                      {vaultMeasurement ? 'Or Scan / Upload New Body Measurements' : 'Ready for AI Body Measurement?'}
                     </h3>
                     <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       Scan your body using your camera or upload 3 reference photos to extract millimeter-accurate dimensions for your tailor.
@@ -1264,6 +1620,12 @@ export default function RequestDetail() {
           </div>
         </div>
       )}
+      {/* Cutters Technical Specification Sheet Modal */}
+      <CuttersSpecSheetModal
+        isOpen={showSpecSheetModal}
+        onClose={() => setShowSpecSheetModal(false)}
+        request={request}
+      />
     </div>
   );
 }

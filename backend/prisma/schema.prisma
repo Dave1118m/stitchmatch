@@ -284,3 +284,11 @@ model DesignOption {
 
   @@map("design_options")
 }
+
+model PlatformSetting {
+  key       String   @id @map("key")
+  value     String   @db.Text @map("value")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}

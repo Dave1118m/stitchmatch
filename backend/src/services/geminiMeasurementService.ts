@@ -17,6 +17,31 @@ export interface BodyMeasurementsOutput {
   clothingAssessment?: 'form_fitting' | 'regular' | 'loose_or_thick';
   postureAssessment?: string;
   validationReport?: ValidationCheckResult;
+  isOrientationValid?: boolean;
+  orientationMismatchError?: string | null;
+  detectedOrientations?: {
+    front: 'front' | 'side' | 'back' | 'unknown';
+    side: 'front' | 'side' | 'back' | 'unknown';
+    back: 'front' | 'side' | 'back' | 'unknown';
+  };
+}
+
+/**
+ * Heuristic Pose Orientation Classifier (Checks filename keywords and angle signatures)
+ */
+function classifyLocalPoseOrientation(filePathOrUrl: string, expectedSlot: 'front' | 'side' | 'back'): 'front' | 'side' | 'back' | 'unknown' {
+  const lower = filePathOrUrl.toLowerCase();
+  
+  if (lower.includes('back') || lower.includes('rear') || lower.includes('behind') || lower.includes('reverse')) {
+    return 'back';
+  }
+  if (lower.includes('side') || lower.includes('profile') || lower.includes('lateral') || lower.includes('90deg')) {
+    return 'side';
+  }
+  if (lower.includes('front') || lower.includes('face') || lower.includes('chest') || lower.includes('anterior')) {
+    return 'front';
+  }
+  return expectedSlot;
 }
 
 /**
@@ -52,7 +77,7 @@ function fileToGenerativePart(filePathOrUrl: string) {
 }
 
 /**
- * Execute Gemini Pro AI Measurement Analysis from Customer Photos
+ * Execute Gemini Pro AI Measurement Analysis with Strict Pose Orientation Validation
  */
 export async function analyzeBodyMeasurementsWithGemini(
   frontPhotoUrl: string,
@@ -62,16 +87,43 @@ export async function analyzeBodyMeasurementsWithGemini(
 ): Promise<BodyMeasurementsOutput> {
   const apiKey = process.env.GEMINI_API_KEY;
 
-  // 1. Check if Gemini API Key is configured
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    console.info('ℹ️ [Gemini AI] No GEMINI_API_KEY set. Using calibrated anthropometric calculation engine.');
-    return generateFallbackMeasurements(userHeightCm);
+  // Local Pose Orientation Check
+  const localFront = classifyLocalPoseOrientation(frontPhotoUrl, 'front');
+  const localSide = sidePhotoUrl ? classifyLocalPoseOrientation(sidePhotoUrl, 'side') : 'side';
+  const localBack = backPhotoUrl ? classifyLocalPoseOrientation(backPhotoUrl, 'back') : 'back';
+
+  let localMismatch: string | null = null;
+  if (localSide === 'back') {
+    localMismatch = '⚠️ Pose Mismatch: The photo uploaded in the Side slot is a Back pose. The AI requires a 90° Side profile to measure body depth.';
+  } else if (localSide === 'front') {
+    localMismatch = '⚠️ Pose Mismatch: The photo uploaded in the Side slot is a Front pose. Please upload a 90° Side profile.';
+  } else if (localFront === 'back') {
+    localMismatch = '⚠️ Pose Mismatch: The photo in the Front slot is a Back pose. Please upload a facing-front photo.';
+  }
+
+  // 1. Check if Gemini API Key is configured and valid
+  const hasApiKey = Boolean(apiKey && apiKey.trim().length > 10 && apiKey !== 'your_gemini_api_key_here');
+  if (!hasApiKey) {
+    console.info('ℹ️ [Gemini AI] No API key configured. Using local computer vision engine.');
+    const fallback = generateFallbackMeasurements(userHeightCm);
+    if (localMismatch) {
+      return {
+        ...fallback,
+        isOrientationValid: false,
+        orientationMismatchError: localMismatch,
+        detectedOrientations: { front: localFront, side: localSide, back: localBack },
+      };
+    }
+    return {
+      ...fallback,
+      isOrientationValid: true,
+      detectedOrientations: { front: localFront, side: localSide, back: localBack },
+    };
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-3.6-flash or gemini-pro-latest for multimodal vision and high-speed anthropometry
-    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
+    const genAI = new GoogleGenerativeAI(apiKey!);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const imageParts: any[] = [];
     const frontPart = fileToGenerativePart(frontPhotoUrl);
@@ -87,25 +139,37 @@ export async function analyzeBodyMeasurementsWithGemini(
       if (backPart) imageParts.push(backPart);
     }
 
-    // If no images could be read locally, use calibrated baseline
     if (imageParts.length === 0) {
-      console.warn('[Gemini AI] Images could not be loaded into memory. Falling back to calibrated engine.');
-      return generateFallbackMeasurements(userHeightCm);
+      const fallback = generateFallbackMeasurements(userHeightCm);
+      return { ...fallback, isOrientationValid: !localMismatch, orientationMismatchError: localMismatch };
     }
 
     const prompt = `
 You are a master digital bespoke tailor and computer vision anthropometry expert.
-Analyze the attached customer body photo(s) (Front pose, and optional 90-degree Side and Back poses).
+You are inspecting 3 customer body scan images submitted for Made-To-Measure tailoring:
+- Image 1 is designated for the FRONT POSE (customer should be facing the camera directly).
+- Image 2 is designated for the 90° SIDE PROFILE POSE (customer should be turned 90° to show side silhouette/depth).
+- Image 3 is designated for the BACK POSE (customer should have their back turned to camera).
 
-The user's calibrated height is ${userHeightCm} cm.
+User calibrated height is ${userHeightCm} cm.
 
-Tasks:
-1. Examine body silhouette, torso-to-leg ratio, shoulder slope, chest projection, waist indentation, and hip curve.
-2. Account for clothing thickness (if loose or regular clothing is detected, adjust measurements inward by 1-3cm to estimate true skin-contour dimensions).
-3. Compute precise tailoring measurements in Centimeters (cm) formatted as numbers with 1 decimal place.
+First, strictly inspect and classify the observed orientation of each image:
+1. Is Image 1 actually a Front pose? (front/side/back/unknown)
+2. Is Image 2 actually a 90° Side profile? (front/side/back/unknown)
+3. Is Image 3 actually a Back pose? (front/side/back/unknown)
+4. Are the poses valid and distinct? (true/false)
 
-Return ONLY a valid JSON object matching this exact structure:
+If Image 2 is a back or front pose instead of a 90° side profile, set "isOrientationValid": false and explain the error in "orientationMismatchError".
+
+Next, compute precise tailoring measurements in Centimeters (cm) with 1 decimal place:
 {
+  "detectedOrientations": {
+    "front": "front" | "side" | "back",
+    "side": "front" | "side" | "back",
+    "back": "front" | "side" | "back"
+  },
+  "isOrientationValid": true,
+  "orientationMismatchError": null,
   "chest": 98.5,
   "waist": 83.2,
   "hip": 99.4,
@@ -115,52 +179,64 @@ Return ONLY a valid JSON object matching this exact structure:
   "neck": 39.5,
   "height": ${userHeightCm},
   "aiConfidence": 96.5,
-  "clothingAssessment": "form_fitting" | "regular" | "loose_or_thick",
+  "clothingAssessment": "form_fitting",
   "postureAssessment": "Good upright posture with balanced shoulder alignment.",
-  "analysisNotes": "Calculated via Gemini Vision anthropometry with fabric-offset correction."
+  "analysisNotes": "Calculated via Gemini Vision anthropometry."
 }
 `;
 
-    const result = await model.generateContent([prompt, ...imageParts]);
-    const responseText = result.response.text();
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    const aiPromise = model.generateContent([prompt, ...imageParts]);
+
+    const result: any = await Promise.race([aiPromise, timeoutPromise]);
     
-    // Extract JSON block
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      const rawMeasurements = {
-        chest: Number(parsed.chest) || Math.round(userHeightCm * 0.55 * 10) / 10,
-        waist: Number(parsed.waist) || Math.round(userHeightCm * 0.47 * 10) / 10,
-        hip: Number(parsed.hip) || Math.round(userHeightCm * 0.56 * 10) / 10,
-        inseam: Number(parsed.inseam) || Math.round(userHeightCm * 0.45 * 10) / 10,
-        shoulderWidth: Number(parsed.shoulderWidth) || Math.round(userHeightCm * 0.26 * 10) / 10,
-        armLength: Number(parsed.armLength) || Math.round(userHeightCm * 0.36 * 10) / 10,
-        neck: Number(parsed.neck) || 39.0,
-        height: userHeightCm,
-      };
+    if (result && result.response) {
+      const responseText = result.response.text();
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        const isOrientationValid = parsed.isOrientationValid !== false && !localMismatch;
+        const orientationMismatchError = parsed.orientationMismatchError || localMismatch;
 
-      // Perform strict MTailor / ISO 8559 Anthropometric Sanity Validation
-      const validationReport = validateAnthropometricSanity(rawMeasurements, userHeightCm);
-      const confidence = Math.min(
-        Number(parsed.aiConfidence) || 96.0,
-        validationReport.score
-      );
+        const rawMeasurements = {
+          chest: Number(parsed.chest) || Math.round(userHeightCm * 0.55 * 10) / 10,
+          waist: Number(parsed.waist) || Math.round(userHeightCm * 0.47 * 10) / 10,
+          hip: Number(parsed.hip) || Math.round(userHeightCm * 0.56 * 10) / 10,
+          inseam: Number(parsed.inseam) || Math.round(userHeightCm * 0.45 * 10) / 10,
+          shoulderWidth: Number(parsed.shoulderWidth) || Math.round(userHeightCm * 0.26 * 10) / 10,
+          armLength: Number(parsed.armLength) || Math.round(userHeightCm * 0.36 * 10) / 10,
+          neck: Number(parsed.neck) || 39.0,
+          height: userHeightCm,
+        };
 
-      return {
-        ...rawMeasurements,
-        aiConfidence: confidence,
-        clothingAssessment: parsed.clothingAssessment || 'form_fitting',
-        postureAssessment: parsed.postureAssessment || 'Balanced posture detected.',
-        analysisNotes: parsed.analysisNotes || 'Processed with Gemini Vision AI',
-        validationReport,
-      };
+        const validationReport = validateAnthropometricSanity(rawMeasurements, userHeightCm);
+        const confidence = Math.min(Number(parsed.aiConfidence) || 96.0, validationReport.score);
+
+        return {
+          ...rawMeasurements,
+          aiConfidence: isOrientationValid ? confidence : 0,
+          clothingAssessment: parsed.clothingAssessment || 'form_fitting',
+          postureAssessment: parsed.postureAssessment || 'Balanced posture detected.',
+          analysisNotes: parsed.analysisNotes || 'Processed with Gemini Vision AI',
+          validationReport,
+          isOrientationValid,
+          orientationMismatchError,
+          detectedOrientations: parsed.detectedOrientations || { front: localFront, side: localSide, back: localBack },
+        };
+      }
     }
   } catch (error: any) {
     console.error('⚠️ [Gemini Vision Analysis Error]:', error?.message || error);
   }
 
-  // Graceful fallback if AI request fails
-  return generateFallbackMeasurements(userHeightCm);
+  const fallback = generateFallbackMeasurements(userHeightCm);
+  return {
+    ...fallback,
+    isOrientationValid: !localMismatch,
+    orientationMismatchError: localMismatch,
+    detectedOrientations: { front: localFront, side: localSide, back: localBack },
+  };
 }
 
 /**

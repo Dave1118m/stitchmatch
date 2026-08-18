@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
-import { usersAPI, tailorsAPI } from '../lib/api';
+import { usersAPI, tailorsAPI, settingsAPI } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { 
   Settings as SettingsIcon, Sliders, Shield, User, Scissors, 
@@ -74,8 +74,30 @@ export default function Settings() {
       if (user.role === 'tailor') {
         loadTailorProfile();
       }
+      if (user.role === 'admin') {
+        loadPlatformSettings();
+      }
     }
   }, [user]);
+
+  const loadPlatformSettings = async () => {
+    try {
+      const res = await settingsAPI.getAll();
+      if (res.data?.settings) {
+        const s = res.data.settings;
+        setPlatformSettings((prev) => ({
+          ...prev,
+          commissionRate: String(s.commissionRate || '5.0'),
+          autoApproveTailors: Boolean(s.autoApproveTailors),
+          maintenanceMode: Boolean(s.maintenanceMode),
+          announcementBanner: s.announcementBanner || '',
+          specialtiesList: Array.isArray(s.specialtiesList) ? s.specialtiesList : prev.specialtiesList,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to load platform settings', err);
+    }
+  };
 
   useEffect(() => {
     if (!message) return;
@@ -133,13 +155,25 @@ export default function Settings() {
     }
   };
 
-  const handleSavePlatformSettings = (e: React.FormEvent) => {
+  const handleSavePlatformSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    setMessage(null);
+    try {
+      const payload = {
+        commissionRate: platformSettings.commissionRate,
+        autoApproveTailors: platformSettings.autoApproveTailors,
+        maintenanceMode: platformSettings.maintenanceMode,
+        announcementBanner: platformSettings.announcementBanner,
+        specialtiesList: platformSettings.specialtiesList,
+      };
+      await settingsAPI.update(payload);
       setMessage({ type: 'success', text: t('settings.savedSuccess') });
-    }, 400);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to save platform settings.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleAddSpecialtyTag = () => {

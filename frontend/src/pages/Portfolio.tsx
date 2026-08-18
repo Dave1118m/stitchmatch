@@ -41,8 +41,6 @@ export default function Portfolio() {
   if (error) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><div className="text-red-500 p-4 text-center">{error}</div></div>;
   if (!tailor) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"><p>Tailor not found</p></div>;
 
-  if (!tailor) return <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"><p>Tailor not found</p></div>;
-
   return (
     <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <header className={`${isDark ? 'bg-gray-800' : 'bg-white'} shadow-sm`}>
