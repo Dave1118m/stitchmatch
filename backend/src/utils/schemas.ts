@@ -14,6 +14,21 @@ export const RegisterSchema = z.object({
   location: z.string().optional().nullable(),
 });
 
+export const RegisterVerifySchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  code: z.string().length(6, { message: 'Verification code must be exactly 6 digits' }),
+  password: z
+    .string()
+    .min(8, { message: 'Password must be at least 8 characters long' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
+  name: z.string().min(2, { message: 'Name must be at least 2 characters long' }),
+  role: z.enum(['customer', 'tailor', 'admin'], { message: 'Invalid role selected' }),
+  phone: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+});
+
+
 export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string().min(1, { message: 'Password is required' }),
@@ -26,6 +41,38 @@ export const OAuthSchema = z.object({
   name: z.string().optional(),
   role: z.enum(['customer', 'tailor', 'admin']).optional(),
 });
+
+export const GoogleAuthSchema = z
+  .object({
+    credential: z.string().optional(),
+    token: z.string().optional(),
+    role: z.enum(['customer', 'tailor', 'admin']).optional(),
+  })
+  .refine((data) => Boolean(data.credential || data.token), {
+    message: 'Either Google credential or access token is required',
+  });
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+});
+
+export const VerifyCodeSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  code: z.string().length(6, { message: 'Verification code must be exactly 6 digits' }),
+  type: z.enum(['password_reset', 'email_verification']).optional(),
+});
+
+export const ResetPasswordSchema = z.object({
+  email: z.string().email({ message: 'Invalid email address' }),
+  code: z.string().length(6, { message: 'Verification code must be exactly 6 digits' }),
+  newPassword: z
+    .string()
+    .min(8, { message: 'Password must be at least 8 characters long' })
+    .regex(/[A-Z]/, { message: 'Password must contain at least one uppercase letter' })
+    .regex(/[0-9]/, { message: 'Password must contain at least one number' }),
+});
+
+
 
 // Service Request Schemas
 export const CreateRequestSchema = z.object({

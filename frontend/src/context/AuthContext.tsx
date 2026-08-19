@@ -25,8 +25,10 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: any) => Promise<any>;
+  registerVerify: (data: any) => Promise<void>;
   oauth: (data: any) => Promise<void>;
+  googleLogin: (data: { credential?: string; token?: string; role?: string }) => Promise<void>;
   logout: () => void;
   updateUser: (data: any) => Promise<void>;
   switchRole: (role: string) => Promise<void>;
@@ -62,9 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: any) => {
     const res = await authAPI.register(data);
+    return res.data;
+  };
+
+  const registerVerify = async (data: any) => {
+    const res = await authAPI.registerVerify(data);
     localStorage.setItem('token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
+    setLoading(false);
   };
 
   const oauth = async (data: any) => {
@@ -72,6 +80,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
+  };
+
+  const googleLogin = async (data: { credential?: string; token?: string; role?: string }) => {
+    const res = await authAPI.googleAuth(data);
+    localStorage.setItem('token', res.data.token);
+    setToken(res.data.token);
+    setUser(res.data.user);
+    setLoading(false);
   };
 
   const logout = () => {
@@ -97,11 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, oauth, logout, updateUser, switchRole }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, registerVerify, oauth, googleLogin, logout, updateUser, switchRole }}>
       {children}
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuth() {
   const context = useContext(AuthContext);

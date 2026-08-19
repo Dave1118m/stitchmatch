@@ -36,9 +36,20 @@ export default api;
 // Auth API
 export const authAPI = {
   register: (data: any) => api.post('/auth/register', data),
+  registerVerify: (data: any) => api.post('/auth/register-verify', data),
   login: (data: any) => api.post('/auth/login', data),
   oauth: (data: any) => api.post('/auth/oauth', data),
+  googleAuth: (data: { credential?: string; token?: string; role?: string }) => api.post('/auth/google', data),
+  getGoogleConfig: () => api.get('/auth/google/config'),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  verifyCode: (data: { email: string; code: string; type?: string }) => api.post('/auth/verify-code', data),
+  resetPassword: (data: { email: string; code: string; newPassword: string }) => api.post('/auth/reset-password', data),
+  sendVerification: (email: string) => api.post('/auth/send-verification', { email }),
+  verifyEmail: (data: { email: string; code: string }) => api.post('/auth/verify-email', data),
 };
+
+
+
 
 // Users API
 export const usersAPI = {
