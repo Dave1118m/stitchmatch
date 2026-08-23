@@ -16,6 +16,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import ThreeBodyAvatar from '../../components/ThreeBodyAvatar';
+import FitEaseRecommendationsCard from '../../components/FitEaseRecommendationsCard';
 
 export default function CustomerProfileSettings() {
   const { user, updateUser } = useAuth();
@@ -353,6 +354,11 @@ export default function CustomerProfileSettings() {
                   Calibrated: {new Date(vaultMeasurement.createdAt).toLocaleDateString()}
                 </span>
               )}
+            </div>
+
+            {/* Fit Ease Presets & International RTW Sizing Breakdown */}
+            <div className="pt-2">
+              <FitEaseRecommendationsCard rawMeasurements={vaultMeasurement} />
             </div>
           </div>
         )}

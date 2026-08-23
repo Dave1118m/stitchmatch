@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/pose": "^0.5.1675469404",
     "@react-oauth/google": "^0.13.5",
     "@types/three": "^0.185.4",
     "axios": "^1.6.5",

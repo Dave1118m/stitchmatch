@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { RotateCw, ZoomIn, ZoomOut, Layers, Eye, Sparkles, Move3d } from 'lucide-react';
+import { RotateCw, ZoomIn, ZoomOut, Layers, Eye, Sparkles, Move3d, CheckCircle2 } from 'lucide-react';
 
 interface ThreeBodyAvatarProps {
   measurements?: {
@@ -19,7 +19,7 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
   const mountRef = useRef<HTMLDivElement | null>(null);
   const [autoRotate, setAutoRotate] = useState(true);
   const [showLaserRings, setShowLaserRings] = useState(true);
-  const [activeTape, setActiveTape] = useState<'all' | 'chest' | 'waist' | 'hip'>('all');
+  const [activeTape, setActiveTape] = useState<'all' | 'chest' | 'waist' | 'hip' | 'inseam' | 'shoulder'>('all');
 
   // Animation and scene refs
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -37,7 +37,6 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     return isNaN(num) || num <= 0 ? fallback : num;
   };
 
-  // Default fallback anthropometric baselines (cm)
   const chestVal = parseVal(measurements?.chest, 96);
   const waistVal = parseVal(measurements?.waist, 82);
   const hipVal = parseVal(measurements?.hip, 98);
@@ -60,7 +59,7 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     camera.position.set(0, 1.1, 3.2);
     cameraRef.current = camera;
 
-    // 3. Renderer setup with anti-aliasing
+    // 3. Renderer setup
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -75,24 +74,24 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     const ambientLight = new THREE.AmbientLight(isDark ? 0x334155 : 0xf1f5f9, 1.8);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0x6366f1, 2.2); // Indigo key light
+    const keyLight = new THREE.DirectionalLight(0x6366f1, 2.2);
     keyLight.position.set(3, 4, 3);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x06b6d4, 1.8); // Cyan fill light
+    const fillLight = new THREE.DirectionalLight(0x06b6d4, 1.8);
     fillLight.position.set(-3, 2, 2);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xa855f7, 2.5); // Purple rim light
+    const rimLight = new THREE.DirectionalLight(0xa855f7, 2.5);
     rimLight.position.set(0, 4, -4);
     scene.add(rimLight);
 
-    // 5. Procedural Anatomical Mannequin Construction
+    // 5. Procedural Anatomical Mannequin Group
     const mannequinGroup = new THREE.Group();
     mannequinGroupRef.current = mannequinGroup;
     scene.add(mannequinGroup);
 
-    // Dynamic scale factors based on actual customer dimensions
+    // Dynamic scale factors
     const chestScale = chestVal / 96;
     const waistScale = waistVal / 82;
     const hipScale = hipVal / 98;
@@ -169,7 +168,7 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     rightShoulder.position.set(shoulderOffset, 1.46, 0);
     mannequinGroup.add(rightShoulder);
 
-    // --- Arms (Left & Right) in stylish relaxed 'A' pose ---
+    // --- Arms ---
     const armLength = 0.26 * armScale;
     const forearmLength = 0.24 * armScale;
 
@@ -199,7 +198,7 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     rightForearm.rotation.z = -0.16;
     mannequinGroup.add(rightForearm);
 
-    // --- Legs & Inseam (Left & Right) ---
+    // --- Legs & Inseam ---
     const thighLength = 0.40 * legScale;
     const calfLength = 0.42 * legScale;
     const legSpacing = 0.10 * hipScale;
@@ -234,7 +233,7 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     rightCalf.position.set(legSpacing, 0.32 * legScale, 0);
     mannequinGroup.add(rightCalf);
 
-    // --- Circular Pedestal Platform ---
+    // --- Pedestal Platform ---
     const pedestalGeo = new THREE.CylinderGeometry(0.65, 0.72, 0.04, 48);
     const pedestalMat = new THREE.MeshStandardMaterial({
       color: isDark ? 0x0f172a : 0xcbd5e1,
@@ -245,12 +244,12 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     pedestal.position.y = 0.02;
     scene.add(pedestal);
 
-    // 6. Glowing Laser Tape-Measure Rings (Cyan, Emerald, Purple)
+    // 6. Glowing Laser Tape-Measure Rings
     const laserRingsGroup = new THREE.Group();
     laserRingsGroupRef.current = laserRingsGroup;
     scene.add(laserRingsGroup);
 
-    const createGlowingRing = (radiusX: number, radiusZ: number, yPos: number, hexColor: number) => {
+    const createGlowingRing = (radiusX: number, radiusZ: number, yPos: number, hexColor: number, name: string) => {
       const curve = new THREE.EllipseCurve(0, 0, radiusX, radiusZ, 0, 2 * Math.PI, false, 0);
       const points = curve.getPoints(64);
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -264,37 +263,54 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
       const line = new THREE.Line(geometry, material);
       line.position.y = yPos;
 
-      // Outer glow pulse halo
       const haloGeo = new THREE.TorusGeometry((radiusX + radiusZ) / 2, 0.008, 16, 64);
       haloGeo.rotateX(Math.PI / 2);
       const haloMat = new THREE.MeshBasicMaterial({
         color: hexColor,
         transparent: true,
-        opacity: 0.6,
+        opacity: 0.65,
       });
       const haloMesh = new THREE.Mesh(haloGeo, haloMat);
       haloMesh.position.y = yPos;
 
       const ringContainer = new THREE.Group();
+      ringContainer.name = name;
       ringContainer.add(line);
       ringContainer.add(haloMesh);
       return ringContainer;
     };
 
     // Chest Ring (Cyan Glow #06b6d4 at Y=1.40)
-    const chestRing = createGlowingRing(chestWidth * 1.15, chestDepth * 1.25, 1.40, 0x06b6d4);
-    chestRing.name = 'chest';
+    const chestRing = createGlowingRing(chestWidth * 1.15, chestDepth * 1.25, 1.40, 0x06b6d4, 'chest');
     laserRingsGroup.add(chestRing);
 
     // Waist Ring (Emerald Glow #10b981 at Y=1.18)
-    const waistRing = createGlowingRing(waistWidth * 1.18, waistDepth * 1.30, 1.18, 0x10b981);
-    waistRing.name = 'waist';
+    const waistRing = createGlowingRing(waistWidth * 1.18, waistDepth * 1.30, 1.18, 0x10b981, 'waist');
     laserRingsGroup.add(waistRing);
 
     // Hip Ring (Purple Glow #a855f7 at Y=1.02)
-    const hipRing = createGlowingRing(hipWidth * 1.15, hipDepth * 1.25, 1.02, 0xa855f7);
-    hipRing.name = 'hip';
+    const hipRing = createGlowingRing(hipWidth * 1.15, hipDepth * 1.25, 1.02, 0xa855f7, 'hip');
     laserRingsGroup.add(hipRing);
+
+    // Shoulder Span Laser (Gold #f59e0b)
+    const shoulderLineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-shoulderOffset, 1.46, 0.05),
+      new THREE.Vector3(shoulderOffset, 1.46, 0.05)
+    ]);
+    const shoulderLineMat = new THREE.LineBasicMaterial({ color: 0xf59e0b, linewidth: 4 });
+    const shoulderSpanLine = new THREE.Line(shoulderLineGeo, shoulderLineMat);
+    shoulderSpanLine.name = 'shoulder';
+    laserRingsGroup.add(shoulderSpanLine);
+
+    // Inseam Vertical Laser (Rose #f43f5e)
+    const inseamLineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0.95, 0.05),
+      new THREE.Vector3(0, 0.05, 0.05)
+    ]);
+    const inseamLineMat = new THREE.LineBasicMaterial({ color: 0xf43f5e, linewidth: 4 });
+    const inseamLaser = new THREE.Line(inseamLineGeo, inseamLineMat);
+    inseamLaser.name = 'inseam';
+    laserRingsGroup.add(inseamLaser);
 
     // 7. Touch & Mouse Drag Controls
     const onMouseDown = (e: MouseEvent) => {
@@ -305,9 +321,9 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     const onMouseMove = (e: MouseEvent) => {
       if (!isDraggingRef.current || !mannequinGroupRef.current) return;
       const deltaX = e.clientX - previousMousePositionRef.current.x;
-      mannequinGroupRef.current.rotation.y += deltaX * 0.012;
+      mannequinGroupRef.current.rotation.y += deltaX * 0.01;
       if (laserRingsGroupRef.current) {
-        laserRingsGroupRef.current.rotation.y += deltaX * 0.012;
+        laserRingsGroupRef.current.rotation.y += deltaX * 0.01;
       }
       previousMousePositionRef.current = { x: e.clientX, y: e.clientY };
     };
@@ -326,9 +342,9 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     const onTouchMove = (e: TouchEvent) => {
       if (!isDraggingRef.current || !mannequinGroupRef.current || e.touches.length !== 1) return;
       const deltaX = e.touches[0].clientX - previousMousePositionRef.current.x;
-      mannequinGroupRef.current.rotation.y += deltaX * 0.015;
+      mannequinGroupRef.current.rotation.y += deltaX * 0.01;
       if (laserRingsGroupRef.current) {
-        laserRingsGroupRef.current.rotation.y += deltaX * 0.015;
+        laserRingsGroupRef.current.rotation.y += deltaX * 0.01;
       }
       previousMousePositionRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     };
@@ -344,29 +360,26 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
     window.addEventListener('touchmove', onTouchMove);
     window.addEventListener('touchend', onTouchEnd);
 
-    // 8. Animation Loop
+    // 8. Render Animation Loop
     let animationFrameId: number;
-    let clock = new THREE.Clock();
-
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
 
-      // Auto rotation if not manually dragging
-      if (autoRotate && !isDraggingRef.current) {
-        if (mannequinGroupRef.current) {
-          mannequinGroupRef.current.rotation.y += 0.008;
-        }
+      if (autoRotate && !isDraggingRef.current && mannequinGroupRef.current) {
+        mannequinGroupRef.current.rotation.y += 0.008;
         if (laserRingsGroupRef.current) {
           laserRingsGroupRef.current.rotation.y += 0.008;
         }
       }
 
-      // Pulse laser tape rings with breathing glow
       if (laserRingsGroupRef.current) {
-        const pulse = 1 + Math.sin(elapsedTime * 3) * 0.03;
+        laserRingsGroupRef.current.visible = showLaserRings;
         laserRingsGroupRef.current.children.forEach((child) => {
-          child.scale.set(pulse, 1, pulse);
+          if (activeTape === 'all') {
+            child.visible = true;
+          } else {
+            child.visible = child.name === activeTape;
+          }
         });
       }
 
@@ -375,7 +388,6 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
 
     animate();
 
-    // Resize handler
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
       const newWidth = container.clientWidth || 360;
@@ -398,9 +410,8 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
       window.removeEventListener('touchend', onTouchEnd);
       renderer.dispose();
     };
-  }, [chestVal, waistVal, hipVal, shoulderVal, inseamVal, armVal, isDark]);
+  }, [chestVal, waistVal, hipVal, shoulderVal, inseamVal, armVal, isDark, autoRotate, showLaserRings, activeTape]);
 
-  // Zoom helpers
   const handleZoom = (delta: number) => {
     if (!cameraRef.current) return;
     cameraRef.current.position.z = THREE.MathUtils.clamp(
@@ -430,9 +441,17 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
             <Move3d className="w-3.5 h-3.5 text-primary-400" />
             <span>3D Body Avatar</span>
           </div>
-          <span className="hidden sm:inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold bg-primary-950/80 text-primary-300 border border-primary-800/60">
-            Real-time Mesh Deformation
-          </span>
+          <button
+            type="button"
+            onClick={() => setShowLaserRings(!showLaserRings)}
+            className={`pointer-events-auto px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
+              showLaserRings 
+                ? 'bg-primary-600 text-white border-primary-400 shadow-sm' 
+                : 'bg-black/60 text-gray-300 border-white/20'
+            }`}
+          >
+            {showLaserRings ? 'Laser Tapes: ON' : 'Laser Tapes: OFF'}
+          </button>
         </div>
 
         <div className="flex items-center space-x-1.5 pointer-events-auto">
@@ -482,22 +501,74 @@ export default function ThreeBodyAvatar({ measurements, isDark = true }: ThreeBo
         className="w-full h-[360px] sm:h-[420px] cursor-grab active:cursor-grabbing flex items-center justify-center relative"
       />
 
-      {/* Floating Measurement Tags Legend */}
-      <div className={`px-4 py-3 border-t grid grid-cols-3 gap-2 text-center text-xs font-semibold backdrop-blur-md ${
+      {/* Measurement Tape Ring Filter Buttons & Values */}
+      <div className={`px-4 py-3 border-t grid grid-cols-3 sm:grid-cols-5 gap-2 text-center text-xs font-semibold backdrop-blur-md ${
         isDark ? 'border-gray-800/80 bg-gray-950/80' : 'border-gray-100 bg-white/80'
       }`}>
-        <div className="flex flex-col items-center justify-center p-1.5 rounded-xl border border-cyan-500/30 bg-cyan-950/20 text-cyan-400">
-          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Chest Ring</span>
-          <span className="text-sm font-extrabold text-cyan-300">{chestVal.toFixed(1)} cm</span>
-        </div>
-        <div className="flex flex-col items-center justify-center p-1.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400">
-          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Waist Ring</span>
-          <span className="text-sm font-extrabold text-emerald-300">{waistVal.toFixed(1)} cm</span>
-        </div>
-        <div className="flex flex-col items-center justify-center p-1.5 rounded-xl border border-purple-500/30 bg-purple-950/20 text-purple-400">
-          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Hip Ring</span>
-          <span className="text-sm font-extrabold text-purple-300">{hipVal.toFixed(1)} cm</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTape(activeTape === 'chest' ? 'all' : 'chest')}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
+            activeTape === 'chest' || activeTape === 'all' 
+              ? 'border-cyan-500/50 bg-cyan-950/30 text-cyan-400' 
+              : 'border-gray-800 opacity-50'
+          }`}
+        >
+          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Chest Tape</span>
+          <span className="text-xs sm:text-sm font-extrabold text-cyan-300">{chestVal.toFixed(1)} cm</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTape(activeTape === 'waist' ? 'all' : 'waist')}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
+            activeTape === 'waist' || activeTape === 'all' 
+              ? 'border-emerald-500/50 bg-emerald-950/30 text-emerald-400' 
+              : 'border-gray-800 opacity-50'
+          }`}
+        >
+          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Waist Tape</span>
+          <span className="text-xs sm:text-sm font-extrabold text-emerald-300">{waistVal.toFixed(1)} cm</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTape(activeTape === 'hip' ? 'all' : 'hip')}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
+            activeTape === 'hip' || activeTape === 'all' 
+              ? 'border-purple-500/50 bg-purple-950/30 text-purple-400' 
+              : 'border-gray-800 opacity-50'
+          }`}
+        >
+          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Hip Tape</span>
+          <span className="text-xs sm:text-sm font-extrabold text-purple-300">{hipVal.toFixed(1)} cm</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTape(activeTape === 'shoulder' ? 'all' : 'shoulder')}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
+            activeTape === 'shoulder' || activeTape === 'all' 
+              ? 'border-amber-500/50 bg-amber-950/30 text-amber-400' 
+              : 'border-gray-800 opacity-50'
+          }`}
+        >
+          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Shoulder Span</span>
+          <span className="text-xs sm:text-sm font-extrabold text-amber-300">{shoulderVal.toFixed(1)} cm</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTape(activeTape === 'inseam' ? 'all' : 'inseam')}
+          className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all ${
+            activeTape === 'inseam' || activeTape === 'all' 
+              ? 'border-rose-500/50 bg-rose-950/30 text-rose-400' 
+              : 'border-gray-800 opacity-50'
+          }`}
+        >
+          <span className="text-[10px] uppercase font-bold tracking-wider opacity-80">Inseam Tape</span>
+          <span className="text-xs sm:text-sm font-extrabold text-rose-300">{inseamVal.toFixed(1)} cm</span>
+        </button>
       </div>
     </div>
   );

@@ -37,6 +37,7 @@ import MeasurementInstructionsModal from '../components/MeasurementInstructionsM
 import AICameraScannerModal from '../components/AICameraScannerModal';
 import ThreeBodyAvatar from '../components/ThreeBodyAvatar';
 import CuttersSpecSheetModal from '../components/CuttersSpecSheetModal';
+import FitEaseRecommendationsCard from '../components/FitEaseRecommendationsCard';
 import { validateImageFile } from '../utils/fileValidation';
 import { validateDualPoseImages, validateTriplePoseImages } from '../utils/imagePoseValidator';
 
@@ -989,6 +990,11 @@ export default function RequestDetail() {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Fit Ease Presets & RTW Sizing Breakdown Card */}
+                  <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <FitEaseRecommendationsCard rawMeasurements={request.measurement} />
                   </div>
 
                   {/* Tailor Manual Fit Adjustments Workspace */}

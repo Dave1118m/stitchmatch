@@ -7,22 +7,19 @@ import {
   RotateCcw, 
   Check, 
   Sparkles, 
-  Smartphone, 
-  Compass, 
   Timer, 
   CheckCircle2, 
   AlertCircle, 
-  ArrowRight, 
   ChevronRight, 
   ChevronLeft,
-  Eye,
   SwitchCamera,
-  Layers,
   ShieldCheck,
-  Zap,
   Ruler,
-  User
+  User,
+  Activity,
+  Maximize2
 } from 'lucide-react';
+import { LivePoseTracker, drawLiveSkeleton, PoseFramingAssessment } from '../utils/mediaPipePoseTracker';
 
 interface AICameraScannerModalProps {
   isOpen: boolean;
@@ -38,6 +35,8 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const poseTrackerRef = useRef<LivePoseTracker | null>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   // Height Calibration State
   const [heightCm, setHeightCm] = useState<number>(175);
@@ -55,19 +54,27 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
     side: null,
   });
 
+  // Real-time Skeleton Tracking & Assessment State
+  const [framingAssessment, setFramingAssessment] = useState<PoseFramingAssessment>({
+    isFullBodyVisible: false,
+    headVisible: false,
+    shouldersVisible: false,
+    hipsVisible: false,
+    anklesVisible: false,
+    postureStatusText: 'Initializing MediaPipe Real-Time Skeleton Tracker...',
+    isSideProfileAligned: false,
+    score: 0,
+  });
+
   // Camera State
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
 
-  // Gyroscope & Orientation State
-  const [tiltAngle, setTiltAngle] = useState<number | null>(null);
-  const [isLevel, setIsLevel] = useState<boolean>(false);
-  const [hasGyroSupport, setHasGyroSupport] = useState<boolean>(false);
-
   // Timer / Countdown
   const [countdown, setCountdown] = useState<number | null>(null);
   const countdownIntervalRef = useRef<any>(null);
+  const stablePoseTimerRef = useRef<any>(null);
 
   // Sync feet/inches to cm
   const updateFeetInches = (ft: number, inc: number) => {
@@ -78,23 +85,108 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
     setHeightCm(cm);
   };
 
-  // Initialize Camera & Sensors when opened
+  // Initialize Camera & Real-Time Pose Tracker
   useEffect(() => {
     if (isOpen) {
       if (currentPose === 'front' || currentPose === 'side') {
-        startCamera();
+        startCameraAndTracker();
       }
-      initOrientationSensor();
     } else {
-      stopCamera();
-      clearInterval(countdownIntervalRef.current);
+      cleanup();
     }
 
     return () => {
-      stopCamera();
-      clearInterval(countdownIntervalRef.current);
+      cleanup();
     };
   }, [isOpen, currentPose, facingMode]);
+
+  const cleanup = () => {
+    stopCamera();
+    if (poseTrackerRef.current) {
+      poseTrackerRef.current.close();
+      poseTrackerRef.current = null;
+    }
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    clearInterval(countdownIntervalRef.current);
+    clearTimeout(stablePoseTimerRef.current);
+  };
+
+  // Start Camera and Initialize MediaPipe Tracker
+  const startCameraAndTracker = async () => {
+    setCameraError(null);
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: facingMode,
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraActive(true);
+
+      // Initialize Pose Tracker
+      if (!poseTrackerRef.current) {
+        poseTrackerRef.current = new LivePoseTracker((results, assessment) => {
+          setFramingAssessment(assessment);
+
+          // Draw skeleton on canvas overlay
+          if (canvasRef.current && videoRef.current) {
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              drawLiveSkeleton(ctx, results, canvas.width, canvas.height, currentPose === 'side');
+            }
+          }
+        });
+      }
+
+      // Continuous Frame Pipeline
+      const processFrame = async () => {
+        if (videoRef.current && poseTrackerRef.current && videoRef.current.readyState >= 2) {
+          if (canvasRef.current) {
+            canvasRef.current.width = videoRef.current.videoWidth || 640;
+            canvasRef.current.height = videoRef.current.videoHeight || 480;
+          }
+          await poseTrackerRef.current.sendFrame(videoRef.current);
+        }
+        animFrameRef.current = requestAnimationFrame(processFrame);
+      };
+
+      processFrame();
+    } catch (err: any) {
+      console.error('Camera access error:', err);
+      setCameraError('Unable to access camera. Please check camera permissions in browser settings.');
+      setCameraActive(false);
+    }
+  };
+
+  // Stop Camera
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
+  };
+
+  const toggleFacingMode = () => {
+    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
+  };
 
   // Audio Beep generator for countdown
   const playBeep = (freq = 880, duration = 0.1) => {
@@ -117,71 +209,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
     }
   };
 
-  // Start Camera
-  const startCamera = async () => {
-    setCameraError(null);
-    try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facingMode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
-
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-      setCameraActive(true);
-    } catch (err: any) {
-      console.error('Camera access error:', err);
-      setCameraError('Unable to access camera. Please check camera permissions in your browser settings.');
-      setCameraActive(false);
-    }
-  };
-
-  // Stop Camera
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-  };
-
-  // Switch between front/back cameras
-  const toggleFacingMode = () => {
-    setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'));
-  };
-
-  // Device Orientation / Gyroscope setup
-  const initOrientationSensor = () => {
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      if (e.beta !== null) {
-        setHasGyroSupport(true);
-        const pitch = Math.round(e.beta); // 90 deg is vertical standing phone
-        setTiltAngle(pitch);
-        setIsLevel(pitch >= 80 && pitch <= 100);
-      }
-    };
-
-    if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', handleOrientation, true);
-    }
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-    };
-  };
-
-  // Start 5-second hands-free countdown timer
+  // 5-second hands-free countdown timer
   const startCountdown = () => {
     if (countdown !== null) return;
     let count = 5;
@@ -196,7 +224,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
       } else {
         clearInterval(countdownIntervalRef.current);
         setCountdown(null);
-        playBeep(1200, 0.3); // High pitch shutter chime
+        playBeep(1200, 0.3);
         takeSnapshot();
       }
     }, 1000);
@@ -214,7 +242,6 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // If front facing, mirror canvas for intuitive view
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -266,14 +293,14 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
             <div>
               <h2 className="text-base sm:text-lg font-bold leading-tight flex items-center gap-2">
                 <span>AI Body Measurement Scanner</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
-                  Dual-Pose AR
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 flex items-center gap-1">
+                  <Activity className="w-3 h-3 animate-pulse" /> Live Skeleton AR
                 </span>
               </h2>
               <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 {currentPose === 'height' && 'Step 1: Calibrate your exact standing height'}
-                {currentPose === 'front' && 'Step 2: Capture facing-front upright pose'}
-                {currentPose === 'side' && 'Step 3: Capture 90° side profile pose'}
+                {currentPose === 'front' && 'Step 2: Stand facing camera (Real-time skeleton active)'}
+                {currentPose === 'side' && 'Step 3: Turn 90° to side for depth contour scan'}
                 {currentPose === 'review' && 'Step 4: Review scan & compute centimeter measurements'}
               </p>
             </div>
@@ -308,7 +335,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
         }`}>
           {[
             { id: 'height', label: '1. Height Calibration', done: heightCm > 50 },
-            { id: 'front', label: '2. Front Pose', done: capturedPhotos.front !== null },
+            { id: 'front', label: '2. Front Live Pose', done: capturedPhotos.front !== null },
             { id: 'side', label: '3. 90° Side Profile', done: capturedPhotos.side !== null },
             { id: 'review', label: '4. AI Review', done: false }
           ].map((step, idx) => {
@@ -338,19 +365,19 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
           })}
         </div>
 
-        {/* Modal Main Viewport */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex flex-col items-center justify-center min-h-[360px] sm:min-h-[440px]">
+        {/* Viewport Container */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col items-center justify-center min-h-[360px] sm:min-h-[440px]">
           
           {/* STEP 1: HEIGHT CALIBRATION */}
           {currentPose === 'height' && (
-            <div className="w-full max-w-md space-y-6 text-center animate-fadeIn">
-              <div className="w-16 h-16 rounded-3xl bg-primary-500/10 text-primary-500 mx-auto flex items-center justify-center border border-primary-500/20">
+            <div className="w-full max-w-md space-y-5 text-center animate-fadeIn">
+              <div className="w-16 h-16 rounded-3xl bg-primary-500/10 text-primary-500 mx-auto flex items-center justify-center border border-primary-500/20 shadow-inner">
                 <Ruler className="w-8 h-8" />
               </div>
               <div>
                 <h3 className="text-xl font-extrabold">Calibrate Your Standing Height</h3>
                 <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  The AI uses your exact height as the ground-truth physical scale to convert image pixels into centimeter tailoring measurements.
+                  The AI uses your exact height as the ground-truth physical scale to convert live skeleton landmarks into centimeter tailoring measurements.
                 </p>
               </div>
 
@@ -390,7 +417,6 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     <span className="text-xl font-bold text-primary-500">cm</span>
                   </div>
 
-                  {/* Preset Quick Badges */}
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     {[160, 165, 170, 175, 180, 185, 190].map((preset) => (
                       <button
@@ -442,16 +468,16 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
               }`}>
                 <User className="w-5 h-5 text-amber-500 shrink-0" />
                 <span className="text-left leading-relaxed">
-                  <strong>Human Subject Only:</strong> The AI requires full-body photos of a person standing upright in form-fitting clothing.
+                  <strong>Human Body Live Tracking:</strong> Stand 2–3 meters away in a well-lit room in form-fitting clothing for real-time landmark tracking.
                 </span>
               </div>
             </div>
           )}
 
-          {/* STEP 2 & 3: CAMERA CAPTURE (FRONT OR SIDE) */}
+          {/* STEP 2 & 3: CAMERA CAPTURE WITH REAL-TIME SKELETON TRACKING */}
           {(currentPose === 'front' || currentPose === 'side') && (
             <div className="relative w-full max-w-2xl bg-black rounded-2xl overflow-hidden aspect-[4/3] sm:aspect-[16/9] shadow-2xl flex items-center justify-center">
-              {/* Camera Video Stream */}
+              {/* Video Camera Stream */}
               <video
                 ref={videoRef}
                 autoPlay
@@ -460,34 +486,42 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
               />
 
-              {/* AR SILHOUETTE GUIDE OVERLAY */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <svg className="w-full h-full opacity-60" viewBox="0 0 200 300">
-                  {currentPose === 'front' ? (
-                    // Front Facing Human Silhouette Outline
-                    <g fill="none" stroke="#10b981" strokeWidth="1.5" strokeDasharray="3 3">
-                      <circle cx="100" cy="50" r="16" />
-                      <path d="M 80,68 C 65,72 50,85 45,140 C 42,160 48,162 55,148 L 70,105 L 70,190 L 62,270 C 62,275 78,275 78,270 L 92,185 L 108,185 L 122,270 C 122,275 138,275 138,270 L 130,190 L 130,105 L 145,148 C 152,162 158,160 155,140 C 150,85 135,72 120,68 Z" />
-                    </g>
-                  ) : (
-                    // 90° Side Profile Human Silhouette Outline
-                    <g fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="3 3">
-                      <circle cx="100" cy="50" r="16" />
-                      <path d="M 94,68 C 88,85 86,120 88,155 C 90,190 86,220 84,270 C 84,275 104,275 104,270 L 106,190 C 114,165 118,125 112,85 C 108,72 102,68 94,68 Z" />
-                    </g>
-                  )}
-                  {/* Ground floor guide */}
-                  <line x1="30" y1="275" x2="170" y2="275" stroke="#10b981" strokeWidth="2" />
-                </svg>
-              </div>
+              {/* Real-time MediaPipe Skeleton Canvas Overlay */}
+              <canvas
+                ref={canvasRef}
+                className={`absolute inset-0 w-full h-full pointer-events-none ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
+              />
 
-              {/* Guidance Banner */}
-              <div className="absolute top-3 inset-x-3 text-center">
-                <span className="px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-md text-white text-xs font-bold shadow-lg border border-white/20">
-                  {currentPose === 'front' 
-                    ? '🧍 Front View: Stand upright facing camera with arms slightly relaxed at sides' 
-                    : '🚶 90° Side Profile: Turn 90° to the side so the AI can measure your body depth'}
-                </span>
+              {/* Top HUD: Real-time Skeleton Tracking Assessment Banner */}
+              <div className="absolute top-3 inset-x-3 flex flex-col items-center gap-1.5 pointer-events-none">
+                <div className="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-white text-xs font-bold shadow-xl border border-white/20 flex items-center space-x-2">
+                  <Activity className="w-3.5 h-3.5 text-green-400 animate-spin" style={{ animationDuration: '3s' }} />
+                  <span>{framingAssessment.postureStatusText}</span>
+                </div>
+
+                {/* Sub-HUD: Landmark Visibility Pills */}
+                <div className="flex items-center gap-1 text-[10px] font-bold">
+                  <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
+                    framingAssessment.headVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
+                  }`}>
+                    Head
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
+                    framingAssessment.shouldersVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
+                  }`}>
+                    Shoulders
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
+                    framingAssessment.hipsVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
+                  }`}>
+                    Hips
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
+                    framingAssessment.anklesVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
+                  }`}>
+                    Ankles
+                  </span>
+                </div>
               </div>
 
               {/* COUNTDOWN OVERLAY */}
@@ -497,7 +531,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     {countdown}
                   </div>
                   <p className="text-white text-base sm:text-lg font-bold mt-4 tracking-wide shadow-black drop-shadow">
-                    Hold steady for capture...
+                    Hold posture for calibration...
                   </p>
                 </div>
               )}
@@ -588,7 +622,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 onClick={() => setCurrentPose('front')}
                 className="btn-primary text-xs sm:text-sm px-7 py-2.5 rounded-full font-bold shadow-lg flex items-center space-x-1.5"
               >
-                <span>Proceed to Camera Pose</span>
+                <span>Launch Real-Time AR Viewfinder</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </>
@@ -599,13 +633,17 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-secondary text-xs sm:text-sm px-4 py-2.5 rounded-full flex items-center space-x-1.5"
               >
                 <Camera className="w-4 h-4" />
-                <span>Capture Now</span>
+                <span>Snap Instant Photo</span>
               </button>
 
               <button
                 onClick={startCountdown}
                 disabled={countdown !== null}
-                className="btn-primary text-sm sm:text-base px-6 sm:px-8 py-2.5 rounded-full font-bold shadow-lg flex items-center space-x-2 animate-pulse"
+                className={`text-sm sm:text-base px-6 sm:px-8 py-2.5 rounded-full font-bold shadow-lg flex items-center space-x-2 transition-all ${
+                  framingAssessment.isFullBodyVisible
+                    ? 'btn-primary animate-pulse'
+                    : 'bg-primary-600/70 text-white cursor-pointer'
+                }`}
               >
                 <Timer className="w-5 h-5" />
                 <span>{countdown !== null ? `Capturing in ${countdown}s...` : '5s Hands-Free Timer'}</span>
