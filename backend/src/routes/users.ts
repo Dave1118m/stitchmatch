@@ -15,7 +15,7 @@ function normalizeUser(user: any) {
     user.tailor = {
       ...user.tailor,
       specialties: parseJsonArray(user.tailor.specialties),
-      portfolioImages: parseJsonArray(user.tailor.portfolioImages),
+      portfolioImages: parseJsonArray(user.tailor.portfolioImages || []),
     };
   }
   return user;

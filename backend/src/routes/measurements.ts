@@ -224,6 +224,7 @@ router.put('/vault/manual', authenticate, authorize('customer'), async (req: Aut
           ...(shoulderWidth !== undefined && { shoulderWidth: Number(shoulderWidth) }),
           ...(armLength !== undefined && { armLength: Number(armLength) }),
           aiStatus: 'completed',
+          aiConfidence: 100,
         },
       });
       return res.json({ measurement: updated });
@@ -233,29 +234,21 @@ router.put('/vault/manual', authenticate, authorize('customer'), async (req: Aut
         orderBy: { createdAt: 'desc' },
       });
 
-      if (recentRequest) {
-        const created = await prisma.measurement.create({
-          data: {
-            requestId: recentRequest.id,
-            customerId: req.userId!,
-            chest: chest ? Number(chest) : 98,
-            waist: waist ? Number(waist) : 84,
-            hip: hip ? Number(hip) : 102,
-            inseam: inseam ? Number(inseam) : 78,
-            shoulderWidth: shoulderWidth ? Number(shoulderWidth) : 44,
-            armLength: armLength ? Number(armLength) : 62,
-            aiStatus: 'completed',
-            aiConfidence: 100,
-          },
-        });
-        return res.json({ measurement: created });
-      } else {
-        return res.json({
-          measurement: {
-            chest, waist, hip, inseam, shoulderWidth, armLength, aiStatus: 'completed'
-          }
-        });
-      }
+      const created = await prisma.measurement.create({
+        data: {
+          requestId: recentRequest ? recentRequest.id : null,
+          customerId: req.userId!,
+          chest: chest ? Number(chest) : 98,
+          waist: waist ? Number(waist) : 84,
+          hip: hip ? Number(hip) : 102,
+          inseam: inseam ? Number(inseam) : 78,
+          shoulderWidth: shoulderWidth ? Number(shoulderWidth) : 44,
+          armLength: armLength ? Number(armLength) : 62,
+          aiStatus: 'completed',
+          aiConfidence: 100,
+        },
+      });
+      return res.json({ measurement: created });
     }
   } catch (error) {
     console.error('Update manual vault measurement error:', error);

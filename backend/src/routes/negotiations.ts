@@ -179,6 +179,8 @@ router.put('/:id/accept', authenticate, async (req: AuthRequest, res: Response) 
         requestId: negotiation.requestId,
         negotiationId: id,
       });
+      io.to(`request:${negotiation.requestId}`).emit('request_updated', { requestId: negotiation.requestId });
+      io.emit('negotiations_updated', { requestId: negotiation.requestId });
     }
 
     res.json({ negotiation: { ...updated, garmentSpecs: parseJson(updated.garmentSpecs) } });
@@ -233,6 +235,8 @@ router.put('/:id/decline', authenticate, async (req: AuthRequest, res: Response)
         requestId: negotiation.requestId,
         negotiationId: id,
       });
+      io.to(`request:${negotiation.requestId}`).emit('request_updated', { requestId: negotiation.requestId });
+      io.emit('negotiations_updated', { requestId: negotiation.requestId });
     }
 
     res.json({ negotiation: { ...updated, garmentSpecs: parseJson(updated.garmentSpecs) } });

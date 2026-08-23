@@ -268,13 +268,14 @@ export default function VideoCallModal({
 
     const handleCallRejected = () => {
       stopRingtone();
-      alert(`${targetUserName} is currently unavailable.`);
-      endCall();
+      setCallStatus('ended');
+      setTimeout(onClose, 1000);
     };
 
     const handleCallEnded = () => {
       stopRingtone();
-      endCall();
+      setCallStatus('ended');
+      setTimeout(onClose, 800);
     };
 
     socket.on('call_accepted', handleCallAccepted);

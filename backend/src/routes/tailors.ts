@@ -9,10 +9,12 @@ import { UpdateTailorProfileSchema } from '../utils/schemas';
 const router = Router();
 
 function normalizeTailor(tailor: any) {
+  if (!tailor) return tailor;
+  const productImages = tailor.products?.flatMap((p: any) => p.images?.map((i: any) => i.url) || []) || [];
   return {
     ...tailor,
     specialties: parseJsonArray(tailor.specialties),
-    portfolioImages: parseJsonArray(tailor.portfolioImages),
+    portfolioImages: productImages.length > 0 ? productImages : parseJsonArray(tailor.portfolioImages),
   };
 }
 
@@ -209,16 +211,15 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.put('/profile', authenticate, authorize('tailor'), validateBody(UpdateTailorProfileSchema), async (req: AuthRequest, res: Response) => {
   try {
     const prisma: PrismaClient = req.app.get('prisma');
-    const { bio, specialties, basePricingMin, basePricingMax, portfolioImages } = req.body;
+    const { bio, specialties, basePricingMin, basePricingMax } = req.body;
 
     const tailor = await prisma.tailor.update({
       where: { id: req.userId },
       data: {
         ...(bio !== undefined && { bio }),
         ...(specialties !== undefined && { specialties: specialties === null ? null : serializeJson(specialties) ?? null }),
-        ...(basePricingMin !== undefined && { basePricingMin }),
-        ...(basePricingMax !== undefined && { basePricingMax }),
-        ...(portfolioImages !== undefined && { portfolioImages: portfolioImages === null ? null : serializeJson(portfolioImages) ?? null }),
+        ...(basePricingMin !== undefined && { basePricingMin: basePricingMin ? parseFloat(basePricingMin) : null }),
+        ...(basePricingMax !== undefined && { basePricingMax: basePricingMax ? parseFloat(basePricingMax) : null }),
       },
     });
 

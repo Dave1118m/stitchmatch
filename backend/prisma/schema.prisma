@@ -151,7 +151,7 @@ model MessageReaction {
 
 model Measurement {
   id              String    @id @default(uuid())
-  requestId       String    @unique @map("request_id")
+  requestId       String?   @unique @map("request_id")
   customerId      String    @map("customer_id")
   frontPhotoUrl   String?   @map("front_photo_url")
   sidePhotoUrl    String?   @map("side_photo_url")
@@ -167,8 +167,8 @@ model Measurement {
   adjustments     String?   @default("[]")
   createdAt       DateTime  @default(now()) @map("created_at")
 
-  request         ServiceRequest @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  customer        User           @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  request         ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer        User            @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@map("measurements")
 }

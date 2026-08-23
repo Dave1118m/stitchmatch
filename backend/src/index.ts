@@ -28,6 +28,11 @@ import { setupSocketHandlers } from './socket';
 
 dotenv.config();
 
+// Global BigInt JSON serialization polyfill
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 const app = express();
 const prisma = new PrismaClient();
 

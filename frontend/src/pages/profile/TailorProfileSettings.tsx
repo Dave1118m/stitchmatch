@@ -32,6 +32,8 @@ export default function TailorProfileSettings() {
   const [tailorForm, setTailorForm] = useState({
     bio: '',
     specialties: [] as string[],
+    basePricingMin: '',
+    basePricingMax: '',
   });
   const [specialtyInput, setSpecialtyInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -50,6 +52,8 @@ export default function TailorProfileSettings() {
       setTailorForm({
         bio: user.tailor.bio || '',
         specialties: safeArray(user.tailor.specialties),
+        basePricingMin: user.tailor.basePricingMin ? String(user.tailor.basePricingMin) : '',
+        basePricingMax: user.tailor.basePricingMax ? String(user.tailor.basePricingMax) : '',
       });
     }
   }, [user]);
@@ -230,6 +234,34 @@ export default function TailorProfileSettings() {
                   <button type="button" onClick={addSpecialty} className="btn-secondary">Add</button>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Min Base Price ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 50"
+                    value={tailorForm.basePricingMin}
+                    onChange={(e) => setTailorForm({ ...tailorForm, basePricingMin: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Max Base Price ($)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 500"
+                    value={tailorForm.basePricingMax}
+                    onChange={(e) => setTailorForm({ ...tailorForm, basePricingMax: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
               <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2 mt-4">
                 <Save className="h-4 w-4" /><span>{saving ? 'Saving...' : 'Save Tailor Profile'}</span>
               </button>
