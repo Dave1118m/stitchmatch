@@ -144,94 +144,109 @@ export default function TailorProfileSettings() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Profile Settings */}
-        <div className="space-y-6 lg:col-span-1">
-          {/* Basic Profile */}
-          <div className="card">
-            <h2 className={`font-semibold mb-4 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      {/* Top Section: Side-by-Side Basic Information and Tailor Profile */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Left Card: Basic Information */}
+        <div className="card flex flex-col justify-between">
+          <div>
+            <h2 className={`font-semibold mb-4 flex items-center text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <User className="h-5 w-5 mr-2 text-primary-600" /> Basic Information
             </h2>
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Name</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Full Name</label>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" required />
               </div>
-              <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Email</label>
-                <input value={user?.email} className="input-field" disabled />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Email</label>
+                  <input value={user?.email} className="input-field opacity-75 cursor-not-allowed" disabled />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Phone Number</label>
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+251 ..." className="input-field" />
+                </div>
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Phone</label>
-                <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-field" />
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Workshop / City Location</label>
+                <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Bole, Addis Ababa" className="input-field" />
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Location</label>
-                <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="input-field" />
-              </div>
-              <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Profile Photo</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Profile & Atelier Photo</label>
                 <div className="flex items-center gap-4 mb-2">
-                  <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden shrink-0 border dark:border-gray-600">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-200 overflow-hidden shrink-0 border-2 dark:border-gray-600 shadow-sm">
                     {form.avatarUrl ? (
                       <img src={form.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-full h-full text-gray-400 p-2" />
+                      <User className="w-full h-full text-gray-400 p-3" />
                     )}
                   </div>
                   <div 
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={handleAvatarUpload}
-                    className={`flex-1 border-2 border-dashed rounded-lg p-2 text-center ${isDark ? 'border-gray-600 bg-gray-700/50 hover:bg-gray-600' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'} cursor-pointer transition-colors`}
+                    className={`flex-1 border-2 border-dashed rounded-xl p-3 text-center ${isDark ? 'border-gray-600 bg-gray-700/40 hover:bg-gray-700' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'} cursor-pointer transition-colors`}
                   >
                     <input type="file" id="avatarImageTailor" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                     <label htmlFor="avatarImageTailor" className="cursor-pointer flex items-center justify-center w-full">
-                      <UploadCloud className={`h-5 w-5 mr-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
-                      <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {uploadingAvatar ? 'Uploading...' : 'Upload Photo'}
+                      <UploadCloud className={`h-5 w-5 mr-2 ${isDark ? 'text-primary-400' : 'text-primary-600'}`} />
+                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {uploadingAvatar ? 'Uploading image...' : 'Click to browse or drag avatar'}
                       </span>
                     </label>
                   </div>
                 </div>
                 <input 
                   type="text" 
-                  placeholder="Or paste an image URL here..." 
+                  placeholder="Or paste an image URL..." 
                   value={form.avatarUrl} 
                   onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} 
-                  className="input-field text-sm" 
+                  className="input-field text-xs" 
                 />
               </div>
-              <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2">
-                <Save className="h-4 w-4" /><span>{saving ? 'Saving...' : 'Save Profile'}</span>
+              <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2 pt-2.5">
+                <Save className="h-4 w-4" /><span>{saving ? 'Saving...' : 'Save Basic Info'}</span>
               </button>
             </form>
           </div>
+        </div>
 
-          {/* Tailor Profile Details */}
-          <div className="card">
-            <h2 className={`font-semibold mb-4 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <Scissors className="h-5 w-5 mr-2 text-primary-600" /> Tailor Profile
+        {/* Right Card: Tailor Profile */}
+        <div className="card flex flex-col justify-between">
+          <div>
+            <h2 className={`font-semibold mb-4 flex items-center text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <Scissors className="h-5 w-5 mr-2 text-primary-600" /> Tailor Profile & Specialties
             </h2>
             <form onSubmit={handleSaveTailorProfile} className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Bio</label>
-                <textarea value={tailorForm.bio} onChange={(e) => setTailorForm({ ...tailorForm, bio: e.target.value })}
-                  className="input-field" rows={3} placeholder="Describe your expertise..." />
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Atelier Bio & Experience</label>
+                <textarea 
+                  value={tailorForm.bio} 
+                  onChange={(e) => setTailorForm({ ...tailorForm, bio: e.target.value })}
+                  className="input-field" 
+                  rows={3} 
+                  placeholder="Describe your tailoring philosophy, years of bespoke craft, and garment mastery..." 
+                />
               </div>
+
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Specialties</label>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Specialties & Tags</label>
+                <div className="flex flex-wrap gap-2 mb-2 min-h-[32px]">
                   {safeArray(tailorForm.specialties).map((s) => (
-                    <span key={s} className={`px-2 py-1 ${isDark ? 'bg-gray-700 text-primary-400' : 'bg-primary-50 text-primary-700'} rounded-full text-sm flex items-center`}>
+                    <span key={s} className={`px-3 py-1 ${isDark ? 'bg-primary-950/60 text-primary-300 border border-primary-800/40' : 'bg-primary-50 text-primary-700 border border-primary-200'} rounded-lg text-xs font-semibold flex items-center shadow-2xs`}>
                       {s}
-                      <button type="button" onClick={() => removeSpecialty(s)} className="ml-1 text-primary-500 hover:text-primary-700">&times;</button>
+                      <button type="button" onClick={() => removeSpecialty(s)} className="ml-1.5 text-primary-500 hover:text-red-500 font-bold">&times;</button>
                     </span>
                   ))}
                 </div>
                 <div className="flex space-x-2">
-                  <input value={specialtyInput} onChange={(e) => setSpecialtyInput(e.target.value)}
-                    placeholder="Add specialty" className="input-field flex-1" />
-                  <button type="button" onClick={addSpecialty} className="btn-secondary">Add</button>
+                  <input 
+                    value={specialtyInput} 
+                    onChange={(e) => setSpecialtyInput(e.target.value)}
+                    placeholder="e.g. Bespoke Tuxedos, Silk Gowns" 
+                    className="input-field flex-1 text-xs" 
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSpecialty(); } }}
+                  />
+                  <button type="button" onClick={addSpecialty} className="btn-secondary text-xs px-4">Add</button>
                 </div>
               </div>
 
@@ -242,7 +257,7 @@ export default function TailorProfileSettings() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="e.g. 50"
+                    placeholder="e.g. 80"
                     value={tailorForm.basePricingMin}
                     onChange={(e) => setTailorForm({ ...tailorForm, basePricingMin: e.target.value })}
                     className="input-field"
@@ -254,7 +269,7 @@ export default function TailorProfileSettings() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="e.g. 500"
+                    placeholder="e.g. 650"
                     value={tailorForm.basePricingMax}
                     onChange={(e) => setTailorForm({ ...tailorForm, basePricingMax: e.target.value })}
                     className="input-field"
@@ -267,18 +282,13 @@ export default function TailorProfileSettings() {
               </button>
             </form>
           </div>
-
-          <div className={`card text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            <p>Role: <span className={`font-medium capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.role}</span></p>
-            <p>Member since: {new Date().toLocaleDateString()}</p>
-          </div>
         </div>
+      </div>
 
-        {/* Right Column: Product Manager */}
-        <div className="lg:col-span-2">
-          <div className={`card h-full ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-            <ProductManager />
-          </div>
+      {/* Bottom Section: Independent Full-Width Product Catalog & E-Commerce Showcase */}
+      <div className="w-full">
+        <div className={`card ${isDark ? 'bg-gray-800/90' : 'bg-white'} border border-slate-200/80 dark:border-gray-700 shadow-xl rounded-3xl p-6 sm:p-8`}>
+          <ProductManager />
         </div>
       </div>
     </div>

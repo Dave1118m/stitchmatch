@@ -335,34 +335,160 @@ export default function TailorProfile() {
               </div>
             </div>
 
-            {/* 3. Portfolio Showcase Section */}
+            {/* 3. Luxury E-Commerce Product Showcase Section */}
             <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl ${
               isDark ? 'bg-[#171923] border-slate-800' : 'bg-white border-slate-200'
             }`}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className={`text-xs font-bold tracking-widest uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Portfolio
+                  <h2 className={`text-xs font-bold tracking-widest uppercase ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                    Atelier Collection
                   </h2>
-                  <h3 className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    Crafted Works & Silhouettes
+                  <h3 className={`text-xl sm:text-2xl font-bold mt-0.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    Bespoke Product Catalog & Showcase
                   </h3>
                 </div>
                 {tailor.products && tailor.products.length > 0 && (
-                  <Link
-                    to={`/tailors/${id}/portfolio`}
-                    className="text-xs font-bold text-amber-500 hover:underline flex items-center space-x-1"
-                  >
-                    <span>Full Catalog ({tailor.products.length})</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Link>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    isDark ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  }`}>
+                    {tailor.products.length} Garments
+                  </span>
                 )}
               </div>
 
-              {portfolioPhotos.length === 0 ? (
-                <p className={`text-sm text-center py-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  No portfolio images uploaded by this tailor yet.
-                </p>
+              {(!tailor.products || tailor.products.length === 0) && portfolioPhotos.length === 0 ? (
+                <div className={`p-10 text-center rounded-2xl border border-dashed ${isDark ? 'border-slate-800 bg-[#0f1117]/50' : 'border-slate-200 bg-slate-50'}`}>
+                  <Scissors className="w-10 h-10 mx-auto text-amber-500/50 mb-3" />
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    No catalog products uploaded by this tailor yet. You can still commission custom bespoke garments using the request panel.
+                  </p>
+                </div>
+              ) : tailor.products && tailor.products.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {tailor.products.map((prod: any) => {
+                    const primaryImg = prod.images?.find((i: any) => i.isPrimary)?.url || prod.images?.[0]?.url;
+                    const priceFormatted = Number(prod.basePrice) > 0 ? `$${Number(prod.basePrice).toFixed(2)}` : `$${basePrice}`;
+
+                    return (
+                      <div
+                        key={prod.id}
+                        className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                          isDark ? 'bg-[#0f1117] border-slate-800 hover:border-amber-500/50' : 'bg-white border-slate-200 hover:border-amber-400'
+                        }`}
+                      >
+                        <div>
+                          {/* Image Stage */}
+                          <div 
+                            onClick={() => primaryImg && setActiveImage({ url: primaryImg, title: prod.name, description: prod.description })}
+                            className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden cursor-pointer"
+                          >
+                            {primaryImg ? (
+                              <img
+                                src={primaryImg}
+                                alt={prod.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 bg-slate-900">
+                                <Scissors className="w-8 h-8 opacity-30 mb-1" />
+                                <span className="text-xs font-semibold">Atelier Bespoke</span>
+                              </div>
+                            )}
+
+                            {/* Gradient Vignette */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent pointer-events-none" />
+
+                            {/* Price Tag Floating Badge */}
+                            <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-black/80 backdrop-blur-md border border-white/20 text-white font-extrabold text-xs shadow-lg">
+                              {priceFormatted}
+                            </div>
+
+                            {/* Photo Count */}
+                            {prod.images && prod.images.length > 1 && (
+                              <div className="absolute bottom-3 right-3 px-2 py-0.5 rounded-lg bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
+                                📸 {prod.images.length}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Details */}
+                          <div className="p-5 space-y-3">
+                            <div>
+                              <h4 className={`font-bold text-base leading-snug group-hover:text-amber-500 transition-colors ${
+                                isDark ? 'text-white' : 'text-slate-900'
+                              }`}>
+                                {prod.name}
+                              </h4>
+                              {prod.description && (
+                                <p className={`text-xs mt-1.5 line-clamp-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  {prod.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Color Swatches */}
+                            {prod.colors && prod.colors.length > 0 && (
+                              <div className="flex items-center space-x-2 pt-2 border-t border-slate-200/50 dark:border-slate-800">
+                                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                  Swatches:
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  {prod.colors.map((c: any, i: number) => (
+                                    <span
+                                      key={i}
+                                      title={c.name}
+                                      className="w-4 h-4 rounded-full border border-black/20 dark:border-white/30 shadow-2xs"
+                                      style={{ backgroundColor: c.hexCode }}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Options Tags */}
+                            {prod.options && prod.options.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {prod.options.map((opt: any, i: number) => {
+                                  const vals = typeof opt.values === 'string' ? JSON.parse(opt.values) : opt.values;
+                                  return (
+                                    <span
+                                      key={i}
+                                      className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                                        isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-700'
+                                      }`}
+                                    >
+                                      {opt.name}: {Array.isArray(vals) ? vals.join(', ') : vals}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 1-Click Commission Action */}
+                        <div className="p-5 pt-0">
+                          <button
+                            onClick={() => {
+                              setRequestForm((prev) => ({
+                                ...prev,
+                                garmentType: prod.name,
+                                notes: prod.description ? `Commissioning based on showcase design: "${prod.name}".\nDetails: ${prod.description}` : `Commissioning style: ${prod.name}`,
+                              }));
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                              toast.success(`Selected "${prod.name}" for your bespoke request!`);
+                            }}
+                            className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-1.5"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Commission This Style</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {portfolioPhotos.map((item, idx) => (

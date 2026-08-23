@@ -16,8 +16,25 @@ import {
   Tag, 
   Palette, 
   SlidersHorizontal,
-  Sparkles
+  Sparkles,
+  Search,
+  DollarSign,
+  Layers,
+  Star,
+  Eye,
+  CheckCircle2
 } from 'lucide-react';
+
+const CATEGORIES = [
+  'All Garments',
+  'Bespoke Suits',
+  'Tuxedos & Formal',
+  'Evening Gowns',
+  'Traditional Habesha',
+  'Blazers & Jackets',
+  'Shirts & Trousers',
+  'Custom Alterations',
+];
 
 export default function ProductManager() {
   const { user } = useAuth();
@@ -31,9 +48,16 @@ export default function ProductManager() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
 
+  // Search & Category Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Garments');
+
+  // Form State
   const [form, setForm] = useState({
     name: '',
     description: '',
+    basePrice: '',
+    category: 'Bespoke Suits',
     images: [] as { url: string; isPrimary: boolean }[],
     colors: [] as { name: string; hexCode: string }[],
     options: [] as { name: string; values: string[] }[],
@@ -70,6 +94,8 @@ export default function ProductManager() {
     setForm({
       name: p.name,
       description: p.description || '',
+      basePrice: p.basePrice ? String(p.basePrice) : '',
+      category: p.category || 'Bespoke Suits',
       images: p.images || [],
       colors: p.colors || [],
       options: p.options ? p.options.map((o: any) => ({
@@ -90,6 +116,8 @@ export default function ProductManager() {
     setForm({
       name: '',
       description: '',
+      basePrice: '',
+      category: 'Bespoke Suits',
       images: [],
       colors: [],
       options: [],
@@ -132,11 +160,24 @@ export default function ProductManager() {
     }
   };
 
-  const handleRemoveImage = (index: number) => {
+  const handleSetPrimaryImage = (index: number) => {
     setForm((prev) => ({
       ...prev,
-      images: prev.images.filter((_, idx) => idx !== index)
+      images: prev.images.map((img, idx) => ({
+        ...img,
+        isPrimary: idx === index,
+      })),
     }));
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setForm((prev) => {
+      const remaining = prev.images.filter((_, idx) => idx !== index);
+      if (remaining.length > 0 && !remaining.some((i) => i.isPrimary)) {
+        remaining[0].isPrimary = true;
+      }
+      return { ...prev, images: remaining };
+    });
   };
 
   const handleAddColor = () => {
@@ -184,34 +225,27 @@ export default function ProductManager() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) {
-      toast.error('Product name is required');
+      toast.error('Product title is required');
       return;
     }
 
     setLoading(true);
     try {
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        basePrice: form.basePrice ? parseFloat(form.basePrice) : 0,
+        images: form.images,
+        colors: form.colors,
+        options: form.options,
+      };
+
       if (editingProduct) {
-        const payload = { ...form, basePrice: 0 };
         await productsAPI.update(editingProduct.id, payload);
         toast.success('Product updated successfully!');
       } else {
-        if (form.colors.length > 0) {
-          // Duplicate the product for each color
-          for (const color of form.colors) {
-            const payload = {
-              ...form,
-              name: `${form.name.trim()} - ${color.name}`,
-              colors: [color],
-              basePrice: 0,
-            };
-            await productsAPI.create(payload);
-          }
-          toast.success(`Created ${form.colors.length} color variants successfully!`);
-        } else {
-          const payload = { ...form, basePrice: 0 };
-          await productsAPI.create(payload);
-          toast.success('Product created successfully!');
-        }
+        await productsAPI.create(payload);
+        toast.success('Product added to your catalog showcase!');
       }
       handleCloseModal();
       fetchProducts();
@@ -224,10 +258,10 @@ export default function ProductManager() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    if (!confirm(`Are you sure you want to delete "${name}" from your catalog showcase?`)) return;
     try {
       await productsAPI.delete(id);
-      toast.success('Product removed');
+      toast.success('Product removed from catalog');
       fetchProducts();
     } catch (err: any) {
       console.error(err);
@@ -235,159 +269,268 @@ export default function ProductManager() {
     }
   };
 
+  // Filtered products
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
+
+  const totalColorsCount = products.reduce((acc, p) => acc + (p.colors?.length || 0), 0);
+  const totalOptionsCount = products.reduce((acc, p) => acc + (p.options?.length || 0), 0);
+
   return (
-    <div className={`mt-8 pt-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+    <div className="w-full space-y-6">
       
-      {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* 1. Header & Live E-Commerce Stats */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-gray-700/80">
         <div>
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-              <Package className="h-5 w-5" />
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-amber-500/20 to-primary-500/20 text-amber-500 dark:text-amber-400 border border-amber-500/30 shadow-xs">
+              <Package className="h-6 w-6" />
             </div>
-            <h3 className={`text-lg sm:text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Product Catalog & Showcase
-            </h3>
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-              isDark ? 'bg-gray-800 text-gray-300' : 'bg-gray-100 text-gray-700'
-            }`}>
-              {products.length} {products.length === 1 ? 'Item' : 'Items'}
-            </span>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                  Product Catalog & E-Commerce Showcase
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20">
+                  {products.length} Products
+                </span>
+              </div>
+              <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Curate your luxury bespoke styles, swatches, and customization options displayed to customers.
+              </p>
+            </div>
           </div>
-          <p className={`text-xs sm:text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            Manage the bespoke garments and product styles displayed on your public tailor profile.
-          </p>
         </div>
 
         <button
           onClick={handleOpenCreateModal}
-          className="btn-primary text-xs sm:text-sm px-4 py-2.5 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all"
+          className="btn-primary text-sm px-5 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-primary-500/25 transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
+          <span>Add Showcase Product</span>
         </button>
       </div>
 
-      {/* Product List Grid */}
+      {/* 2. Storefront Metrics Bar */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Active Garments
+          </p>
+          <p className={`text-2xl font-extrabold font-serif mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            {products.length}
+          </p>
+        </div>
+
+        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Fabric Swatches
+          </p>
+          <p className="text-2xl font-extrabold font-serif mt-1 text-primary-600 dark:text-primary-400">
+            {totalColorsCount}
+          </p>
+        </div>
+
+        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
+          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Bespoke Options
+          </p>
+          <p className="text-2xl font-extrabold font-serif mt-1 text-amber-500">
+            {totalOptionsCount}
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Search & Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search catalog by garment name, description, fabric..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field pl-10 text-sm py-2.5"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 4. E-Commerce Product Cards Grid */}
       {fetching ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={`h-48 rounded-2xl animate-pulse ${isDark ? 'bg-gray-800/60' : 'bg-gray-100'}`} />
+            <div key={i} className={`h-72 rounded-3xl animate-pulse ${isDark ? 'bg-gray-800/60' : 'bg-gray-100'}`} />
           ))}
         </div>
-      ) : products.length === 0 ? (
-        <div className={`p-8 sm:p-12 text-center rounded-2xl border border-dashed ${
+      ) : filteredProducts.length === 0 ? (
+        <div className={`p-12 text-center rounded-3xl border-2 border-dashed ${
           isDark ? 'border-gray-800 bg-gray-900/40' : 'border-slate-300 bg-slate-50/50'
         }`}>
-          <div className={`w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center ${
+          <div className={`w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center ${
             isDark ? 'bg-gray-800 text-gray-500' : 'bg-white text-slate-400 shadow-sm'
           }`}>
-            <Package className="w-7 h-7" />
+            <Package className="w-8 h-8" />
           </div>
-          <h4 className={`text-base font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            No products in your catalog yet
+          <h4 className={`text-lg font-bold mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            {searchQuery ? 'No products matched your search' : 'No products in your showcase catalog yet'}
           </h4>
-          <p className={`text-xs max-w-md mx-auto mb-5 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-            Add suits, dresses, tuxedos, and bespoke attire to highlight your craftsmanship to prospective clients.
+          <p className={`text-xs sm:text-sm max-w-md mx-auto mb-6 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+            {searchQuery 
+              ? 'Try changing your search term or clearing the filter.' 
+              : 'Add suits, dresses, tuxedos, and bespoke attire to highlight your craftsmanship to prospective clients.'}
           </p>
           <button
-            onClick={handleOpenCreateModal}
-            className="btn-primary text-xs px-5 py-2.5 rounded-xl font-bold inline-flex items-center space-x-2 shadow-md"
+            onClick={searchQuery ? () => setSearchQuery('') : handleOpenCreateModal}
+            className="btn-primary text-xs sm:text-sm px-6 py-3 rounded-2xl font-bold inline-flex items-center space-x-2 shadow-lg"
           >
-            <Plus className="w-4 h-4" />
-            <span>Create Your First Product</span>
+            {searchQuery ? <span>Clear Search Filter</span> : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Add Your First Product</span>
+              </>
+            )}
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {products.map((p) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((p) => {
             const primaryImg = p.images?.find((i: any) => i.isPrimary)?.url || p.images?.[0]?.url;
+            const price = Number(p.basePrice) > 0 ? `$${Number(p.basePrice).toFixed(2)}` : 'Starting from inquiry';
+
             return (
               <div
                 key={p.id}
-                className={`group rounded-2xl border overflow-hidden flex flex-col transition-all duration-200 hover:shadow-lg ${
-                  isDark ? 'bg-gray-800/80 border-gray-700/80 hover:border-purple-500/50' : 'bg-white border-slate-200 hover:border-purple-300'
+                className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                  isDark ? 'bg-gray-800/90 border-gray-700/80 hover:border-amber-500/50' : 'bg-white border-slate-200 hover:border-amber-300'
                 }`}
               >
-                {/* Image Aspect Box */}
-                <div className="aspect-[4/3] w-full bg-black/10 dark:bg-black/30 relative overflow-hidden">
-                  {primaryImg ? (
-                    <img
-                      src={primaryImg}
-                      alt={p.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                      <ImageIcon className="w-8 h-8 mb-1 opacity-40" />
-                      <span className="text-[10px] font-semibold">No Image</span>
-                    </div>
-                  )}
-
-                  {/* Actions Bar Floating Overlay */}
-                  <div className="absolute top-2.5 right-2.5 flex items-center space-x-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleOpenEditModal(p)}
-                      title="Edit Product"
-                      className="p-2 rounded-xl bg-white/90 dark:bg-gray-900/90 text-slate-800 dark:text-white shadow-md hover:bg-white dark:hover:bg-gray-800 transition-all cursor-pointer backdrop-blur-xs"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(p.id, p.name)}
-                      title="Delete Product"
-                      className="p-2 rounded-xl bg-red-600/90 hover:bg-red-600 text-white shadow-md transition-all cursor-pointer backdrop-blur-xs"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Details */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <h4 className={`font-bold text-sm sm:text-base leading-snug line-clamp-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {p.name}
-                    </h4>
-                    {p.description && (
-                      <p className={`text-xs mt-1 line-clamp-2 leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                        {p.description}
-                      </p>
+                {/* Product Image Stage */}
+                <div>
+                  <div className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden">
+                    {primaryImg ? (
+                      <img
+                        src={primaryImg}
+                        alt={p.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-slate-900">
+                        <ImageIcon className="w-10 h-10 mb-1 opacity-30" />
+                        <span className="text-xs font-semibold">No Image Uploaded</span>
+                      </div>
                     )}
+
+                    {/* Gradient Vignette */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+
+                    {/* Price Tag Floating Badge */}
+                    <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-xs shadow-lg">
+                      {price}
+                    </div>
+
+                    {/* Image Count Badge */}
+                    {p.images && p.images.length > 1 && (
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
+                        📸 {p.images.length} photos
+                      </div>
+                    )}
+
+                    {/* Quick Edit & Delete Actions (Floating Overlay) */}
+                    <div className="absolute top-3 right-3 flex items-center space-x-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleOpenEditModal(p)}
+                        title="Edit Product"
+                        className="p-2.5 rounded-xl bg-white/95 dark:bg-gray-900/95 text-slate-800 dark:text-white shadow-lg hover:scale-105 transition-all cursor-pointer backdrop-blur-xs"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id, p.name)}
+                        title="Delete Product"
+                        className="p-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg hover:scale-105 transition-all cursor-pointer backdrop-blur-xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Colors & Options Badges */}
-                  <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-gray-700/60">
+                  {/* Product Details Body */}
+                  <div className="p-5 space-y-3">
+                    <div>
+                      <h4 className={`font-bold text-base sm:text-lg leading-snug line-clamp-1 group-hover:text-amber-500 transition-colors ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}>
+                        {p.name}
+                      </h4>
+                      {p.description && (
+                        <p className={`text-xs mt-1 line-clamp-2 leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          {p.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Color Palette Swatches */}
                     {p.colors && p.colors.length > 0 && (
-                      <div className="flex items-center space-x-1.5">
-                        <Palette className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                        <div className="flex items-center gap-1 overflow-hidden">
-                          {p.colors.slice(0, 5).map((c: any, i: number) => (
+                      <div className="flex items-center space-x-2 pt-2 border-t border-slate-100 dark:border-gray-700/60">
+                        <Palette className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          {p.colors.map((c: any, i: number) => (
                             <span
                               key={i}
-                              title={c.name}
-                              className="w-3.5 h-3.5 rounded-full border border-black/20 dark:border-white/20 flex-shrink-0"
+                              title={`${c.name} (${c.hexCode})`}
+                              className="w-4 h-4 rounded-full border border-black/20 dark:border-white/30 shadow-2xs flex-shrink-0"
                               style={{ backgroundColor: c.hexCode }}
                             />
                           ))}
-                          {p.colors.length > 5 && (
-                            <span className="text-[10px] text-gray-400 font-bold">
-                              +{p.colors.length - 5}
-                            </span>
-                          )}
                         </div>
                       </div>
                     )}
 
+                    {/* Bespoke Customization Options */}
                     {p.options && p.options.length > 0 && (
-                      <div className="flex items-center space-x-1 text-[11px] text-gray-500 dark:text-gray-400">
-                        <SlidersHorizontal className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">
-                          {p.options.map((o: any) => o.name).join(', ')}
-                        </span>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {p.options.map((opt: any, i: number) => {
+                          const vals = typeof opt.values === 'string' ? JSON.parse(opt.values) : opt.values;
+                          return (
+                            <span
+                              key={i}
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                                isDark ? 'bg-gray-700/60 text-slate-300' : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {opt.name}: {Array.isArray(vals) ? vals.join(', ') : vals}
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Footer Edit Button */}
+                <div className="px-5 pb-5 pt-0">
+                  <button
+                    onClick={() => handleOpenEditModal(p)}
+                    className={`w-full py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center space-x-1.5 ${
+                      isDark 
+                        ? 'border-gray-700 hover:border-amber-500 hover:text-amber-400 text-slate-300 bg-gray-800' 
+                        : 'border-slate-200 hover:border-amber-400 hover:text-amber-700 text-slate-700 bg-slate-50'
+                    }`}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit Garment Specs</span>
+                  </button>
                 </div>
               </div>
             );
@@ -399,7 +542,7 @@ export default function ProductManager() {
       {/* POPUP MODAL: CREATE / EDIT PRODUCT */}
       {/* ========================================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fadeIn">
           <div
             className={`w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl border overflow-hidden transition-all ${
               isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-slate-200 text-slate-900'
@@ -407,18 +550,18 @@ export default function ProductManager() {
           >
             {/* Modal Header */}
             <div className={`px-6 py-4 border-b flex items-center justify-between ${
-              isDark ? 'border-gray-800 bg-gray-950/50' : 'border-slate-100 bg-slate-50/70'
+              isDark ? 'border-gray-800 bg-gray-950/60' : 'border-slate-100 bg-slate-50/80'
             }`}>
               <div className="flex items-center space-x-2.5">
-                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400">
+                <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-400 border border-amber-500/30">
                   <Package className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-bold text-base sm:text-lg leading-tight">
-                    {editingProduct ? 'Edit Product Item' : 'Create New Product Item'}
+                    {editingProduct ? 'Edit Showcase Garment' : 'Create New Showcase Garment'}
                   </h3>
                   <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                    {editingProduct ? 'Update product specifications and imagery' : 'Add a showcase item or customizable bespoke piece to your catalog'}
+                    Define product pricing, fabric swatches, and customization attributes for clients.
                   </p>
                 </div>
               </div>
@@ -434,45 +577,65 @@ export default function ProductManager() {
 
             {/* Modal Form Body (Scrollable) */}
             <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
-              {/* Product Title */}
-              <div>
-                <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
-                  isDark ? 'text-gray-300' : 'text-slate-700'
-                }`}>
-                  Product Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g., Bespoke 3-Piece Silk Lapel Tuxedo"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="input-field text-sm"
-                />
+              
+              {/* Product Title & Base Price Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-gray-300' : 'text-slate-700'
+                  }`}>
+                    Garment Title *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Bespoke 3-Piece Silk Lapel Tuxedo"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="input-field text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-gray-300' : 'text-slate-700'
+                  }`}>
+                    Base Price ($)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="e.g. 350.00"
+                    value={form.basePrice}
+                    onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
+                    className="input-field text-sm"
+                  />
+                </div>
               </div>
 
-              {/* Description */}
+              {/* Description & Fabric Details */}
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
-                  Description & Fabric Details
+                  Description & Fabric Specifications
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g., Handcrafted with Super 150s virgin wool, full canvas chest piece, and bespoke hand-stitched silk lining."
+                  placeholder="e.g. Handcrafted with Super 150s virgin Italian wool, full canvas chest piece, horn buttons, and hand-stitched silk lining."
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="input-field text-sm leading-relaxed"
                 />
               </div>
 
-              {/* Image Upload Gallery */}
+              {/* Photo Gallery Manager */}
               <div>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
-                  Product Photography
+                  Product Photography Gallery
                 </label>
                 
                 <div
@@ -480,8 +643,8 @@ export default function ProductManager() {
                   onDrop={handleImageUpload}
                   className={`border-2 border-dashed rounded-2xl p-4 text-center transition-all ${
                     isDark
-                      ? 'border-gray-700 bg-gray-800/40 hover:bg-gray-800/70 hover:border-purple-500/60'
-                      : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-purple-400'
+                      ? 'border-gray-700 bg-gray-800/40 hover:bg-gray-800/70 hover:border-amber-500/60'
+                      : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-amber-400'
                   }`}
                 >
                   <input
@@ -495,9 +658,9 @@ export default function ProductManager() {
                     htmlFor="modalProductImage"
                     className="cursor-pointer flex flex-col items-center justify-center space-y-1.5"
                   >
-                    <UploadCloud className={`h-8 w-8 ${uploadingImage ? 'animate-bounce text-purple-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
-                    <span className="text-xs font-semibold text-purple-600 dark:text-purple-400">
-                      {uploadingImage ? 'Uploading image...' : 'Click to browse image file or drag and drop'}
+                    <UploadCloud className={`h-8 w-8 ${uploadingImage ? 'animate-bounce text-amber-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                      {uploadingImage ? 'Uploading image...' : 'Click to browse image or drag and drop'}
                     </span>
                     <span className={`text-[11px] ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
                       PNG, JPG, or WebP up to 10MB
@@ -505,15 +668,18 @@ export default function ProductManager() {
                   </label>
                 </div>
 
-                {/* Uploaded Thumbnails Preview */}
+                {/* Uploaded Thumbnails Preview with Primary Selector */}
                 {form.images.length > 0 && (
-                  <div className="flex flex-wrap gap-2.5 mt-3">
+                  <div className="flex flex-wrap gap-3 mt-3">
                     {form.images.map((img, i) => (
                       <div
                         key={i}
-                        className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 group shadow-xs"
+                        className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 group shadow-sm transition-all ${
+                          img.isPrimary ? 'border-amber-500 ring-2 ring-amber-500/30' : 'border-gray-300 dark:border-gray-700'
+                        }`}
                       >
                         <img src={img.url} alt="Uploaded preview" className="w-full h-full object-cover" />
+                        
                         <button
                           type="button"
                           onClick={() => handleRemoveImage(i)}
@@ -521,24 +687,29 @@ export default function ProductManager() {
                         >
                           <X className="w-3 h-3" />
                         </button>
-                        {img.isPrimary && (
-                          <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 backdrop-blur-xs">
-                            Primary
-                          </span>
-                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimaryImage(i)}
+                          className={`absolute bottom-0 inset-x-0 text-[9px] font-bold text-center py-0.5 backdrop-blur-xs transition-colors ${
+                            img.isPrimary ? 'bg-amber-500 text-white' : 'bg-black/60 text-white hover:bg-black/80'
+                          }`}
+                        >
+                          {img.isPrimary ? '★ Primary' : 'Set Primary'}
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Color Swatches */}
+              {/* Color Palette Swatches */}
               <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-slate-50 border-slate-200'}`}>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
                   <span className="flex items-center space-x-1.5">
-                    <Palette className="w-3.5 h-3.5 text-purple-500" />
+                    <Palette className="w-3.5 h-3.5 text-amber-500" />
                     <span>Fabric Colors & Swatches</span>
                   </span>
                   <span className="text-[10px] font-normal lowercase opacity-70">optional</span>
@@ -547,7 +718,7 @@ export default function ProductManager() {
                 <div className="flex items-center gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Color name (e.g., Midnight Blue)"
+                    placeholder="Color name (e.g. Midnight Navy)"
                     value={colorName}
                     onChange={(e) => setColorName(e.target.value)}
                     className="input-field text-xs flex-1 py-2"
@@ -572,16 +743,16 @@ export default function ProductManager() {
                     {form.colors.map((c, i) => (
                       <span
                         key={i}
-                        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                        className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
                           isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-slate-200 text-slate-800 shadow-2xs'
                         }`}
                       >
-                        <span className="w-3 h-3 rounded-full border border-black/20" style={{ backgroundColor: c.hexCode }} />
+                        <span className="w-3.5 h-3.5 rounded-full border border-black/20 shadow-2xs" style={{ backgroundColor: c.hexCode }} />
                         <span>{c.name}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveColor(i)}
-                          className="text-gray-400 hover:text-red-500 ml-1"
+                          className="text-gray-400 hover:text-red-500 ml-1 font-bold"
                         >
                           &times;
                         </button>
@@ -591,14 +762,14 @@ export default function ProductManager() {
                 )}
               </div>
 
-              {/* Design Customization Options */}
+              {/* Bespoke Customization Options */}
               <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/50 border-gray-800' : 'bg-slate-50 border-slate-200'}`}>
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 flex items-center justify-between ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
                   <span className="flex items-center space-x-1.5">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-purple-500" />
-                    <span>Custom Design Options</span>
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Customization Options</span>
                   </span>
                   <span className="text-[10px] font-normal lowercase opacity-70">optional</span>
                 </label>
@@ -606,15 +777,15 @@ export default function ProductManager() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Option name (e.g., Collar Style)"
+                    placeholder="Option name (e.g. Lapel Style)"
                     value={optName}
                     onChange={(e) => setOptName(e.target.value)}
                     className="input-field text-xs py-2"
                   />
-                  <div className="flex items-center gap-2">
+                  <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Values (e.g., Notch, Peak, Shawl)"
+                      placeholder="Values (e.g. Peak, Notch, Shawl)"
                       value={optVals}
                       onChange={(e) => setOptVals(e.target.value)}
                       className="input-field text-xs flex-1 py-2"
@@ -622,7 +793,7 @@ export default function ProductManager() {
                     <button
                       type="button"
                       onClick={handleAddOption}
-                      className="btn-secondary text-xs px-3.5 py-2 font-bold flex-shrink-0"
+                      className="btn-secondary text-xs px-3 py-2 font-bold flex-shrink-0"
                     >
                       + Add
                     </button>
@@ -631,22 +802,23 @@ export default function ProductManager() {
 
                 {form.options.length > 0 && (
                   <div className="space-y-1.5">
-                    {form.options.map((o, i) => (
+                    {form.options.map((opt, i) => (
                       <div
                         key={i}
-                        className={`flex items-center justify-between p-2 rounded-xl text-xs border ${
-                          isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-slate-200 shadow-2xs'
+                        className={`flex items-center justify-between px-3 py-1.5 rounded-xl border text-xs ${
+                          isDark ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-slate-200 text-slate-800 shadow-2xs'
                         }`}
                       >
-                        <span className="truncate">
-                          <strong className="font-bold">{o.name}:</strong> {Array.isArray(o.values) ? o.values.join(', ') : o.values}
-                        </span>
+                        <div>
+                          <span className="font-bold text-amber-500">{opt.name}: </span>
+                          <span>{opt.values.join(', ')}</span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveOption(i)}
-                          className="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"
+                          className="text-gray-400 hover:text-red-500 ml-2 font-bold"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          &times;
                         </button>
                       </div>
                     ))}
@@ -654,35 +826,28 @@ export default function ProductManager() {
                 )}
               </div>
 
-              {/* Modal Action Footer */}
-              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100 dark:border-gray-800">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="btn-secondary text-xs sm:text-sm px-4 py-2.5 rounded-xl font-bold"
+                  className="btn-secondary text-xs sm:text-sm px-5 py-2.5 rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading || uploadingImage}
-                  className="btn-primary text-xs sm:text-sm px-6 py-2.5 rounded-xl font-bold shadow-md hover:shadow-lg transition-all flex items-center space-x-2 disabled:opacity-50"
+                  disabled={loading}
+                  className="btn-primary text-xs sm:text-sm px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 shadow-lg"
                 >
-                  {loading ? (
-                    <span>Saving...</span>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>{editingProduct ? 'Save Changes' : 'Create Product'}</span>
-                    </>
-                  )}
+                  <Check className="w-4 h-4" />
+                  <span>{loading ? 'Saving Garment...' : editingProduct ? 'Save Changes' : 'Publish Product'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 }
