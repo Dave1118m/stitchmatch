@@ -44,15 +44,10 @@ export default function Home() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (user) {
-      if (searchQuery.trim()) {
-        navigate(`/tailors?search=${encodeURIComponent(searchQuery.trim())}`);
-      } else {
-        navigate('/tailors');
-      }
+    if (searchQuery.trim()) {
+      navigate(`/tailors?search=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      // Unauthenticated visitors are routed to Customer Registration
-      navigate(`/register?role=customer`);
+      navigate('/tailors');
     }
   };
 
@@ -153,11 +148,11 @@ export default function Home() {
               </Link>
             ) : (
               <>
-                <Link to="/login?role=customer" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
+                <Link to="/login" className="btn-secondary text-xs sm:text-sm px-3 sm:px-4 py-2 flex items-center space-x-1 sm:space-x-1.5">
                   <LogIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>{t('nav.signIn')}</span>
                 </Link>
-                <Link to="/register?role=customer" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
+                <Link to="/join" className="btn-primary text-xs sm:text-sm px-3.5 sm:px-5 py-2 flex items-center space-x-1 sm:space-x-1.5 shadow-md">
                   <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>{t('nav.joinNow')}</span>
                 </Link>
@@ -263,7 +258,7 @@ export default function Home() {
             
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 sm:gap-6">
               <Link
-                to={user ? '/dashboard' : '/register?role=customer'}
+                to={user ? '/dashboard' : '/join'}
                 className="bg-[#2563eb] hover:bg-blue-700 text-white font-medium py-3 sm:py-3.5 px-8 sm:px-10 rounded shadow hover:shadow-lg transition-all w-full sm:w-auto text-base sm:text-lg"
               >
                 {t('home.getStartedBtn')}
@@ -583,7 +578,7 @@ export default function Home() {
               </p>
             </div>
             <Link
-              to={user ? '/tailors' : '/register?role=customer'}
+              to="/tailors"
               className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline"
             >
               <span>{t('home.footer.exploreTailors')}</span>
@@ -636,7 +631,7 @@ export default function Home() {
               </p>
             </div>
             <Link
-              to={user ? '/tailors' : '/register?role=customer'}
+              to="/tailors"
               className="mt-4 md:mt-0 text-primary-600 font-bold text-sm flex items-center space-x-1 hover:underline"
             >
               <span>{t('home.footer.exploreTailors')}</span>
@@ -700,7 +695,7 @@ export default function Home() {
                       </div>
                       
                       <Link
-                        to={user ? `/tailors/${tailor.id}` : '/register?role=customer'}
+                        to={`/tailors/${tailor.id}`}
                         className="btn-primary text-xs px-4 py-2 inline-flex items-center space-x-1"
                       >
                         <span>{t('tailors.viewProfile')}</span>
@@ -725,7 +720,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
             <Link
-              to={user ? '/tailors' : '/register?role=customer'}
+              to="/tailors"
               className="bg-white text-primary-700 font-bold px-8 py-3.5 rounded-xl hover:bg-slate-50 transition-colors shadow-lg flex items-center justify-center space-x-2"
             >
               <Search className="h-5 w-5" />
@@ -733,7 +728,7 @@ export default function Home() {
             </Link>
             {!user && (
               <Link
-                to="/register?role=tailor"
+                to="/join"
                 className="bg-primary-900/40 text-white font-semibold border border-white/30 px-8 py-3.5 rounded-xl hover:bg-primary-900/60 transition-colors flex items-center justify-center space-x-2"
               >
                 <Scissors className="h-5 w-5" />

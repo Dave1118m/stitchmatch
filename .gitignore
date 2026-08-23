@@ -30,3 +30,8 @@ uploads/
 .idea/
 .DS_Store
 Thumbs.db
+
+# SSL certificates & keys
+certs/
+*.pem
+*.key
