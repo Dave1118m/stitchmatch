@@ -13,7 +13,7 @@ const httpsOptions = (fs.existsSync(certPath) && fs.existsSync(keyPath))
       key: fs.readFileSync(keyPath),
       cert: fs.readFileSync(certPath),
     }
-  : true // fallback to automatic https if cert files move
+  : undefined
 
 export default defineConfig({
   plugins: [react()],
