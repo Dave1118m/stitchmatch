@@ -224,7 +224,7 @@ router.put('/vault/manual', authenticate, authorize('customer'), async (req: Aut
 
       const created = await prisma.measurement.create({
         data: {
-          requestId: recentRequest ? recentRequest.id : null,
+          requestId: recentRequest ? recentRequest.id : undefined,
           customerId: req.userId!,
           chest: chest ? Number(chest) : 98,
           waist: waist ? Number(waist) : 84,
