@@ -138,7 +138,7 @@ export async function analyzeBodyMeasurementsWithGemini(
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const imageParts: any[] = [];
     const frontPart = fileToGenerativePart(frontPhotoUrl);
