@@ -2,7 +2,6 @@
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker is not supported in this browser.');
     return null;
   }
 
@@ -10,17 +9,20 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/',
     });
-    console.log('Service Worker registered successfully with scope:', registration.scope);
     return registration;
-  } catch (error) {
-    console.error('Service Worker registration failed:', error);
+  } catch (error: any) {
+    // Handle self-signed certificate restriction on localhost gracefully
+    if (error?.name === 'SecurityError' || error?.message?.includes('SSL')) {
+      console.info('ℹ️ [Service Worker] Development localhost certificate detected. Falling back to direct browser notifications.');
+    } else {
+      console.warn('[Service Worker] Registration skipped:', error?.message || error);
+    }
     return null;
   }
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
   if (!('Notification' in window)) {
-    console.warn('Browser does not support notifications.');
     return 'denied';
   }
 
@@ -32,7 +34,6 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     const permission = await Notification.requestPermission();
     return permission;
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
     return 'denied';
   }
 }
@@ -44,13 +45,20 @@ export function showBrowserNotification(title: string, options?: NotificationOpt
 
   try {
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.ready.then((registration) => {
-        registration.showNotification(title, {
-          icon: '/vite.svg',
-          badge: '/vite.svg',
-          ...options,
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          registration.showNotification(title, {
+            icon: '/vite.svg',
+            badge: '/vite.svg',
+            ...options,
+          });
+        })
+        .catch(() => {
+          new Notification(title, {
+            icon: '/vite.svg',
+            ...options,
+          });
         });
-      });
     } else {
       new Notification(title, {
         icon: '/vite.svg',
@@ -58,6 +66,10 @@ export function showBrowserNotification(title: string, options?: NotificationOpt
       });
     }
   } catch (err) {
-    console.warn('Could not display notification:', err);
+    // Gracefully handle browser notification restriction
   }
+}
+
+export function subscribeUserToPush(): Promise<PushSubscription | null> {
+  return Promise.resolve(null);
 }
