@@ -2,8 +2,8 @@
  * Client-Side Computer Vision & Pose Consistency Validator
  * Analyzes raw image pixels using HTML5 Canvas to verify:
  * 1. Aspect ratio & full-body vertical framing / distance
- * 2. Identity & clothing color consistency across all 3 poses (preventing different persons)
- * 3. Silhouette width ratio (90° side profile vs frontal shoulder width)
+ * 2. Identity & clothing color consistency between Front and 90° Side poses
+ * 3. Human silhouette framing
  */
 
 export interface PoseValidationResult {
@@ -97,13 +97,71 @@ function calculateColorDivergence(p1: number[], p2: number[]): number {
 }
 
 /**
- * Validate all 3 photos for distance, person identity consistency, and pose orientation
+ * Validate Front & Side photos for distance, vertical framing, and person identity consistency
+ */
+export async function validateDualPoseImages(
+  frontSource: File | string,
+  sideSource: File | string
+): Promise<PoseValidationResult> {
+  try {
+    const [frontImg, sideImg] = await Promise.all([
+      loadImage(frontSource),
+      loadImage(sideSource),
+    ]);
+
+    // 1. Framing & Distance Validation (Vertical Portrait Full Body Ratio)
+    const frontRatio = frontImg.naturalHeight / (frontImg.naturalWidth || 1);
+    const sideRatio = sideImg.naturalHeight / (sideImg.naturalWidth || 1);
+
+    // If an image is landscape or extreme wide crop
+    if (frontRatio < 0.95 || sideRatio < 0.95) {
+      return {
+        isValid: false,
+        error: '⚠️ Framing Warning: One or more photos are horizontal/landscape. Please stand 2-3 meters away and capture vertical portrait photos that display your full upright body from head to feet.',
+      };
+    }
+
+    // 2. Identity & Clothing Consistency Validation
+    const frontProfile = extractColorProfile(frontImg);
+    const sideProfile = extractColorProfile(sideImg);
+
+    const divFrontSide = calculateColorDivergence(frontProfile, sideProfile);
+
+    // If divergence exceeds threshold, the photos show completely different subjects/clothing colors
+    if (divFrontSide > 0.8) {
+      return {
+        isValid: false,
+        error: `⚠️ Subject / Outfit Inconsistency: The Front and Side photos appear to show different individuals or different clothing. Both photos must be of the same person in the same form-fitting attire.`,
+        details: { colorDivergence: divFrontSide },
+      };
+    }
+
+    return {
+      isValid: true,
+      details: {
+        frontAspectRatio: frontRatio,
+        sideAspectRatio: sideRatio,
+        colorDivergence: divFrontSide,
+      },
+    };
+  } catch (err: any) {
+    console.warn('[Pose Validator] Fallback on error:', err);
+    return { isValid: true };
+  }
+}
+
+/**
+ * Legacy Triple Pose Validator (Front, Side, Back)
  */
 export async function validateTriplePoseImages(
   frontSource: File | string,
   sideSource: File | string,
-  backSource: File | string
+  backSource?: File | string | null
 ): Promise<PoseValidationResult> {
+  if (!backSource) {
+    return validateDualPoseImages(frontSource, sideSource);
+  }
+
   try {
     const [frontImg, sideImg, backImg] = await Promise.all([
       loadImage(frontSource),
@@ -111,20 +169,17 @@ export async function validateTriplePoseImages(
       loadImage(backSource),
     ]);
 
-    // 1. Framing & Distance Validation (Vertical Portrait Full Body Ratio)
     const frontRatio = frontImg.naturalHeight / (frontImg.naturalWidth || 1);
     const sideRatio = sideImg.naturalHeight / (sideImg.naturalWidth || 1);
     const backRatio = backImg.naturalHeight / (backImg.naturalWidth || 1);
 
-    // If an image is landscape or extreme wide crop
-    if (frontRatio < 1.0 || sideRatio < 1.0 || backRatio < 1.0) {
+    if (frontRatio < 0.95 || sideRatio < 0.95 || backRatio < 0.95) {
       return {
         isValid: false,
         error: '⚠️ Distance / Framing Error: One or more photos are horizontal/landscape. Please stand 2-3 meters back and capture vertical portrait photos that show your full body from head to feet.',
       };
     }
 
-    // 2. Identity & Clothing Consistency Validation (Single Person Check)
     const frontProfile = extractColorProfile(frontImg);
     const sideProfile = extractColorProfile(sideImg);
     const backProfile = extractColorProfile(backImg);
@@ -135,11 +190,10 @@ export async function validateTriplePoseImages(
 
     const maxDivergence = Math.max(divFrontSide, divFrontBack, divSideBack);
 
-    // If divergence exceeds 0.72, the photos show completely different subjects/clothing colors
-    if (maxDivergence > 0.75) {
+    if (maxDivergence > 0.8) {
       return {
         isValid: false,
-        error: `⚠️ Person / Outfit Inconsistency Detected: The uploaded photos appear to show different individuals or completely different clothing. All 3 photos must be of the same person wearing consistent form-fitting attire.`,
+        error: `⚠️ Person / Outfit Inconsistency Detected: The uploaded photos appear to show different individuals or clothing. All photos must be of the same person.`,
         details: { colorDivergence: maxDivergence },
       };
     }

@@ -38,7 +38,7 @@ import AICameraScannerModal from '../components/AICameraScannerModal';
 import ThreeBodyAvatar from '../components/ThreeBodyAvatar';
 import CuttersSpecSheetModal from '../components/CuttersSpecSheetModal';
 import { validateImageFile } from '../utils/fileValidation';
-import { validateTriplePoseImages } from '../utils/imagePoseValidator';
+import { validateDualPoseImages, validateTriplePoseImages } from '../utils/imagePoseValidator';
 
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
@@ -51,6 +51,7 @@ export default function RequestDetail() {
   const [request, setRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState({ frontPhotoUrl: '', sidePhotoUrl: '', backPhotoUrl: '' });
+  const [scanHeightCm, setScanHeightCm] = useState<number>(175);
   const [uploadingPhotoField, setUploadingPhotoField] = useState<'front' | 'side' | 'back' | null>(null);
   const [orderStatus, setOrderStatus] = useState('');
   const [measurementViewTab, setMeasurementViewTab] = useState<'3d' | 'photos'>('3d');
@@ -222,7 +223,7 @@ export default function RequestDetail() {
     const otherSlots = Object.entries(selectedFileFingerprints).filter(([slot]) => slot !== field);
     for (const [slotKey, existingFp] of otherSlots) {
       if (existingFp === fingerprint) {
-        toast.error(`⚠️ Duplicate Photo Rejected: You selected the same image for both ${field.toUpperCase()} and ${slotKey.toUpperCase()}. The AI measurement engine requires 1 distinct Front pose, 1 separate 90° Side profile, and 1 Back pose.`);
+        toast.error(`⚠️ Duplicate Photo Rejected: You selected the same image for both ${field.toUpperCase()} and ${slotKey.toUpperCase()}. The AI measurement engine requires 1 distinct Front pose and 1 separate 90° Side profile.`);
         e.target.value = '';
         return;
       }
@@ -250,37 +251,40 @@ export default function RequestDetail() {
     // Strict Duplicate pose check
     const isDuplicate = 
       (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.frontPhotoUrl === photos.sidePhotoUrl) ||
-      (photos.frontPhotoUrl && photos.backPhotoUrl && photos.frontPhotoUrl === photos.backPhotoUrl) ||
-      (photos.sidePhotoUrl && photos.backPhotoUrl && photos.sidePhotoUrl === photos.backPhotoUrl) ||
-      (selectedFileFingerprints.front && selectedFileFingerprints.side && selectedFileFingerprints.front === selectedFileFingerprints.side) ||
-      (selectedFileFingerprints.front && selectedFileFingerprints.back && selectedFileFingerprints.front === selectedFileFingerprints.back) ||
-      (selectedFileFingerprints.side && selectedFileFingerprints.back && selectedFileFingerprints.side === selectedFileFingerprints.back);
+      (selectedFileFingerprints.front && selectedFileFingerprints.side && selectedFileFingerprints.front === selectedFileFingerprints.side);
 
     if (isDuplicate) {
-      toast.error('⚠️ Duplicate Photo Error: Front, Side, and Back photos must be separate poses. The AI requires 1 distinct Front pose and 1 separate 90° Side profile to measure chest and waist depth accurately.');
+      toast.error('⚠️ Duplicate Photo Error: Front and Side photos must be separate poses. The AI requires 1 distinct Front pose and 1 separate 90° Side profile to measure chest and waist depth accurately.');
+      return;
+    }
+
+    if (!photos.frontPhotoUrl || !photos.sidePhotoUrl) {
+      toast.error('Please upload both Front and 90° Side profile photos.');
       return;
     }
 
     setSubmitting(true);
     try {
       // Run Client-Side Pixel Computer Vision Verification (Person Identity & Distance/Framing)
-      if (photos.frontPhotoUrl && photos.sidePhotoUrl && photos.backPhotoUrl) {
-        const visionResult = await validateTriplePoseImages(
-          photos.frontPhotoUrl,
-          photos.sidePhotoUrl,
-          photos.backPhotoUrl
-        );
-        if (!visionResult.isValid && visionResult.error) {
-          toast.error(visionResult.error);
-          setSubmitting(false);
-          return;
-        }
+      const visionResult = await validateDualPoseImages(
+        photos.frontPhotoUrl,
+        photos.sidePhotoUrl
+      );
+      if (!visionResult.isValid && visionResult.error) {
+        toast.error(visionResult.error);
+        setSubmitting(false);
+        return;
       }
 
-      await measurementsAPI.uploadPhotos(id!, photos);
+      await measurementsAPI.uploadPhotos(id!, {
+        frontPhotoUrl: photos.frontPhotoUrl,
+        sidePhotoUrl: photos.sidePhotoUrl,
+        backPhotoUrl: photos.backPhotoUrl || undefined,
+        heightCm: scanHeightCm,
+      });
       setShowManualPhotoUpload(false);
       showBrowserNotification('AI Measurement Processing', {
-        body: 'Your body scan photos are being analyzed by our tailoring AI engine.',
+        body: 'Your Front and Side photos are being analyzed by our AI tailoring engine.',
       });
       loadRequest();
     } catch (err: any) {
@@ -291,15 +295,14 @@ export default function RequestDetail() {
   };
 
   // Live Camera Scan Completion Handler
-  const handleCameraScanComplete = async (captured: { frontPhotoUrl: string; sidePhotoUrl: string; backPhotoUrl: string }) => {
+  const handleCameraScanComplete = async (captured: { frontPhotoUrl: string; sidePhotoUrl: string; heightCm: number }) => {
     setSubmitting(true);
     try {
       // Run Client-Side Pixel Computer Vision Verification (Person Identity & Distance/Framing)
-      if (captured.frontPhotoUrl && captured.sidePhotoUrl && captured.backPhotoUrl) {
-        const visionResult = await validateTriplePoseImages(
+      if (captured.frontPhotoUrl && captured.sidePhotoUrl) {
+        const visionResult = await validateDualPoseImages(
           captured.frontPhotoUrl,
-          captured.sidePhotoUrl,
-          captured.backPhotoUrl
+          captured.sidePhotoUrl
         );
         if (!visionResult.isValid && visionResult.error) {
           toast.error(visionResult.error);
@@ -310,7 +313,7 @@ export default function RequestDetail() {
 
       await measurementsAPI.uploadPhotos(id!, captured);
       showBrowserNotification('AI Measurement Extraction Started', {
-        body: 'All 3 live camera angles received! Estimating tailoring dimensions.',
+        body: 'Front & Side camera angles received! Converting pixels to centimeters.',
       });
       loadRequest();
     } catch (err: any) {
@@ -1213,47 +1216,98 @@ export default function RequestDetail() {
                         className="btn-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center space-x-1"
                       >
                         <UploadCloud className="w-3.5 h-3.5" />
-                        <span>{showManualPhotoUpload ? 'Hide Uploader' : 'Upload Photos (Files / URLs)'}</span>
+                        <span>{showManualPhotoUpload ? 'Hide Uploader' : 'Upload Photos (Files / Gallery)'}</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Photo Upload Form: Direct File Browser + URL Inputs */}
+                  {/* Photo Upload Form: Height calibration + Front/Side Photo Cards */}
                   {showManualPhotoUpload && (
-                    <form onSubmit={handleUploadPhotos} className={`p-4 rounded-xl border space-y-4 ${
-                      isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-200'
-                    }`}>
-                      <div>
-                        <p className={`text-xs font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                          Select or Upload 3 Required Poses:
-                        </p>
-                        <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                          You can browse photos directly from your phone/computer or paste image URLs.
-                        </p>
+                    <form onSubmit={handleUploadPhotos} className="space-y-4">
+                      {/* Height Calibration Input & Guidelines */}
+                      <div className={`p-4 rounded-2xl border space-y-3 ${
+                        isDark ? 'bg-gray-900/80 border-gray-700/80' : 'bg-white border-gray-200'
+                      }`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                              Standing Height Calibration (cm) *
+                            </label>
+                            <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              The AI uses your exact height to convert image pixels into centimeter tailoring dimensions.
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min="100"
+                              max="240"
+                              required
+                              value={scanHeightCm}
+                              onChange={(e) => setScanHeightCm(Number(e.target.value))}
+                              className="input-field w-24 text-center font-mono font-bold text-sm py-1.5"
+                            />
+                            <span className="text-xs font-bold text-primary-500">cm</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Presets */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className={`text-[10px] font-semibold mr-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quick select:</span>
+                          {[160, 165, 170, 175, 180, 185, 190].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setScanHeightCm(preset)}
+                              className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold border transition-all ${
+                                scanHeightCm === preset
+                                  ? 'bg-primary-600 border-primary-600 text-white'
+                                  : isDark ? 'border-gray-700 bg-gray-800 text-gray-300 hover:border-primary-500' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-500'
+                              }`}
+                            >
+                              {preset}cm
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Human Only Guidelines */}
+                        <div className={`p-2.5 rounded-xl border text-[11px] flex items-center space-x-2 ${
+                          isDark ? 'bg-amber-950/30 border-amber-800/40 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'
+                        }`}>
+                          <Info className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <span>
+                            <strong>Human Subject Required:</strong> Photos must be full-body upright photos of yourself in form-fitting clothes.
+                          </span>
+                        </div>
                       </div>
 
-                      {/* 3 Photo Upload Cards Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* 2 Photo Upload Cards Grid (Front & Side) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Front Photo Card */}
-                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                        <div className={`p-3.5 rounded-2xl border flex flex-col items-center justify-between text-center relative ${
                           isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
                         }`}>
-                          <span className="text-xs font-bold mb-1.5">1. Front Pose</span>
-                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                          <div className="mb-2">
+                            <span className="text-xs font-bold block">1. Front View Pose *</span>
+                            <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Facing camera upright</span>
+                          </div>
+                          
+                          <div className="w-full h-36 rounded-xl overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-3">
                             {photos.frontPhotoUrl ? (
                               <img src={photos.frontPhotoUrl} alt="Front Preview" className="w-full h-full object-cover" />
                             ) : uploadingPhotoField === 'front' ? (
-                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                             ) : (
                               <div className="text-gray-400 flex flex-col items-center">
-                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                                <span className="text-[10px]">No file selected</span>
+                                <ImageIcon className="w-7 h-7 mb-1 opacity-50" />
+                                <span className="text-[11px]">No photo selected</span>
                               </div>
                             )}
                           </div>
-                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
-                            <Upload className="w-3 h-3" />
-                            <span>Browse File</span>
+
+                          <label className="btn-secondary w-full text-xs py-2 cursor-pointer flex items-center justify-center space-x-1 font-bold">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Browse Front Photo</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -1261,35 +1315,33 @@ export default function RequestDetail() {
                               onChange={(e) => handleFileUpload('front', e)}
                             />
                           </label>
-                          <input
-                            type="text"
-                            placeholder="or paste URL"
-                            value={photos.frontPhotoUrl}
-                            onChange={(e) => setPhotos({ ...photos, frontPhotoUrl: e.target.value })}
-                            className="input-field text-[10px] py-1 mt-1.5 w-full"
-                          />
                         </div>
 
                         {/* Side Photo Card */}
-                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                        <div className={`p-3.5 rounded-2xl border flex flex-col items-center justify-between text-center relative ${
                           isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
                         }`}>
-                          <span className="text-xs font-bold mb-1.5">2. Side Pose</span>
-                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                          <div className="mb-2">
+                            <span className="text-xs font-bold block">2. 90° Side Profile Pose *</span>
+                            <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Turned 90° for body depth</span>
+                          </div>
+
+                          <div className="w-full h-36 rounded-xl overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-3">
                             {photos.sidePhotoUrl ? (
                               <img src={photos.sidePhotoUrl} alt="Side Preview" className="w-full h-full object-cover" />
                             ) : uploadingPhotoField === 'side' ? (
-                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                             ) : (
                               <div className="text-gray-400 flex flex-col items-center">
-                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                                <span className="text-[10px]">No file selected</span>
+                                <ImageIcon className="w-7 h-7 mb-1 opacity-50" />
+                                <span className="text-[11px]">No photo selected</span>
                               </div>
                             )}
                           </div>
-                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
-                            <Upload className="w-3 h-3" />
-                            <span>Browse File</span>
+
+                          <label className="btn-secondary w-full text-xs py-2 cursor-pointer flex items-center justify-center space-x-1 font-bold">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Browse Side Photo</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -1297,59 +1349,16 @@ export default function RequestDetail() {
                               onChange={(e) => handleFileUpload('side', e)}
                             />
                           </label>
-                          <input
-                            type="text"
-                            placeholder="or paste URL"
-                            value={photos.sidePhotoUrl}
-                            onChange={(e) => setPhotos({ ...photos, sidePhotoUrl: e.target.value })}
-                            className="input-field text-[10px] py-1 mt-1.5 w-full"
-                          />
-                        </div>
-
-                        {/* Back Photo Card */}
-                        <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
-                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
-                        }`}>
-                          <span className="text-xs font-bold mb-1.5">3. Back Pose</span>
-                          <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
-                            {photos.backPhotoUrl ? (
-                              <img src={photos.backPhotoUrl} alt="Back Preview" className="w-full h-full object-cover" />
-                            ) : uploadingPhotoField === 'back' ? (
-                              <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <div className="text-gray-400 flex flex-col items-center">
-                                <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                                <span className="text-[10px]">No file selected</span>
-                              </div>
-                            )}
-                          </div>
-                          <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
-                            <Upload className="w-3 h-3" />
-                            <span>Browse File</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => handleFileUpload('back', e)}
-                            />
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="or paste URL"
-                            value={photos.backPhotoUrl}
-                            onChange={(e) => setPhotos({ ...photos, backPhotoUrl: e.target.value })}
-                            className="input-field text-[10px] py-1 mt-1.5 w-full"
-                          />
                         </div>
                       </div>
 
                       <button
                         type="submit"
-                        disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl || !photos.backPhotoUrl}
-                        className="btn-primary w-full text-xs py-2.5 flex items-center justify-center space-x-2 font-bold disabled:opacity-50"
+                        disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl}
+                        className="btn-primary w-full text-xs sm:text-sm py-3 flex items-center justify-center space-x-2 font-bold shadow-lg disabled:opacity-50"
                       >
                         <Sparkles className="h-4 w-4" />
-                        <span>{submitting ? 'Analyzing Photos...' : 'Submit 3 Poses to AI Measurement Engine'}</span>
+                        <span>{submitting ? 'Analyzing Photos...' : 'Convert Pixels to Centimeter Measurements'}</span>
                       </button>
                     </form>
                   )}

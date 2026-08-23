@@ -116,9 +116,10 @@ export const ProposeNegotiationSchema = z.object({
 
 // Measurement Schemas
 export const MeasurementPhotoSchema = z.object({
-  frontPhotoUrl: z.string().min(1, { message: 'Front photo is required' }).optional().or(z.literal('')),
-  sidePhotoUrl: z.string().min(1, { message: 'Side photo is required' }).optional().or(z.literal('')),
-  backPhotoUrl: z.string().min(1, { message: 'Back photo is required' }).optional().or(z.literal('')),
+  frontPhotoUrl: z.string().min(1, { message: 'Front photo is required' }),
+  sidePhotoUrl: z.string().min(1, { message: 'Side photo is required' }),
+  backPhotoUrl: z.string().optional().nullable().or(z.literal('')),
+  heightCm: z.coerce.number().min(50).max(260).optional().nullable(),
 });
 
 export const MeasurementAdjustmentSchema = z.object({

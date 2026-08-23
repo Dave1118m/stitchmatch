@@ -42,7 +42,7 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;
-    const { frontPhotoUrl, sidePhotoUrl, backPhotoUrl } = req.body;
+    const { frontPhotoUrl, sidePhotoUrl, backPhotoUrl, heightCm } = req.body;
 
     // Verify access
     const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
@@ -55,23 +55,10 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
     // Strict Duplicate Photo Validation Check
     const frontHash = getFileHash(frontPhotoUrl);
     const sideHash = getFileHash(sidePhotoUrl);
-    const backHash = getFileHash(backPhotoUrl);
 
     if (frontHash && sideHash && frontHash === sideHash) {
       return res.status(400).json({
         error: '⚠️ Duplicate Photo Rejected: The Front and Side photos are identical. The AI engine requires 1 distinct Front pose and 1 separate 90° Side profile pose to measure chest and waist depth accurately.',
-      });
-    }
-
-    if (frontHash && backHash && frontHash === backHash) {
-      return res.status(400).json({
-        error: '⚠️ Duplicate Photo Rejected: The Front and Back photos are identical. Please provide a separate Back pose.',
-      });
-    }
-
-    if (sideHash && backHash && sideHash === backHash) {
-      return res.status(400).json({
-        error: '⚠️ Duplicate Photo Rejected: The Side and Back photos are identical. Please provide distinct angles for accurate 3D contour fitting.',
       });
     }
 
@@ -96,7 +83,8 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
 
     // Process AI body measurement analysis
     const io = req.app.get('io');
-    processAIMeasurements(prisma, requestId, io);
+    const height = heightCm ? Number(heightCm) : 175;
+    processAIMeasurements(prisma, requestId, io, height);
 
     res.json({ measurement });
   } catch (error) {
@@ -345,7 +333,7 @@ router.put('/:requestId/adjustments', authenticate, authorize('tailor'), validat
 });
 
 // Process AI measurement analysis via Gemini Vision & Anthropometric rules
-async function processAIMeasurements(prisma: PrismaClient, requestId: string, io?: Server) {
+async function processAIMeasurements(prisma: PrismaClient, requestId: string, io?: Server, userHeightCm: number = 175) {
   try {
     // Update status to processing
     await prisma.measurement.update({
@@ -404,20 +392,62 @@ async function processAIMeasurements(prisma: PrismaClient, requestId: string, io
       return;
     }
 
-    // User calibrated reference height defaults to 175cm unless specified
-    const calibratedHeight = 175;
+    const calibratedHeight = userHeightCm > 50 && userHeightCm < 260 ? userHeightCm : 175;
+
+    if (!measurement.frontPhotoUrl || !measurement.sidePhotoUrl) {
+      return;
+    }
 
     // Execute Gemini Pro Vision Multimodal Measurement Engine
     const aiResult = await analyzeBodyMeasurementsWithGemini(
-      measurement.frontPhotoUrl!,
+      measurement.frontPhotoUrl,
       measurement.sidePhotoUrl,
       measurement.backPhotoUrl,
       calibratedHeight
     );
 
+    // Check if Human verification failed (e.g. animal, object, landscape uploaded)
+    if (aiResult.isHuman === false) {
+      const errorMsg = aiResult.humanCheckError || '⚠️ Human Subject Required: Non-human photo detected. Please upload clear photos of yourself standing upright in form-fitting clothing.';
+      
+      await prisma.measurement.update({
+        where: { requestId },
+        data: {
+          aiStatus: 'needs_retake',
+          aiConfidence: 0,
+          adjustments: JSON.stringify([{ error: errorMsg }]),
+        },
+      });
+
+      if (io) {
+        io.emit('measurements_updated', { requestId, aiStatus: 'needs_retake', error: errorMsg });
+      }
+
+      await createNotification(
+        prisma,
+        serviceRequest.customerId,
+        '⚠️ Non-Human Photo Rejected',
+        errorMsg,
+        'request',
+        io
+      );
+
+      if (serviceRequest.tailorId) {
+        await createNotification(
+          prisma,
+          serviceRequest.tailorId,
+          'Customer Scan Retake Requested',
+          `${serviceRequest.customer.name}'s uploaded scan was not a recognized human body and has been requested to retake.`,
+          'request',
+          io
+        );
+      }
+      return;
+    }
+
     // Check if Pose Orientation validation failed
     if (aiResult.isOrientationValid === false) {
-      const errorMsg = aiResult.orientationMismatchError || 'The AI detected that the uploaded pose angles are mismatched or not distinct. Please provide 1 Front pose, 1 90° Side profile, and 1 Back pose.';
+      const errorMsg = aiResult.orientationMismatchError || 'The AI detected that the uploaded pose angles are mismatched or not distinct. Please provide 1 Front pose and 1 separate 90° Side profile.';
       
       await prisma.measurement.update({
         where: { requestId },

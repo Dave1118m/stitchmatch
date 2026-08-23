@@ -299,8 +299,8 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
               </p>
             </div>
 
-            {/* Pose Cards Breakdown */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+            {/* Pose Cards Breakdown (Front + 90° Side Profile) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
               <div className={`p-4 rounded-xl border transition-all ${
                 isDark ? 'border-gray-700 bg-gray-800/80 hover:bg-gray-800' : 'border-gray-200 bg-white hover:bg-gray-50 shadow-sm'
               }`}>
@@ -308,10 +308,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                   <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
                     1
                   </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4FrontTitle')}</h4>
+                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Facing-Front View</h4>
                 </div>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {t('measurements.photoGuide.step4FrontDesc')}
+                  Stand facing the camera directly, standing tall with your arms relaxed slightly away from your hips.
                 </p>
               </div>
 
@@ -322,24 +322,10 @@ export default function MeasurementInstructionsModal({ isOpen, onClose, onComple
                   <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
                     2
                   </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4SideTitle')}</h4>
+                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>2. 90° Side Profile View</h4>
                 </div>
                 <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {t('measurements.photoGuide.step4SideDesc')}
-                </p>
-              </div>
-
-              <div className={`p-4 rounded-xl border transition-all ${
-                isDark ? 'border-gray-700 bg-gray-800/80 hover:bg-gray-800' : 'border-gray-200 bg-white hover:bg-gray-50 shadow-sm'
-              }`}>
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-7 h-7 rounded-lg bg-primary-100 dark:bg-primary-950/80 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-xs">
-                    3
-                  </div>
-                  <h4 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('measurements.photoGuide.step4BackTitle')}</h4>
-                </div>
-                <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                  {t('measurements.photoGuide.step4BackDesc')}
+                  Turn 90 degrees sideways so the camera captures your side silhouette, chest depth, and posture curve.
                 </p>
               </div>
             </div>
