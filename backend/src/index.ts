@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
-import { createServer } from 'http';
+import http from 'http';
+import https from 'https';
+import fs from 'fs';
 import { Server } from 'socket.io';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
@@ -27,8 +29,48 @@ import { setupSocketHandlers } from './socket';
 dotenv.config();
 
 const app = express();
-const httpServer = createServer(app);
 const prisma = new PrismaClient();
+
+// ==========================================
+// SSL / TLS Digital Certificate Configuration
+// ==========================================
+const certCandidates = [
+  {
+    cert: process.env.SSL_CERT_PATH,
+    key: process.env.SSL_KEY_PATH,
+  },
+  {
+    cert: path.resolve(process.cwd(), '..', 'certs', 'cert.pem'),
+    key: path.resolve(process.cwd(), '..', 'certs', 'key.pem'),
+  },
+  {
+    cert: path.resolve(process.cwd(), 'certs', 'cert.pem'),
+    key: path.resolve(process.cwd(), 'certs', 'key.pem'),
+  },
+  {
+    cert: path.resolve(__dirname, '..', '..', 'certs', 'cert.pem'),
+    key: path.resolve(__dirname, '..', '..', 'certs', 'key.pem'),
+  },
+];
+
+let sslOptions: { cert: Buffer; key: Buffer } | null = null;
+for (const cand of certCandidates) {
+  if (cand.cert && cand.key && fs.existsSync(cand.cert) && fs.existsSync(cand.key)) {
+    try {
+      sslOptions = {
+        cert: fs.readFileSync(cand.cert),
+        key: fs.readFileSync(cand.key),
+      };
+      console.log(`🔐 Loaded SSL Digital Certificate from: ${cand.cert}`);
+      break;
+    } catch (err) {
+      console.warn('⚠️ Failed reading SSL certificates from path:', cand.cert, err);
+    }
+  }
+}
+
+const isHttps = !!sslOptions;
+const httpServer = isHttps ? https.createServer(sslOptions!, app) : http.createServer(app);
 
 // ==========================================
 // 1. HTTP Security Headers (Helmet)
@@ -37,7 +79,7 @@ app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows uploaded images to load on cross-origin frontends
     contentSecurityPolicy: false, // Managed by reverse proxy or frontend SPA
-    hsts: process.env.NODE_ENV === 'production' ? { maxAge: 31536000, includeSubDomains: true } : false,
+    hsts: { maxAge: 31536000, includeSubDomains: true },
   })
 );
 
@@ -180,8 +222,9 @@ setupSocketHandlers(io, prisma);
 
 const PORT = Number(process.env.PORT) || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 StitchMatch Production Server running on port ${PORT}`);
-  console.log(`🔒 Security active: Helmet enabled, Rate Limiters engaged`);
+  const protocol = isHttps ? 'https' : 'http';
+  console.log(`🚀 StitchMatch Production Server running on ${protocol}://localhost:${PORT}`);
+  console.log(`🔒 Security active: ${isHttps ? 'HTTPS (TLS Digital Certificate Enabled)' : 'HTTP'}, Helmet enabled, Rate Limiters engaged`);
 });
 
-export { app, httpServer, io, prisma };
+export { app, httpServer, io, prisma };

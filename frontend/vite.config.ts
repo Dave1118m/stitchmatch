@@ -1,19 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import fs from 'fs'
+import path from 'path'
+
+const certPath = path.resolve(__dirname, '../certs/cert.pem')
+const keyPath = path.resolve(__dirname, '../certs/key.pem')
+
+const httpsOptions = (fs.existsSync(certPath) && fs.existsSync(keyPath))
+  ? {
+      key: fs.readFileSync(keyPath),
+      cert: fs.readFileSync(certPath),
+    }
+  : true // fallback to automatic https if cert files move
 
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
     host: true,
+    https: httpsOptions,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:5000',
         changeOrigin: true,
+        secure: false,
       },
       '/socket.io': {
-        target: 'http://localhost:5000',
+        target: 'https://localhost:5000',
         ws: true,
+        secure: false,
       },
     },
   },
