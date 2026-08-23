@@ -305,7 +305,7 @@ router.get('/:requestId/photo/:which/signed', authenticate, async (req: AuthRequ
     if (!['front', 'side', 'back'].includes(which)) return res.status(400).json({ error: 'Invalid photo type' });
 
     const token = generatePhotoToken(requestId, which as any, Number(process.env.PHOTO_TOKEN_EXPIRES || 300));
-    const url = `${process.env.BACKEND_URL || 'https://localhost:5000'}/api/photos/serve?token=${token}`;
+    const url = `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/photos/serve?token=${token}`;
     res.json({ url, expiresIn: Number(process.env.PHOTO_TOKEN_EXPIRES || 300) });
   } catch (error) {
     console.error('Get signed photo link error:', error);

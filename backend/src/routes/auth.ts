@@ -509,7 +509,7 @@ router.post('/forgot-password', validateBody(ForgotPasswordSchema), async (req: 
       },
     });
 
-    const frontendUrl = (process.env.FRONTEND_URL || 'https://localhost:5173').split(',')[0].trim();
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
     const resetUrl = `${frontendUrl}/forgot-password?email=${encodeURIComponent(email)}&code=${code}`;
 
     const emailContent = generatePasswordResetEmail(user.name, code, resetUrl);
