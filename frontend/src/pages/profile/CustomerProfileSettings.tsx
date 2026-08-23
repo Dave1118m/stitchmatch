@@ -38,12 +38,12 @@ export default function CustomerProfileSettings() {
   const [savingVault, setSavingVault] = useState(false);
   const [isEditingVault, setIsEditingVault] = useState(false);
   const [vaultForm, setVaultForm] = useState({
-    chest: '98.0',
-    waist: '84.0',
-    hip: '102.0',
-    inseam: '78.0',
-    shoulderWidth: '44.0',
-    armLength: '62.0',
+    chest: '',
+    waist: '',
+    hip: '',
+    inseam: '',
+    shoulderWidth: '',
+    armLength: '',
   });
 
   useEffect(() => {
@@ -60,17 +60,19 @@ export default function CustomerProfileSettings() {
     setLoadingVault(true);
     try {
       const res = await measurementsAPI.getVaultLatest();
-      if (res.data?.measurement) {
+      if (res.data?.measurement && res.data.measurement.chest) {
         const m = res.data.measurement;
         setVaultMeasurement(m);
         setVaultForm({
-          chest: m.chest ? String(m.chest) : '98.0',
-          waist: m.waist ? String(m.waist) : '84.0',
-          hip: m.hip ? String(m.hip) : '102.0',
-          inseam: m.inseam ? String(m.inseam) : '78.0',
-          shoulderWidth: m.shoulderWidth ? String(m.shoulderWidth) : '44.0',
-          armLength: m.armLength ? String(m.armLength) : '62.0',
+          chest: m.chest ? String(m.chest) : '',
+          waist: m.waist ? String(m.waist) : '',
+          hip: m.hip ? String(m.hip) : '',
+          inseam: m.inseam ? String(m.inseam) : '',
+          shoulderWidth: m.shoulderWidth ? String(m.shoulderWidth) : '',
+          armLength: m.armLength ? String(m.armLength) : '',
         });
+      } else {
+        setVaultMeasurement(null);
       }
     } catch (err) {
       console.error('Failed to load vault measurement:', err);
@@ -286,17 +288,41 @@ export default function CustomerProfileSettings() {
               </button>
             </div>
           </form>
+        ) : !vaultMeasurement || !vaultMeasurement.chest ? (
+          /* Empty State */
+          <div className={`p-8 text-center rounded-2xl border-2 border-dashed ${
+            isDark ? 'border-gray-800 bg-gray-900/40' : 'border-slate-300 bg-slate-50/50'
+          }`}>
+            <div className={`w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center ${
+              isDark ? 'bg-gray-800 text-purple-400' : 'bg-white text-purple-600 shadow-sm'
+            }`}>
+              <Ruler className="w-6 h-6" />
+            </div>
+            <h4 className={`text-base font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              No saved measurements in your vault yet
+            </h4>
+            <p className={`text-xs max-w-md mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+              Add your anatomical measurements once to enable instant 1-click tailored fittings across all master artisans.
+            </p>
+            <button
+              onClick={() => setIsEditingVault(true)}
+              className="btn-primary text-xs px-5 py-2.5 rounded-xl font-bold inline-flex items-center space-x-2 shadow-md"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Enter Body Measurements</span>
+            </button>
+          </div>
         ) : (
-          /* View Mode: Metrics Cards Grid */
+          /* View Mode: Verified Metrics Cards Grid */
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: 'Chest', val: vaultForm.chest, sub: `${(Number(vaultForm.chest) / 2.54).toFixed(1)} in` },
-                { label: 'Waist', val: vaultForm.waist, sub: `${(Number(vaultForm.waist) / 2.54).toFixed(1)} in` },
-                { label: 'Hip & Seat', val: vaultForm.hip, sub: `${(Number(vaultForm.hip) / 2.54).toFixed(1)} in` },
-                { label: 'Inseam', val: vaultForm.inseam, sub: `${(Number(vaultForm.inseam) / 2.54).toFixed(1)} in` },
-                { label: 'Shoulders', val: vaultForm.shoulderWidth, sub: `${(Number(vaultForm.shoulderWidth) / 2.54).toFixed(1)} in` },
-                { label: 'Arm Length', val: vaultForm.armLength, sub: `${(Number(vaultForm.armLength) / 2.54).toFixed(1)} in` },
+                { label: 'Chest', val: vaultMeasurement.chest, sub: `${(Number(vaultMeasurement.chest) / 2.54).toFixed(1)} in` },
+                { label: 'Natural Waist', val: vaultMeasurement.waist, sub: `${(Number(vaultMeasurement.waist) / 2.54).toFixed(1)} in` },
+                { label: 'Hip & Seat', val: vaultMeasurement.hip, sub: `${(Number(vaultMeasurement.hip) / 2.54).toFixed(1)} in` },
+                { label: 'Inseam', val: vaultMeasurement.inseam, sub: `${(Number(vaultMeasurement.inseam) / 2.54).toFixed(1)} in` },
+                { label: 'Shoulder Width', val: vaultMeasurement.shoulderWidth, sub: `${(Number(vaultMeasurement.shoulderWidth) / 2.54).toFixed(1)} in` },
+                { label: 'Arm Length', val: vaultMeasurement.armLength, sub: `${(Number(vaultMeasurement.armLength) / 2.54).toFixed(1)} in` },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -320,11 +346,11 @@ export default function CustomerProfileSettings() {
             }`}>
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                <span>Saved measurements automatically pre-fill new tailor service requests for rapid 1-click commissioning.</span>
+                <span>Verified anatomical dimensions ready for 1-click commissioning.</span>
               </div>
               {vaultMeasurement?.createdAt && (
                 <span className="text-[10px] opacity-70 hidden sm:inline">
-                  Last calibrated: {new Date(vaultMeasurement.createdAt).toLocaleDateString()}
+                  Calibrated: {new Date(vaultMeasurement.createdAt).toLocaleDateString()}
                 </span>
               )}
             </div>

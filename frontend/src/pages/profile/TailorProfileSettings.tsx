@@ -164,12 +164,12 @@ export default function TailorProfileSettings() {
                 </div>
                 <div>
                   <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Phone Number</label>
-                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+251 ..." className="input-field" />
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-field" />
                 </div>
               </div>
               <div>
                 <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Workshop / City Location</label>
-                <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="e.g. Bole, Addis Ababa" className="input-field" />
+                <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="input-field" />
               </div>
               <div>
                 <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Profile & Atelier Photo</label>
@@ -190,14 +190,13 @@ export default function TailorProfileSettings() {
                     <label htmlFor="avatarImageTailor" className="cursor-pointer flex items-center justify-center w-full">
                       <UploadCloud className={`h-5 w-5 mr-2 ${isDark ? 'text-primary-400' : 'text-primary-600'}`} />
                       <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {uploadingAvatar ? 'Uploading image...' : 'Click to browse or drag avatar'}
+                        {uploadingAvatar ? 'Uploading image...' : 'Browse or Drag Photo'}
                       </span>
                     </label>
                   </div>
                 </div>
                 <input 
                   type="text" 
-                  placeholder="Or paste an image URL..." 
                   value={form.avatarUrl} 
                   onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} 
                   className="input-field text-xs" 
@@ -224,7 +223,6 @@ export default function TailorProfileSettings() {
                   onChange={(e) => setTailorForm({ ...tailorForm, bio: e.target.value })}
                   className="input-field" 
                   rows={3} 
-                  placeholder="Describe your tailoring philosophy, years of bespoke craft, and garment mastery..." 
                 />
               </div>
 
@@ -242,7 +240,6 @@ export default function TailorProfileSettings() {
                   <input 
                     value={specialtyInput} 
                     onChange={(e) => setSpecialtyInput(e.target.value)}
-                    placeholder="e.g. Bespoke Tuxedos, Silk Gowns" 
                     className="input-field flex-1 text-xs" 
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSpecialty(); } }}
                   />
@@ -257,7 +254,6 @@ export default function TailorProfileSettings() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="e.g. 80"
                     value={tailorForm.basePricingMin}
                     onChange={(e) => setTailorForm({ ...tailorForm, basePricingMin: e.target.value })}
                     className="input-field"
@@ -269,7 +265,6 @@ export default function TailorProfileSettings() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="e.g. 650"
                     value={tailorForm.basePricingMax}
                     onChange={(e) => setTailorForm({ ...tailorForm, basePricingMax: e.target.value })}
                     className="input-field"

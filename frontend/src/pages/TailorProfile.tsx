@@ -150,19 +150,28 @@ export default function TailorProfile() {
 
   const initials = getInitials(tailor.user?.name);
   const specialtiesList: string[] = Array.isArray(tailor.specialties) ? tailor.specialties : [];
-  const basePrice = tailor.basePricingMin || 85;
-  const completedOrders = tailor.completedCount || (tailor.reviewCount ? tailor.reviewCount * 2 + 12 : 1);
-  const ratingScore = tailor.averageRating ? Number(tailor.averageRating).toFixed(1) : '4.9';
-  const totalReviews = tailor.reviewCount || 0;
+  
+  const minPrice = tailor.basePricingMin ? Number(tailor.basePricingMin) : null;
+  const maxPrice = tailor.basePricingMax ? Number(tailor.basePricingMax) : null;
+  let priceDisplay = 'Custom Quote';
+  if (minPrice && maxPrice) {
+    priceDisplay = `$${minPrice} - $${maxPrice}`;
+  } else if (minPrice) {
+    priceDisplay = `From $${minPrice}`;
+  }
 
-  // Extract portfolio work photos (from portfolioImages or catalog products)
+  const completedOrders = tailor.completedCount || 0;
+  const totalReviews = tailor.reviewCount || 0;
+  const ratingScore = totalReviews > 0 && tailor.averageRating ? Number(tailor.averageRating).toFixed(1) : null;
+
+  // Extract portfolio work photos
   const portfolioPhotos: { url: string; title: string; description?: string }[] = [];
   if (Array.isArray(tailor.portfolioImages)) {
     tailor.portfolioImages.forEach((item: any) => {
-      if (typeof item === 'string') {
-        portfolioPhotos.push({ url: item, title: 'Bespoke Craftsmanship' });
+      if (typeof item === 'string' && item.trim()) {
+        portfolioPhotos.push({ url: item, title: tailor.user?.name || 'Bespoke Work' });
       } else if (item && typeof item === 'object' && item.imageUrl) {
-        portfolioPhotos.push({ url: item.imageUrl, title: item.title || 'Bespoke Work', description: item.description });
+        portfolioPhotos.push({ url: item.imageUrl, title: item.title || tailor.user?.name || 'Bespoke Work', description: item.description });
       }
     });
   }
@@ -171,7 +180,7 @@ export default function TailorProfile() {
       if (prod.images && prod.images.length > 0) {
         prod.images.forEach((img: any) => {
           if (img.url && !portfolioPhotos.some((p) => p.url === img.url)) {
-            portfolioPhotos.push({ url: img.url, title: prod.name });
+            portfolioPhotos.push({ url: img.url, title: prod.name, description: prod.description });
           }
         });
       }
@@ -204,11 +213,11 @@ export default function TailorProfile() {
         </div>
       </header>
 
-      {/* Main 2-Column Responsive Layout (Figma Screenshot 2) */}
+      {/* Main Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* LEFT COLUMN: Main Tailor Profile, Metrics, Portfolio & Reviews */}
+          {/* LEFT COLUMN: Main Tailor Profile, Metrics & Showcase */}
           <div className="lg:col-span-8 space-y-6">
             
             {/* 1. Tailor Hero Profile Card */}
@@ -216,7 +225,7 @@ export default function TailorProfile() {
               isDark ? 'bg-[#171923] border-slate-800' : 'bg-white border-slate-200'
             }`}>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                {/* Avatar Badge / Initials */}
+                {/* Avatar */}
                 {tailor.user?.avatarUrl ? (
                   <img
                     src={tailor.user.avatarUrl}
@@ -235,28 +244,38 @@ export default function TailorProfile() {
                     {tailor.user?.name}
                   </h1>
 
-                  <div className={`flex items-center text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <MapPin className="h-4 w-4 mr-1.5 text-amber-500 flex-shrink-0" />
-                    <span>{tailor.user?.location || 'Addis Ababa, Ethiopia'}</span>
-                  </div>
+                  {tailor.user?.location ? (
+                    <div className={`flex items-center text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <MapPin className="h-4 w-4 mr-1.5 text-amber-500 flex-shrink-0" />
+                      <span>{tailor.user.location}</span>
+                    </div>
+                  ) : null}
 
                   {/* Rating Line */}
                   <div className="flex items-center space-x-2 pt-1">
-                    <div className="flex text-amber-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-current" />
-                      ))}
-                    </div>
-                    <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                      {ratingScore}
-                    </span>
-                    <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                      ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
-                    </span>
+                    {ratingScore ? (
+                      <>
+                        <div className="flex text-amber-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`h-4 w-4 ${i < Math.round(Number(ratingScore)) ? 'fill-current' : 'opacity-30'}`} />
+                          ))}
+                        </div>
+                        <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          {ratingScore}
+                        </span>
+                        <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                          ({totalReviews} {totalReviews === 1 ? 'review' : 'reviews'})
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xs font-semibold text-amber-500 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                        New Verified Artisan
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Direct Action: Start Chat button on profile header */}
+                {/* Start Chat Button */}
                 {user?.role === 'customer' && (
                   <button
                     onClick={handleStartConversation}
@@ -268,38 +287,46 @@ export default function TailorProfile() {
                 )}
               </div>
 
-              {/* Bio Paragraph */}
+              {/* Bio Section */}
               <div className="mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-800">
-                <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                  {tailor.bio || 'Master artisan tailor with years of dedicated experience in bespoke suitmaking, couture gowns, traditional craftsmanship, and precision tailoring.'}
-                </p>
+                {tailor.bio ? (
+                  <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                    {tailor.bio}
+                  </p>
+                ) : (
+                  <p className={`text-xs italic ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    No biography provided yet.
+                  </p>
+                )}
               </div>
 
               {/* Specialty Badges */}
-              <div className="flex flex-wrap gap-2 mt-5">
-                {specialtiesList.map((spec) => (
-                  <span
-                    key={spec}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold tracking-wider uppercase ${
-                      isDark
-                        ? 'bg-amber-950/40 text-amber-300 border border-amber-800/40'
-                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}
-                  >
-                    {spec}
-                  </span>
-                ))}
-              </div>
+              {specialtiesList.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-5">
+                  {specialtiesList.map((spec) => (
+                    <span
+                      key={spec}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold tracking-wider uppercase ${
+                        isDark
+                          ? 'bg-amber-950/40 text-amber-300 border border-amber-800/40'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* 2. Three Metric Statistics Cards (Completed / Rating / Base Price) */}
+            {/* 2. Metric Statistics Cards */}
             <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {/* Stat 1: Completed Orders */}
-              <div className={`p-4 sm:p-6 rounded-2xl border text-center transition-transform duration-300 hover:scale-[1.02] ${
+              <div className={`p-4 sm:p-6 rounded-2xl border text-center ${
                 isDark ? 'bg-[#171923] border-slate-800' : 'bg-white border-slate-200 shadow-xs'
               }`}>
                 <p className={`text-[11px] font-bold tracking-wider uppercase mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Completed
+                  Completed Orders
                 </p>
                 <p className={`text-2xl sm:text-3xl font-extrabold font-serif ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   {completedOrders}
@@ -307,30 +334,36 @@ export default function TailorProfile() {
               </div>
 
               {/* Stat 2: Rating */}
-              <div className={`p-4 sm:p-6 rounded-2xl border text-center transition-transform duration-300 hover:scale-[1.02] ${
+              <div className={`p-4 sm:p-6 rounded-2xl border text-center ${
                 isDark ? 'bg-[#171923] border-slate-800' : 'bg-white border-slate-200 shadow-xs'
               }`}>
                 <p className={`text-[11px] font-bold tracking-wider uppercase mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Rating
+                  Customer Rating
                 </p>
                 <p className="text-2xl sm:text-3xl font-extrabold text-amber-500 font-serif flex items-center justify-center">
-                  <span>{ratingScore}</span>
-                  <span className="text-xl ml-1">★</span>
+                  {ratingScore ? (
+                    <>
+                      <span>{ratingScore}</span>
+                      <span className="text-xl ml-1">★</span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-sans font-bold">New</span>
+                  )}
                 </p>
               </div>
 
               {/* Stat 3: Base Price */}
-              <div className={`p-4 sm:p-6 rounded-2xl border text-center transition-transform duration-300 hover:scale-[1.02] ${
+              <div className={`p-4 sm:p-6 rounded-2xl border text-center ${
                 isDark ? 'bg-[#171923] border-slate-800' : 'bg-white border-slate-200 shadow-xs'
               }`}>
                 <p className={`text-[11px] font-bold tracking-wider uppercase mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Base Price
+                  Pricing Range
                 </p>
-                <p className="text-2xl sm:text-3xl font-extrabold text-amber-500 font-serif">
-                  ${basePrice}
+                <p className="text-lg sm:text-2xl font-extrabold text-amber-500 font-serif truncate">
+                  {priceDisplay}
                 </p>
                 <span className={`text-[10px] font-medium block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  per garment
+                  base tailoring
                 </span>
               </div>
             </div>
@@ -368,7 +401,9 @@ export default function TailorProfile() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {tailor.products.map((prod: any) => {
                     const primaryImg = prod.images?.find((i: any) => i.isPrimary)?.url || prod.images?.[0]?.url;
-                    const priceFormatted = Number(prod.basePrice) > 0 ? `$${Number(prod.basePrice).toFixed(2)}` : `$${basePrice}`;
+                    const priceFormatted = Number(prod.basePrice) > 0 
+                      ? `$${Number(prod.basePrice).toFixed(2)}` 
+                      : (minPrice ? `From $${minPrice}` : 'Custom Quote');
 
                     return (
                       <div
@@ -571,9 +606,11 @@ export default function TailorProfile() {
                           {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                        "{review.feedback || 'Outstanding craftsmanship and attention to detail.'}"
-                      </p>
+                      {review.feedback && (
+                        <p className={`text-xs sm:text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                          "{review.feedback}"
+                        </p>
+                      )}
 
                       {review.tailorReply && (
                         <div className={`mt-3 pl-3 border-l-2 border-amber-500 text-xs italic ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -600,7 +637,7 @@ export default function TailorProfile() {
                   Request a Service
                 </h3>
                 <p className="text-xs font-bold text-amber-500 mt-1">
-                  Starting from ${basePrice} per garment
+                  {minPrice ? `Starting from $${minPrice} per garment` : 'Custom tailored on request'}
                 </p>
               </div>
 

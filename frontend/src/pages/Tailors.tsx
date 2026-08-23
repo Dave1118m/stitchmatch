@@ -303,8 +303,18 @@ export default function Tailors() {
             {tailors.map((tailor) => {
               const featuredImg = getTailorFeaturedImage(tailor);
               const initials = getInitials(tailor.user?.name);
+              const minP = tailor.basePricingMin ? Number(tailor.basePricingMin) : null;
+              const maxP = tailor.basePricingMax ? Number(tailor.basePricingMax) : null;
+              let priceStr = 'Custom Quote';
+              if (minP && maxP) {
+                priceStr = `$${minP} - $${maxP}`;
+              } else if (minP) {
+                priceStr = `From $${minP}`;
+              }
+
+              const reviewCount = tailor.reviewCount || 0;
+              const hasReviews = reviewCount > 0 && tailor.averageRating;
               const specialtiesList = Array.isArray(tailor.specialties) ? tailor.specialties : [];
-              const startingPrice = tailor.basePricingMin || 85;
 
               return (
                 <Link
@@ -348,54 +358,61 @@ export default function Tailors() {
                           </h3>
                           <p className={`text-xs flex items-center truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             <MapPin className="h-3.5 w-3.5 mr-1 text-amber-500 flex-shrink-0" />
-                            <span className="truncate">{tailor.user?.location || 'Location verified'}</span>
+                            <span className="truncate">{tailor.user?.location || 'Location on request'}</span>
                           </p>
                         </div>
                       </div>
 
                       {/* Specialty Tags */}
-                      <div className="flex flex-wrap gap-1.5 mb-2">
-                        {specialtiesList.slice(0, 2).map((spec: string) => (
-                          <span
-                            key={spec}
-                            className={`px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${
-                              isDark
-                                ? 'bg-amber-950/40 text-amber-300 border border-amber-800/40'
-                                : 'bg-amber-50 text-amber-800 border border-amber-200'
-                            }`}
-                          >
-                            {spec}
-                          </span>
-                        ))}
-                      </div>
+                      {specialtiesList.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {specialtiesList.slice(0, 2).map((spec: string) => (
+                            <span
+                              key={spec}
+                              className={`px-2.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${
+                                isDark
+                                  ? 'bg-amber-950/40 text-amber-300 border border-amber-800/40'
+                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+                              }`}
+                            >
+                              {spec}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Bottom Row: Rating Stars & Starting Price */}
                     <div className="pt-3 border-t border-slate-200/50 dark:border-slate-800 flex items-center justify-between">
                       {/* Rating & Count */}
                       <div className="flex items-center space-x-1.5">
-                        <div className="flex text-amber-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3.5 w-3.5 ${
-                                i < Math.floor(tailor.averageRating || 5) ? 'fill-current' : 'opacity-40'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                          ({tailor.reviewCount || (tailor.averageRating ? 24 : 0)})
-                        </span>
+                        {hasReviews ? (
+                          <>
+                            <div className="flex text-amber-400">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`h-3.5 w-3.5 ${
+                                    i < Math.round(Number(tailor.averageRating)) ? 'fill-current' : 'opacity-30'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                              ({reviewCount})
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-amber-500">
+                            New Artisan
+                          </span>
+                        )}
                       </div>
 
-                      {/* Starting Price */}
+                      {/* Price Tag */}
                       <div className="text-right">
-                        <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'} mr-1`}>
-                          from
-                        </span>
-                        <span className="text-base font-extrabold text-amber-500">
-                          ${startingPrice}
+                        <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          {priceStr}
                         </span>
                       </div>
                     </div>

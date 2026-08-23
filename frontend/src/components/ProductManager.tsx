@@ -589,7 +589,6 @@ export default function ProductManager() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Bespoke 3-Piece Silk Lapel Tuxedo"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="input-field text-sm"
@@ -606,7 +605,6 @@ export default function ProductManager() {
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="e.g. 350.00"
                     value={form.basePrice}
                     onChange={(e) => setForm({ ...form, basePrice: e.target.value })}
                     className="input-field text-sm"
@@ -623,7 +621,6 @@ export default function ProductManager() {
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Handcrafted with Super 150s virgin Italian wool, full canvas chest piece, horn buttons, and hand-stitched silk lining."
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className="input-field text-sm leading-relaxed"
@@ -660,7 +657,7 @@ export default function ProductManager() {
                   >
                     <UploadCloud className={`h-8 w-8 ${uploadingImage ? 'animate-bounce text-amber-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
                     <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                      {uploadingImage ? 'Uploading image...' : 'Click to browse image or drag and drop'}
+                      {uploadingImage ? 'Uploading image...' : 'Browse Image or Drag Photo'}
                     </span>
                     <span className={`text-[11px] ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
                       PNG, JPG, or WebP up to 10MB
@@ -718,7 +715,6 @@ export default function ProductManager() {
                 <div className="flex items-center gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Color name (e.g. Midnight Navy)"
                     value={colorName}
                     onChange={(e) => setColorName(e.target.value)}
                     className="input-field text-xs flex-1 py-2"
@@ -777,7 +773,6 @@ export default function ProductManager() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                   <input
                     type="text"
-                    placeholder="Option name (e.g. Lapel Style)"
                     value={optName}
                     onChange={(e) => setOptName(e.target.value)}
                     className="input-field text-xs py-2"
@@ -785,7 +780,6 @@ export default function ProductManager() {
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="Values (e.g. Peak, Notch, Shawl)"
                       value={optVals}
                       onChange={(e) => setOptVals(e.target.value)}
                       className="input-field text-xs flex-1 py-2"
