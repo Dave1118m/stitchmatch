@@ -50,13 +50,27 @@ function classifyLocalPoseOrientation(filePathOrUrl: string, expectedSlot: 'fron
  */
 function fileToGenerativePart(filePathOrUrl: string) {
   try {
-    let localPath = filePathOrUrl;
-    
-    // If it's a relative or localhost upload URL, resolve to disk path
-    if (filePathOrUrl.includes('/uploads/')) {
-      const fileName = filePathOrUrl.split('/uploads/').pop();
+    if (!filePathOrUrl || typeof filePathOrUrl !== 'string') return null;
+
+    // 1. Handle base64 Data URLs (e.g. from live camera capture)
+    if (filePathOrUrl.startsWith('data:')) {
+      const matches = filePathOrUrl.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+      if (matches && matches[2]) {
+        return {
+          inlineData: {
+            data: matches[2],
+            mimeType: matches[1] || 'image/jpeg',
+          },
+        };
+      }
+    }
+
+    // 2. Handle /uploads/ URL or relative path on disk
+    let localPath = filePathOrUrl.trim();
+    if (localPath.includes('/uploads/') || localPath.includes('\\uploads\\')) {
+      const fileName = localPath.split(/[/\\]uploads[/\\]/).pop();
       if (fileName) {
-        localPath = path.join(process.cwd(), 'uploads', fileName);
+        localPath = path.join(process.cwd(), 'uploads', fileName.split('?')[0]);
       }
     }
 
@@ -72,7 +86,7 @@ function fileToGenerativePart(filePathOrUrl: string) {
       };
     }
   } catch (err) {
-    console.warn('[Gemini Vision] Could not read local file:', filePathOrUrl, err);
+    console.warn('[Gemini Vision] Could not read file for AI analysis:', filePathOrUrl, err);
   }
   return null;
 }
@@ -147,68 +161,76 @@ export async function analyzeBodyMeasurementsWithGemini(
     const sidePart = fileToGenerativePart(sidePhotoUrl);
     if (sidePart) imageParts.push(sidePart);
 
+    if (backPhotoUrl) {
+      const backPart = fileToGenerativePart(backPhotoUrl);
+      if (backPart) imageParts.push(backPart);
+    }
+
     if (imageParts.length === 0) {
+      console.warn('⚠️ [Gemini Vision] No valid image parts could be loaded from URLs. Using fallback.');
       const fallback = generatePixelCalibratedMeasurements(calibratedHeight);
       return { ...fallback, isHuman: true, isOrientationValid: !localMismatch, orientationMismatchError: localMismatch };
     }
 
     const prompt = `
-You are a master digital bespoke tailor and computer vision anthropometry expert.
-You are inspecting 2 customer body scan photos submitted for Made-To-Measure tailoring:
-- Image 1 is the FRONT POSE (customer facing the camera directly, head-to-toe or full body upright).
-- Image 2 is the 90° SIDE PROFILE POSE (customer turned 90° to the side).
+You are a master digital bespoke tailor, anthropometrist, and computer vision body measurement AI.
+You are given actual customer body scan photos:
+- Image 1: FRONT POSE (customer standing upright facing camera directly).
+- Image 2: 90° SIDE PROFILE (customer turned 90° lateral).
 
-Reference Calibrated Height: ${calibratedHeight} cm.
+Physical Ground-Truth Reference:
+- Total Standing Barefoot Height = ${calibratedHeight} cm.
 
-MANDATORY RULES & CHECKS:
-1. HUMAN-ONLY VERIFICATION:
-   - Check if Image 1 and Image 2 both contain a real, living HUMAN being.
-   - If either image contains non-human content (e.g. an animal, landscape, vehicle, drawing, furniture, object, or empty room), you MUST set "isHuman": false and "humanCheckError": "Non-human subject detected. Please upload clear photos of yourself standing upright in form-fitting clothing."
+CRITICAL INSTRUCTIONS:
+1. HUMAN VERIFICATION:
+   - Check if Image 1 and Image 2 both contain a real living human.
+   - If non-human (animal, object, furniture, landscape, empty room), set "isHuman": false and "humanCheckError": "Non-human subject detected."
 
-2. POSE ORIENTATION CLASSIFICATION:
-   - Verify Image 1 is a Front pose (facing camera).
-   - Verify Image 2 is a 90° Side profile pose.
-   - If Image 2 is a front or back pose instead of a side profile, set "isOrientationValid": false and "orientationMismatchError": "Image 2 must be a 90° side profile to measure body depth accurately."
+2. POSE ORIENTATION:
+   - Ensure Image 1 is facing front and Image 2 is a 90° side profile.
+   - If mismatched, set "isOrientationValid": false and explain in "orientationMismatchError".
 
-3. PIXEL-TO-CENTIMETER CALIBRATION & ANTHROPOMETRY:
-   - Use the reference height of ${calibratedHeight} cm as the physical ground-truth scale.
-   - Determine the pixel height of the person in the front image and calculate the millimeter/pixel scaling factor.
-   - Measure the frontal widths (W) and lateral side depths (D) for Chest, Waist, and Hips.
-   - Compute elliptical circumferences in Centimeters (cm) with 1 decimal place:
-     * chest = circumference around fullest part of chest/bust
-     * waist = circumference around narrowest natural waist
-     * hip = circumference around fullest seat/hips
-     * inseam = crotch to ankle floor length
-     * shoulderWidth = biacromial diameter across top of shoulders
-     * armLength = shoulder point along arm to wrist bone
-     * neck = neck base circumference
+3. TRUE INDIVIDUAL MEASUREMENT EXTRACTION (DO NOT USE GENERIC OR HARDCODED NUMBERS):
+   - Measure the specific person visible in these photos. Inspect their actual body build (ectomorph, mesomorph, endomorph, slim, athletic, or heavy).
+   - Use the reference height of ${calibratedHeight} cm to convert pixel dimensions into real centimeters.
+   - Extract the person's true visible frontal widths and lateral depths:
+     * chest: circumference in cm (1 decimal) around fullest bust/chest
+     * waist: circumference in cm (1 decimal) around narrowest natural waist
+     * hip: circumference in cm (1 decimal) around fullest seat
+     * inseam: crotch to ankle bone floor length in cm (1 decimal)
+     * shoulderWidth: biacromial diameter across shoulders in cm (1 decimal)
+     * armLength: shoulder joint to wrist bone in cm (1 decimal)
+     * neck: neck base circumference in cm (1 decimal)
+   - Evaluate clothing fit: "form_fitting", "regular", or "loose_or_thick".
+   - Provide detailed analysis notes describing the individual's specific physique, silhouette, and contours.
 
-Return ONLY a valid JSON object strictly matching this schema:
+Return ONLY a valid JSON object strictly matching this format (no markdown fences, just pure JSON):
 {
   "isHuman": true,
   "humanCheckError": null,
   "detectedOrientations": {
-    "front": "front" | "side" | "back",
-    "side": "front" | "side" | "back"
+    "front": "front",
+    "side": "side"
   },
   "isOrientationValid": true,
   "orientationMismatchError": null,
-  "chest": 98.5,
-  "waist": 83.2,
-  "hip": 99.4,
-  "inseam": 79.5,
-  "shoulderWidth": 46.2,
-  "armLength": 63.0,
-  "neck": 39.5,
+  "chest": 0.0,
+  "waist": 0.0,
+  "hip": 0.0,
+  "inseam": 0.0,
+  "shoulderWidth": 0.0,
+  "armLength": 0.0,
+  "neck": 0.0,
   "height": ${calibratedHeight},
-  "aiConfidence": 97.0,
+  "aiConfidence": 95.0,
   "clothingAssessment": "form_fitting",
-  "postureAssessment": "Good upright posture with level shoulder alignment.",
-  "analysisNotes": "Calibrated against reference height of ${calibratedHeight}cm using Front & Side anthropometric vision."
+  "postureAssessment": "Upright posture description",
+  "analysisNotes": "Detailed visual evaluation of this specific individual's body contours and proportions"
 }
 `;
 
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 7000));
+    // 35s timeout for multimodal vision analysis
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 35000));
     const aiPromise = model.generateContent([prompt, ...imageParts]);
 
     const result: any = await Promise.race([aiPromise, timeoutPromise]);
@@ -245,7 +267,7 @@ Return ONLY a valid JSON object strictly matching this schema:
         };
 
         const validationReport = validateAnthropometricSanity(rawMeasurements, calibratedHeight);
-        const confidence = Math.min(Number(parsed.aiConfidence) || 96.0, validationReport.score);
+        const confidence = Math.min(Number(parsed.aiConfidence) || 95.0, validationReport.score);
 
         return {
           ...rawMeasurements,

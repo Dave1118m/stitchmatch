@@ -7,6 +7,7 @@ import { notificationsAPI } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import { showBrowserNotification } from '../lib/pushNotifications';
 import LanguageSwitcher from './LanguageSwitcher';
+import InstallAppBanner from './InstallAppBanner';
 import { 
   Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, 
   Bell, ClipboardList, Shield, ChevronDown, Check, CheckCheck, Trash2, 
@@ -713,8 +714,8 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
           </header>
 
-          {/* Page Content */}
-          <main className="p-4 sm:p-6 lg:p-8">
+          {/* Page Content with responsive mobile bottom clearance */}
+          <main className="p-3 sm:p-6 lg:p-8 pb-28 lg:pb-8">
             {children}
           </main>
         </div>
@@ -855,6 +856,95 @@ export default function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
+
+      {/* Mobile App Bottom Tab Bar (Native Mobile Experience) */}
+      <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t backdrop-blur-md transition-all ${
+        darkMode ? 'bg-gray-900/95 border-gray-800 text-white' : 'bg-white/95 border-gray-200 text-gray-900'
+      }`} style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
+        <div className="grid grid-cols-5 h-16 max-w-md mx-auto items-center px-1">
+          {/* 1. Orders / Requests */}
+          <Link
+            to="/dashboard"
+            className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+              isActive('/dashboard') || isActive('/')
+                ? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <ClipboardList className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t('nav.requests')}</span>
+          </Link>
+
+          {/* 2. Find Tailors (or Admin Panel for admin) */}
+          {user?.role === 'admin' ? (
+            <Link
+              to="/admin"
+              className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+                isActive('/admin')
+                  ? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <Shield className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] tracking-tight">{t('nav.admin')}</span>
+            </Link>
+          ) : (
+            <Link
+              to="/tailors"
+              className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+                isActive('/tailors')
+                  ? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+                  : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+              }`}
+            >
+              <Scissors className="w-5 h-5 mb-0.5" />
+              <span className="text-[10px] tracking-tight">{t('nav.findTailors')}</span>
+            </Link>
+          )}
+
+          {/* 3. Messages */}
+          <Link
+            to="/messages"
+            className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all relative ${
+              isActive('/messages')
+                ? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <MessageSquare className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t('nav.messages')}</span>
+          </Link>
+
+          {/* 4. Profile & Vault */}
+          <Link
+            to="/profile"
+            className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+              isActive('/profile')
+                ? 'text-primary-600 dark:text-primary-400 font-bold scale-105'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <User className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">{t('nav.profile')}</span>
+          </Link>
+
+          {/* 5. Menu Drawer */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className={`flex flex-col items-center justify-center py-1 rounded-xl transition-all ${
+              mobileMenuOpen
+                ? 'text-primary-600 dark:text-primary-400 font-bold'
+                : darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            <Menu className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">More</span>
+          </button>
+        </div>
+      </div>
+
+      {/* PWA Mobile Add to Home Screen Banner */}
+      <InstallAppBanner />
     </div>
   );
 }

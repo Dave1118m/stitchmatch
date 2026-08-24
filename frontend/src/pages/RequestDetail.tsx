@@ -90,6 +90,35 @@ export default function RequestDetail() {
     back?: string;
   }>({});
 
+  // Display Measurement Unit State (Inches vs Centimeters)
+  const [measurementUnit, setMeasurementUnit] = useState<'in' | 'cm'>(() => {
+    return (localStorage.getItem('stitchmatch_unit') as 'in' | 'cm') || 'in';
+  });
+
+  const toggleMeasurementUnit = (unit: 'in' | 'cm') => {
+    setMeasurementUnit(unit);
+    localStorage.setItem('stitchmatch_unit', unit);
+  };
+
+  const formatDimension = (val: number | string | null | undefined) => {
+    if (!val) return { primary: 'Pending', secondary: '' };
+    const cmVal = Number(val);
+    if (isNaN(cmVal)) return { primary: 'Pending', secondary: '' };
+
+    const inVal = cmVal / 2.54;
+    if (measurementUnit === 'in') {
+      return {
+        primary: `${inVal.toFixed(1)} in`,
+        secondary: `${cmVal.toFixed(1)} cm`,
+      };
+    } else {
+      return {
+        primary: `${cmVal.toFixed(1)} cm`,
+        secondary: `${inVal.toFixed(1)} in`,
+      };
+    }
+  };
+
   // Negotiation state
   const [negotiations, setNegotiations] = useState<any[]>([]);
   const [showNegotiationForm, setShowNegotiationForm] = useState(false);
@@ -698,15 +727,15 @@ export default function RequestDetail() {
                         </button>
                       </div>
 
-                      {/* Photo Upload Form: Direct File Browser */}
+                      {/* Photo Upload Form: Direct File Browser (Front & 90° Side Profile) */}
                       <form onSubmit={handleUploadPhotos} className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {/* Front Photo Card */}
-                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                          <div className={`p-3 rounded-xl border flex flex-col items-center justify-between text-center relative ${
                             isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
                           }`}>
-                            <span className="text-xs font-bold mb-1.5">1. Front Pose</span>
-                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                            <span className="text-xs font-bold mb-1.5">1. Front Pose (Facing Camera)</span>
+                            <div className="w-full h-36 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
                               {photos.frontPhotoUrl ? (
                                 <img src={photos.frontPhotoUrl} alt="Front Preview" className="w-full h-full object-cover" />
                               ) : uploadingPhotoField === 'front' ? (
@@ -720,7 +749,7 @@ export default function RequestDetail() {
                             </div>
                             <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
                               <Upload className="w-3 h-3" />
-                              <span>Browse File</span>
+                              <span>Browse Front Photo</span>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -731,11 +760,11 @@ export default function RequestDetail() {
                           </div>
 
                           {/* Side Photo Card */}
-                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
+                          <div className={`p-3 rounded-xl border flex flex-col items-center justify-between text-center relative ${
                             isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
                           }`}>
-                            <span className="text-xs font-bold mb-1.5">2. 90° Side Profile</span>
-                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
+                            <span className="text-xs font-bold mb-1.5">2. 90° Side Profile (Turned Sideways)</span>
+                            <div className="w-full h-36 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
                               {photos.sidePhotoUrl ? (
                                 <img src={photos.sidePhotoUrl} alt="Side Preview" className="w-full h-full object-cover" />
                               ) : uploadingPhotoField === 'side' ? (
@@ -749,7 +778,7 @@ export default function RequestDetail() {
                             </div>
                             <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
                               <Upload className="w-3 h-3" />
-                              <span>Browse File</span>
+                              <span>Browse Side Photo</span>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -758,44 +787,15 @@ export default function RequestDetail() {
                               />
                             </label>
                           </div>
-
-                          {/* Back Photo Card */}
-                          <div className={`p-2.5 rounded-xl border flex flex-col items-center justify-between text-center relative ${
-                            isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
-                          }`}>
-                            <span className="text-xs font-bold mb-1.5">3. Back Pose</span>
-                            <div className="w-full h-28 rounded-lg overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-2">
-                              {photos.backPhotoUrl ? (
-                                <img src={photos.backPhotoUrl} alt="Back Preview" className="w-full h-full object-cover" />
-                              ) : uploadingPhotoField === 'back' ? (
-                                <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <div className="text-gray-400 flex flex-col items-center">
-                                  <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                                  <span className="text-[10px]">No file selected</span>
-                                </div>
-                              )}
-                            </div>
-                            <label className="btn-secondary w-full text-[11px] py-1.5 cursor-pointer flex items-center justify-center space-x-1">
-                              <Upload className="w-3 h-3" />
-                              <span>Browse File</span>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => handleFileUpload('back', e)}
-                              />
-                            </label>
-                          </div>
                         </div>
 
                         <button
                           type="submit"
-                          disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl || !photos.backPhotoUrl}
+                          disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl}
                           className="btn-primary w-full text-xs py-2.5 flex items-center justify-center space-x-2 font-bold disabled:opacity-50 cursor-pointer shadow-md"
                         >
                           <Sparkles className="h-4 w-4" />
-                          <span>{submitting ? 'Analyzing Photos...' : 'Submit New Scan to AI Engine'}</span>
+                          <span>{submitting ? 'Analyzing Photos with AI...' : 'Submit 2 Photos to AI Vision Engine'}</span>
                         </button>
                       </form>
                     </div>
@@ -820,7 +820,7 @@ export default function RequestDetail() {
                               return parsed[0].orientationError;
                             }
                           } catch (e) {}
-                          return 'The AI engine detected that the uploaded photo angles do not match the required poses (e.g. uploading a Back or Front pose in the Side Profile slot). The AI requires 1 facing-front pose, 1 separate 90° Side profile, and 1 Back pose.';
+                          return 'The AI engine detected that the uploaded photo angles do not match the required poses. The AI requires 1 facing-front pose and 1 separate 90° side profile pose.';
                         })()}
                       </p>
                       {isCustomer && (
@@ -843,44 +843,72 @@ export default function RequestDetail() {
                     </div>
                   )}
 
+                  {/* Extracted Dimensions Header + Unit Switcher Toggle */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Extracted Body Dimensions
+                    </span>
+                    <div className="flex items-center p-0.5 rounded-lg bg-gray-200/80 dark:bg-gray-800 text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => toggleMeasurementUnit('in')}
+                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                          measurementUnit === 'in'
+                            ? 'bg-primary-600 text-white shadow-xs font-bold'
+                            : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Inches (in)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleMeasurementUnit('cm')}
+                        className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                          measurementUnit === 'cm'
+                            ? 'bg-primary-600 text-white shadow-xs font-bold'
+                            : isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Centimeters (cm)
+                      </button>
+                    </div>
+                  </div>
+
                   {/* 6 Core AI Measurement Metrics Grid */}
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-sm">
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Chest</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.chest ? `${Number(request.measurement.chest).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Waist</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.waist ? `${Number(request.measurement.waist).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Hip</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.hip ? `${Number(request.measurement.hip).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Inseam</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.inseam ? `${Number(request.measurement.inseam).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Shoulders</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.shoulderWidth ? `${Number(request.measurement.shoulderWidth).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-xl border ${isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'}`}>
-                      <span className={`block text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Arm Length</span>
-                      <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {request.measurement.armLength ? `${Number(request.measurement.armLength).toFixed(1)} cm` : 'Pending'}
-                      </span>
-                    </div>
+                    {[
+                      { label: 'Chest Circumference', key: 'chest' },
+                      { label: 'Natural Waist', key: 'waist' },
+                      { label: 'Hip & Seat', key: 'hip' },
+                      { label: 'Inseam Length', key: 'inseam' },
+                      { label: 'Shoulder Width', key: 'shoulderWidth' },
+                      { label: 'Arm Length', key: 'armLength' },
+                    ].map(({ label, key }) => {
+                      const val = request.measurement[key];
+                      const dim = formatDimension(val);
+                      return (
+                        <div
+                          key={key}
+                          className={`p-2.5 rounded-xl border flex flex-col justify-between ${
+                            isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'
+                          }`}
+                        >
+                          <span className={`block text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {label}
+                          </span>
+                          <div className="mt-1">
+                            <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {dim.primary}
+                            </span>
+                            {dim.secondary && (
+                              <span className={`block text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                ({dim.secondary})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* View Tabs: 3D Body Avatar Visualizer VS Scanned Photos */}
@@ -934,53 +962,38 @@ export default function RequestDetail() {
                       </div>
                     )}
 
-                    {/* Tab 2: Customer Measurement Photos Gallery */}
+                    {/* Tab 2: Customer Measurement Photos Gallery (Front & 90° Side) */}
                     {measurementViewTab === 'photos' && (
                       <div className="animate-fadeIn">
-                        {(request.measurement.frontPhotoUrl || request.measurement.sidePhotoUrl || request.measurement.backPhotoUrl) ? (
-                          <div className="grid grid-cols-3 gap-2.5">
+                        {(request.measurement.frontPhotoUrl || request.measurement.sidePhotoUrl) ? (
+                          <div className="grid grid-cols-2 gap-3">
                             {request.measurement.frontPhotoUrl && (
                               <div 
                                 onClick={() => setModalImage({ src: request.measurement.frontPhotoUrl, title: 'Front Measurement View' })}
-                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                                className="group relative h-40 sm:h-52 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
                               >
                                 <img
                                   src={request.measurement.frontPhotoUrl}
                                   alt="Front View"
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                 />
-                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
-                                  1. Front
+                                <span className="absolute bottom-2 left-2 px-2 py-1 rounded-md text-[10px] font-bold bg-black/70 text-white backdrop-blur-xs">
+                                  1. Front Pose
                                 </span>
                               </div>
                             )}
                             {request.measurement.sidePhotoUrl && (
                               <div 
                                 onClick={() => setModalImage({ src: request.measurement.sidePhotoUrl, title: 'Side Measurement View' })}
-                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
+                                className="group relative h-40 sm:h-52 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
                               >
                                 <img
                                   src={request.measurement.sidePhotoUrl}
                                   alt="Side View"
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                 />
-                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
-                                  2. Side
-                                </span>
-                              </div>
-                            )}
-                            {request.measurement.backPhotoUrl && (
-                              <div 
-                                onClick={() => setModalImage({ src: request.measurement.backPhotoUrl, title: 'Back Measurement View' })}
-                                className="group relative h-28 sm:h-36 rounded-xl overflow-hidden bg-black cursor-pointer border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all"
-                              >
-                                <img
-                                  src={request.measurement.backPhotoUrl}
-                                  alt="Back View"
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                />
-                                <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/60 text-white backdrop-blur-xs">
-                                  3. Back
+                                <span className="absolute bottom-2 left-2 px-2 py-1 rounded-md text-[10px] font-bold bg-black/70 text-white backdrop-blur-xs">
+                                  2. 90° Side Profile
                                 </span>
                               </div>
                             )}
@@ -1146,30 +1159,25 @@ export default function RequestDetail() {
 
                       {/* Quick Metric Pills */}
                       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs font-mono">
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Chest</span>
-                          <strong>{Number(vaultMeasurement.chest || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Waist</span>
-                          <strong>{Number(vaultMeasurement.waist || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Hip</span>
-                          <strong>{Number(vaultMeasurement.hip || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Inseam</span>
-                          <strong>{Number(vaultMeasurement.inseam || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Shoulder</span>
-                          <strong>{Number(vaultMeasurement.shoulderWidth || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
-                          <span className="text-[9px] text-gray-400 uppercase block font-sans">Arm</span>
-                          <strong>{Number(vaultMeasurement.armLength || 0).toFixed(1)}</strong> <span className="text-[9px]">cm</span>
-                        </div>
+                        {[
+                          { label: 'Chest', key: 'chest' },
+                          { label: 'Waist', key: 'waist' },
+                          { label: 'Hip', key: 'hip' },
+                          { label: 'Inseam', key: 'inseam' },
+                          { label: 'Shoulder', key: 'shoulderWidth' },
+                          { label: 'Arm', key: 'armLength' },
+                        ].map(({ label, key }) => {
+                          const dim = formatDimension(vaultMeasurement[key]);
+                          return (
+                            <div key={key} className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                              <span className="text-[9px] text-gray-400 uppercase block font-sans">{label}</span>
+                              <strong className="text-xs">{dim.primary}</strong>
+                              {dim.secondary && (
+                                <span className="block text-[9px] text-gray-400 font-normal">({dim.secondary})</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
 
                       <button

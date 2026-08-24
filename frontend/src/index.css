@@ -5,14 +5,35 @@
 @layer base {
   :root {
     --color-primary: #d946ef;
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
   }
   
+  html, body {
+    overflow-x: hidden;
+    position: relative;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 antialiased font-sans;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   .dark body {
     @apply bg-gray-900 text-gray-100 antialiased font-sans;
+  }
+
+  /* Prevent text scaling on orientation change in mobile Safari */
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   html[lang="am"],
@@ -53,42 +74,50 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-primary-600 text-white px-6 py-2.5 rounded-lg font-medium 
-           hover:bg-primary-700 transition-colors duration-200 
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary-600 text-white px-5 sm:px-6 py-2.5 sm:py-2.5 min-h-[42px] sm:min-h-[44px] rounded-xl font-semibold 
+           hover:bg-primary-700 active:scale-[0.98] transition-all duration-200 
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center;
   }
   
   .btn-secondary {
-    @apply bg-white text-gray-700 px-6 py-2.5 rounded-lg font-medium 
-           border border-gray-300 hover:bg-gray-50 transition-colors duration-200
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-white text-gray-700 px-5 sm:px-6 py-2.5 min-h-[42px] sm:min-h-[44px] rounded-xl font-semibold 
+           border border-gray-300 hover:bg-gray-50 active:scale-[0.98] transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center;
   }
   
   .dark .btn-secondary {
-    @apply bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700;
+    @apply bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700;
   }
   
   .btn-danger {
-    @apply bg-red-600 text-white px-6 py-2.5 rounded-lg font-medium 
-           hover:bg-red-700 transition-colors duration-200;
+    @apply bg-red-600 text-white px-5 sm:px-6 py-2.5 min-h-[42px] sm:min-h-[44px] rounded-xl font-semibold 
+           hover:bg-red-700 active:scale-[0.98] transition-all duration-200 flex items-center justify-center;
   }
   
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg 
+    @apply w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm sm:text-base
            focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
            outline-none transition-all duration-200;
   }
   
   .dark .input-field {
-    @apply bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400;
+    @apply bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-400;
   }
   
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6;
   }
   
   .dark .card {
-    @apply bg-gray-800 border-gray-700;
+    @apply bg-gray-800/90 border-gray-700/80;
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
   }
 
   .chat-wallpaper {

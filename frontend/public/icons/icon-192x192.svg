@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="50%" stop-color="#311042"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <rect x="6" y="6" width="180" height="180" rx="36" fill="none" stroke="url(#purple)" stroke-width="2" opacity="0.3"/>
+
+  <!-- Center Scissors Emblem -->
+  <g transform="translate(96, 92) scale(0.48)">
+    <circle cx="-54" cy="70" r="32" fill="none" stroke="url(#gold)" stroke-width="14"/>
+    <circle cx="54" cy="70" r="32" fill="none" stroke="url(#gold)" stroke-width="14"/>
+
+    <path d="M -32 50 L 50 -105 L 35 -115 L -45 35 Z" fill="url(#gold)"/>
+    <path d="M 32 50 L -50 -105 L -35 -115 L 45 35 Z" fill="url(#gold)"/>
+
+    <circle cx="0" cy="-20" r="10" fill="#ffffff" stroke="url(#gold)" stroke-width="4"/>
+    <path d="M 0 -75 L 4 -60 L 19 -56 L 4 -52 L 0 -37 L -4 -52 L -19 -56 L -4 -60 Z" fill="#ffffff" opacity="0.9"/>
+  </g>
+
+  <text x="96" y="166" font-family="-apple-system, BlinkMacSystemFont, 'Outfit', 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="2">
+    STITCHMATCH
+  </text>
+</svg>
