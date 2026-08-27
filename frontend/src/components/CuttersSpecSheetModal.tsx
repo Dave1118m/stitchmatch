@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { 
   Scissors, 
@@ -22,6 +23,7 @@ interface CuttersSpecSheetModalProps {
 }
 
 export default function CuttersSpecSheetModal({ isOpen, onClose, request }: CuttersSpecSheetModalProps) {
+  const { t } = useTranslation();
   const isDark = useDarkMode();
 
   if (!isOpen || !request) return null;
@@ -86,7 +88,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
               className="btn-primary text-xs px-4 py-2 rounded-xl font-bold flex items-center space-x-2 shadow-md cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Print / Save as PDF</span>
+              <span>{t('specSheet.printBtn')}</span>
             </button>
             <button
               onClick={onClose}
@@ -102,7 +104,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
         {/* Printable Document Body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-8 bg-white text-slate-900 print:overflow-visible print:p-0">
           
-          {/* Header Atelier Branding */}
+          {/* Header Tailoring Branding */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b-2 border-slate-900 pb-6 gap-4">
             <div>
               <div className="flex items-center space-x-2">
@@ -110,11 +112,11 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
                   <Scissors className="w-4 h-4" />
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-slate-950 uppercase">
-                  Atelier Technical Specification
+                  {t('specSheet.title')}
                 </h1>
               </div>
               <p className="text-xs font-mono text-slate-500 uppercase tracking-widest mt-1">
-                Bespoke Tailoring & Pattern Cutter's Work Order
+                {t('specSheet.subtitle')}
               </p>
             </div>
 
@@ -125,10 +127,10 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
             </div>
           </div>
 
-          {/* Client & Artisan Summary Grid */}
+          {/* Customer & Tailor Summary Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
             <div className="space-y-1.5">
-              <span className="font-bold uppercase tracking-wider text-slate-500 block mb-1 text-[10px]">Client Details</span>
+              <span className="font-bold uppercase tracking-wider text-slate-500 block mb-1 text-[10px]">{t('specSheet.customerDetails')}</span>
               <p className="font-bold text-sm text-slate-900">{request.customer?.name}</p>
               <p className="text-slate-600">Email: {request.customer?.email}</p>
               {request.customer?.phone && <p className="text-slate-600">Phone: {request.customer.phone}</p>}
@@ -136,7 +138,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
             </div>
 
             <div className="space-y-1.5 sm:border-l sm:pl-4 border-slate-200">
-              <span className="font-bold uppercase tracking-wider text-slate-500 block mb-1 text-[10px]">Artisan / Atelier</span>
+              <span className="font-bold uppercase tracking-wider text-slate-500 block mb-1 text-[10px]">{t('specSheet.tailorDetails')}</span>
               <p className="font-bold text-sm text-slate-900">{request.tailor?.name}</p>
               <p className="text-slate-600">Garment Type: <strong className="text-slate-900">{request.garmentType}</strong></p>
               <p className="text-slate-600">Fabric Preference: {request.fabricPreference || 'Client Specified'}</p>
@@ -150,7 +152,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
             <div className="flex items-center justify-between border-b border-slate-300 pb-2">
               <h2 className="text-base font-bold font-serif uppercase tracking-wider text-slate-900 flex items-center">
                 <Ruler className="w-4 h-4 mr-2 text-slate-700" />
-                1. Anthropometric Body Measurements & Cutting Ease
+                {t('specSheet.dimensionsTitle')}
               </h2>
               {measurement?.aiConfidence && (
                 <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold">
@@ -191,7 +193,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
           <div className="space-y-3">
             <h2 className="text-base font-bold font-serif uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-2 flex items-center">
               <FileText className="w-4 h-4 mr-2 text-slate-700" />
-              2. Design Specs & Tailor Notes
+              {t('specSheet.tolerancesTitle')}
             </h2>
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
               {request.notes ? (
@@ -211,7 +213,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
           <div className="space-y-3">
             <h2 className="text-base font-bold font-serif uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-2 flex items-center">
               <ShieldCheck className="w-4 h-4 mr-2 text-slate-700" />
-              3. Production Milestones & Atelier Sign-Off
+              {t('specSheet.milestonesTitle')}
             </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -237,7 +239,7 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
 
           {/* Footer Legal Seal */}
           <div className="pt-6 border-t border-slate-200 text-center text-[10px] text-slate-400 font-mono">
-            StitchMatch Atelier Portal · High Precision Anthropometric Bespoke Standard · Confidential Spec Sheet
+            {t('specSheet.confidential')}
           </div>
 
         </div>

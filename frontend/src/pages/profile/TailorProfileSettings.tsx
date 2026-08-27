@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useToast } from '../../context/ToastContext';
@@ -21,6 +22,7 @@ const safeArray = (val: any): any[] => {
 };
 
 export default function TailorProfileSettings() {
+  const { t } = useTranslation();
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [form, setForm] = useState({
@@ -136,7 +138,7 @@ export default function TailorProfileSettings() {
 
   return (
     <div className="max-w-7xl mx-auto px-4">
-      <h1 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Tailor Settings</h1>
+      <h1 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('profile.tailor.title')}</h1>
 
       {message && (
         <div className={`mb-4 p-3 rounded-lg text-sm ${message.includes('success') ? (isDark ? 'bg-green-900/30 text-green-300' : 'bg-green-50 text-green-700') : (isDark ? 'bg-red-900/30 text-red-300' : 'bg-red-50 text-red-700')}`}>
@@ -150,50 +152,44 @@ export default function TailorProfileSettings() {
         <div className="card flex flex-col justify-between">
           <div>
             <h2 className={`font-semibold mb-4 flex items-center text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <User className="h-5 w-5 mr-2 text-primary-600" /> Basic Information
+              <User className="h-5 w-5 mr-2 text-primary-600" /> {t('profile.tailor.basicInfo')}
             </h2>
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Full Name</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{t('auth.nameLabel')}</label>
                 <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" required />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Email</label>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{t('auth.emailLabel')}</label>
                   <input value={user?.email} className="input-field opacity-75 cursor-not-allowed" disabled />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Phone Number</label>
+                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{t('auth.phoneLabel')}</label>
                   <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-field" />
                 </div>
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Workshop / City Location</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{t('profile.tailor.location')}</label>
                 <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className="input-field" />
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Profile & Atelier Photo</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>{t('profile.tailor.photo')}</label>
                 <div className="flex items-center gap-4 mb-2">
                   <div className="w-16 h-16 rounded-2xl bg-gray-200 overflow-hidden shrink-0 border-2 dark:border-gray-600 shadow-sm">
                     {form.avatarUrl ? (
                       <img src={form.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-full h-full text-gray-400 p-3" />
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400">
+                        <User className="h-8 w-8" />
+                      </div>
                     )}
                   </div>
-                  <div 
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={handleAvatarUpload}
-                    className={`flex-1 border-2 border-dashed rounded-xl p-3 text-center ${isDark ? 'border-gray-600 bg-gray-700/40 hover:bg-gray-700' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'} cursor-pointer transition-colors`}
-                  >
-                    <input type="file" id="avatarImageTailor" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                    <label htmlFor="avatarImageTailor" className="cursor-pointer flex items-center justify-center w-full">
-                      <UploadCloud className={`h-5 w-5 mr-2 ${isDark ? 'text-primary-400' : 'text-primary-600'}`} />
-                      <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                        {uploadingAvatar ? 'Uploading image...' : 'Browse or Drag Photo'}
-                      </span>
-                    </label>
-                  </div>
+                  <label className="btn-secondary text-xs flex items-center space-x-1.5 cursor-pointer">
+                    <UploadCloud className="h-4 w-4" />
+                    <span>{uploadingAvatar ? t('common.loading') : 'Upload Photo'}</span>
+                    <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={uploadingAvatar} />
+                  </label>
                 </div>
                 <input 
                   type="text" 
@@ -203,7 +199,7 @@ export default function TailorProfileSettings() {
                 />
               </div>
               <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2 pt-2.5">
-                <Save className="h-4 w-4" /><span>{saving ? 'Saving...' : 'Save Basic Info'}</span>
+                <Save className="h-4 w-4" /><span>{saving ? t('common.loading') : t('common.save')}</span>
               </button>
             </form>
           </div>
@@ -213,11 +209,11 @@ export default function TailorProfileSettings() {
         <div className="card flex flex-col justify-between">
           <div>
             <h2 className={`font-semibold mb-4 flex items-center text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <Scissors className="h-5 w-5 mr-2 text-primary-600" /> Tailor Profile & Specialties
+              <Scissors className="h-5 w-5 mr-2 text-primary-600" /> {t('profile.tailor.title')}
             </h2>
             <form onSubmit={handleSaveTailorProfile} className="space-y-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Atelier Bio & Experience</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Tailor Bio & Experience</label>
                 <textarea 
                   value={tailorForm.bio} 
                   onChange={(e) => setTailorForm({ ...tailorForm, bio: e.target.value })}

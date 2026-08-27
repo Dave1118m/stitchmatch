@@ -77,10 +77,26 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ForgotPassword />} />
               <Route path="/join" element={<Join />} />
-              <Route path="/tailors" element={<Tailors />} />
-              <Route path="/tailors/:id" element={<TailorProfile />} />
-              <Route path="/tailors/:id/portfolio" element={<Portfolio />} />
-              <Route path="/tailors/:id/reviews" element={<Reviews />} />
+              <Route path="/tailors" element={
+                <ProtectedRoute>
+                  <Tailors />
+                </ProtectedRoute>
+              } />
+              <Route path="/tailors/:id" element={
+                <ProtectedRoute>
+                  <TailorProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/tailors/:id/portfolio" element={
+                <ProtectedRoute>
+                  <Portfolio />
+                </ProtectedRoute>
+              } />
+              <Route path="/tailors/:id/reviews" element={
+                <ProtectedRoute>
+                  <Reviews />
+                </ProtectedRoute>
+              } />
 
 
               <Route path="/dashboard" element={

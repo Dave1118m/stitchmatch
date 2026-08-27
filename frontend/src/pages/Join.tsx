@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import joinCustomerImg from '../assets/join_customer_client.jpg';
 import joinTailorImg from '../assets/join_tailor_artisan.jpg';
@@ -9,9 +10,14 @@ import { Scissors, User, ArrowRight } from 'lucide-react';
 
 export default function Join() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const isDark = useDarkMode();
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<'customer' | 'tailor' | null>(null);
+
+  if (user) {
+    return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />;
+  }
 
   const handleContinue = () => {
     if (selectedRole) {
@@ -97,7 +103,7 @@ export default function Join() {
               <div className="h-48 overflow-hidden relative">
                 <img 
                   src={joinTailorImg} 
-                  alt="Tailor working in atelier" 
+                  alt="Tailor working in tailor shop" 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6">

@@ -74,7 +74,7 @@ export default function InstallAppBanner() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-1.5">
-                <h4 className="text-xs font-bold truncate">Install StitchMatch App</h4>
+                <h4 className="text-xs font-bold truncate">Install የደስደስ Fashion App</h4>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-purple-500/20 text-purple-400 border border-purple-500/30">
                   Fast
                 </span>

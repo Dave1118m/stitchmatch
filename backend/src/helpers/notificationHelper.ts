@@ -83,8 +83,8 @@ export async function notifyTailorApproval(
   await createNotification(
     prisma,
     tailorId,
-    approved ? 'Atelier Account Approved' : 'Application Update',
-    approved ? 'Congratulations! Your tailor atelier profile has been verified and published.' : 'Your tailor application was reviewed and could not be approved at this time.',
+    approved ? 'Tailor Account Approved' : 'Application Update',
+    approved ? 'Congratulations! Your tailor profile has been verified and published.' : 'Your tailor application was reviewed and could not be approved at this time.',
     'approval',
     io
   );
@@ -117,7 +117,7 @@ export async function notifyNewReview(
   await createNotification(
     prisma,
     tailorId,
-    'New Atelier Review',
+    'New Customer Review',
     `${customerName || 'A customer'} left you a ${rating}-star review on your completed order.`,
     'review',
     io

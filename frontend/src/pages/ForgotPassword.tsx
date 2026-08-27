@@ -184,7 +184,7 @@ export default function ForgotPassword() {
         <div className="absolute inset-0 z-0">
           <img
             src={tailorHeroImg}
-            alt="Atelier Background"
+            alt="Tailor Background"
             className="w-full h-full object-cover opacity-50 transform scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/70" />
@@ -194,7 +194,7 @@ export default function ForgotPassword() {
         <div className="relative z-10">
           <Link to="/" className="inline-flex items-center space-x-2">
             <span className="text-xs font-bold tracking-[0.28em] text-slate-300 uppercase">
-              Atelier Security
+              Tailor Security
             </span>
           </Link>
         </div>
@@ -206,12 +206,12 @@ export default function ForgotPassword() {
             Recovery.
           </h1>
           <p className="text-sm text-slate-300 leading-relaxed font-light">
-            We use encrypted OTP verification codes and industry-standard security protocols to protect your StitchMatch portfolio and bespoke commission data.
+            We use encrypted OTP verification codes and industry-standard security protocols to protect your የደስደስ Fashion portfolio and bespoke commission data.
           </p>
         </div>
 
         <div className="relative z-10 text-xs text-slate-400">
-          StitchMatch Atelier Cryptographic Protection
+          የደስደስ Fashion · Bespoke Tailoring Platform
         </div>
       </div>
 
@@ -234,7 +234,7 @@ export default function ForgotPassword() {
               <Scissors className="h-4 w-4" />
             </div>
             <span className="font-bold text-base tracking-tight">
-              Stitch<span className="text-amber-500">Match</span>
+              የደስደስ <span className="text-amber-500">Fashion</span>
             </span>
           </Link>
         </div>
@@ -267,21 +267,21 @@ export default function ForgotPassword() {
 
               <form onSubmit={handleRequestCode} className="space-y-4">
                 <div>
-                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Email address
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
+                    Email address *
                   </label>
-                  <div className={`flex items-center px-3.5 py-3 rounded-xl border transition-all ${
-                    isDark ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400' : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
+                    isDark ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20' : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <Mail className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <Mail className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type="email"
                       required
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@email.com"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                   </div>
@@ -342,8 +342,8 @@ export default function ForgotPassword() {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 {/* 6-Digit OTP Box */}
                 <div>
-                  <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    6-Digit Verification Code
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
+                    6-Digit Verification Code *
                   </label>
                   <div className="flex items-center justify-between gap-2" onPaste={handleOtpPaste}>
                     {otp.map((digit, index) => (
@@ -356,12 +356,12 @@ export default function ForgotPassword() {
                         value={digit}
                         onChange={(e) => handleOtpChange(index, e.target.value)}
                         onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                        className={`w-12 h-14 text-center text-xl font-bold font-mono rounded-xl border transition-all ${
-                          digit ? 'border-amber-500 bg-amber-500/10 text-amber-500' : ''
+                        className={`w-12 h-14 text-center text-xl font-bold font-mono rounded-2xl border-2 transition-all ${
+                          digit ? 'border-amber-500 bg-amber-500/10 text-amber-500 ring-2 ring-amber-500/20' : ''
                         } ${
                           isDark
-                            ? 'bg-[#171923] border-slate-700 focus:border-amber-500 text-white'
-                            : 'bg-white border-slate-200 focus:border-amber-500 text-slate-900 shadow-2xs'
+                            ? 'bg-[#171923] border-slate-700 focus:border-amber-400 focus:ring-4 focus:ring-amber-500/20 text-white'
+                            : 'bg-white border-slate-300 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 text-slate-900 shadow-sm'
                         }`}
                       />
                     ))}
@@ -374,7 +374,7 @@ export default function ForgotPassword() {
                     type="button"
                     onClick={handleResendCode}
                     disabled={resendCooldown > 0 || loading}
-                    className={`inline-flex items-center space-x-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center space-x-1.5 text-xs font-semibold transition-colors ${
                       resendCooldown > 0
                         ? 'text-slate-500 cursor-not-allowed'
                         : 'text-amber-600 hover:text-amber-500 cursor-pointer'
@@ -387,53 +387,53 @@ export default function ForgotPassword() {
 
                 {/* New Password */}
                 <div>
-                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    New Password
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
+                    New Password *
                   </label>
-                  <div className={`flex items-center px-3.5 py-2.5 rounded-xl border transition-all ${
-                    isDark ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400' : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
+                    isDark ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20' : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      minLength={8}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                      className="p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <p className={`text-[11px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <p className={`text-[11px] font-medium mt-1 ${isDark ? 'text-purple-400/80' : 'text-purple-800'}`}>
                     Must be 8+ chars with 1 uppercase & 1 number.
                   </p>
                 </div>
 
                 {/* Confirm Password */}
                 <div>
-                  <label className={`block text-xs font-medium mb-1.5 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                    Confirm New Password
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isDark ? 'text-purple-300' : 'text-purple-900'}`}>
+                    Confirm New Password *
                   </label>
-                  <div className={`flex items-center px-3.5 py-2.5 rounded-xl border transition-all ${
-                    isDark ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400' : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
+                    isDark ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20' : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      minLength={8}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                   </div>
@@ -463,7 +463,7 @@ export default function ForgotPassword() {
                   Password Reset Complete
                 </h2>
                 <p className={`text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  Your StitchMatch account credentials have been securely updated. You can now sign in with your new password.
+                  Your የደስደስ Fashion account credentials have been securely updated. You can now sign in with your new password.
                 </p>
               </div>
 
@@ -482,7 +482,7 @@ export default function ForgotPassword() {
         {/* Footer */}
         <div className="text-center pt-8">
           <p className={`text-[11px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-            © 2026 StitchMatch Atelier · Security & Integrity
+            © 2026 የደስደስ Fashion · Custom Tailoring Platform
           </p>
         </div>
 

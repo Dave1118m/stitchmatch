@@ -10,7 +10,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  let data = { title: 'StitchMatch', body: 'You have a new update!', icon: '/vite.svg' };
+  let data = { title: 'የደስደስ Fashion', body: 'You have a new update!', icon: '/vite.svg' };
   try {
     if (event.data) {
       data = event.data.json();

@@ -8,7 +8,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import { Search, MapPin, Star, Scissors, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import { TailorCardSkeleton } from '../components/SkeletonLoaders';
 
-function getTailorFeaturedImage(tailor: any): string {
+function getTailorFeaturedImage(tailor: any): string | null {
   if (tailor.portfolioImages && Array.isArray(tailor.portfolioImages) && tailor.portfolioImages.length > 0) {
     const first = tailor.portfolioImages[0];
     if (typeof first === 'string' && (first.startsWith('http') || first.startsWith('/'))) return first;
@@ -19,7 +19,7 @@ function getTailorFeaturedImage(tailor: any): string {
     if (prodImg) return prodImg;
   }
   if (tailor.user?.avatarUrl) return tailor.user.avatarUrl;
-  return 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80';
+  return null;
 }
 
 function getInitials(name?: string): string {
@@ -116,8 +116,13 @@ export default function Tailors() {
     loadTailorsData(searchQuery, selectedSpecialty, selectedRating, maxPrice);
   };
 
+  const translateSpecialty = (spec: string) => {
+    if (!spec || spec === 'All') return t('specialties.all', 'All Specialties');
+    return t(`specialties.${spec}`, spec);
+  };
+
   const ratingOptions = [
-    { value: 'any', label: 'Any' },
+    { value: 'any', label: t('tailors.ratingAny', 'Any') },
     { value: '4', label: '4+' },
     { value: '4.5', label: '4.5+' },
     { value: '4.8', label: '4.8+' },
@@ -133,7 +138,7 @@ export default function Tailors() {
               <Scissors className="h-5 w-5" />
             </div>
             <span className={`text-xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Stitch<span className="text-amber-500">Match</span>
+              የደስደስ <span className="text-amber-500">Fashion</span>
             </span>
           </Link>
 
@@ -157,7 +162,7 @@ export default function Tailors() {
         {/* Page Title & Subtitle */}
         <div className="mb-6">
           <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Find the perfect craftsperson for your garment.
+            {t('tailors.pageSubtitle', 'Find the perfect craftsperson for your garment.')}
           </p>
         </div>
 
@@ -173,7 +178,7 @@ export default function Tailors() {
               <Search className={`h-5 w-5 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
               <input
                 type="text"
-                placeholder="Search by name or location..."
+                placeholder={t('tailors.searchPlaceholder', 'Search by name or location...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full bg-transparent outline-none text-sm font-medium ${
@@ -196,10 +201,10 @@ export default function Tailors() {
                     : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-amber-500'
                 }`}
               >
-                <option value="All">All Specialties</option>
+                <option value="All">{t('specialties.all', 'All Specialties')}</option>
                 {availableSpecialties.map((spec) => (
                   <option key={spec} value={spec}>
-                    {spec}
+                    {translateSpecialty(spec)}
                   </option>
                 ))}
               </select>
@@ -211,7 +216,7 @@ export default function Tailors() {
             {/* Rating Filter Pills */}
             <div className="flex items-center space-x-2 flex-wrap gap-y-2">
               <span className={`text-xs font-semibold uppercase tracking-wider mr-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Min Rating:
+                {t('tailors.minRating', 'Min Rating:')}
               </span>
               {ratingOptions.map((opt) => {
                 const isActive = selectedRating === opt.value;
@@ -240,7 +245,7 @@ export default function Tailors() {
             {/* Max Price Range Slider */}
             <div className="flex items-center space-x-3 w-full sm:w-auto">
               <span className={`text-xs font-semibold uppercase tracking-wider whitespace-nowrap ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Max Price:
+                {t('tailors.maxPrice', 'Max Price:')}
               </span>
               <input
                 type="range"
@@ -262,7 +267,7 @@ export default function Tailors() {
                 className="ml-auto sm:ml-2 px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md transition-all flex items-center space-x-1.5"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
-                <span>Filter</span>
+                <span>{t('tailors.filterBtn', 'Filter')}</span>
               </button>
             </div>
           </div>
@@ -279,10 +284,10 @@ export default function Tailors() {
           <div className={`p-16 text-center rounded-2xl border ${isDark ? 'bg-[#171923] border-slate-800 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}>
             <Scissors className="h-14 w-14 mx-auto mb-4 text-amber-500 opacity-80" />
             <h3 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              No craftspersons found matching your criteria
+              {t('tailors.emptyTitle', 'No craftspersons found matching your criteria')}
             </h3>
             <p className="text-sm mb-6">
-              Try broadening your specialty filters, rating threshold, or search query.
+              {t('tailors.emptyDesc', 'Try broadening your specialty filters, rating threshold, or search query.')}
             </p>
             <button
               onClick={() => {
@@ -295,7 +300,7 @@ export default function Tailors() {
               }}
               className="px-6 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-sm shadow-md hover:bg-amber-700 transition-all"
             >
-              Reset Filters
+              {t('tailors.resetFilter', 'Reset Filters')}
             </button>
           </div>
         ) : (
@@ -305,11 +310,11 @@ export default function Tailors() {
               const initials = getInitials(tailor.user?.name);
               const minP = tailor.basePricingMin ? Number(tailor.basePricingMin) : null;
               const maxP = tailor.basePricingMax ? Number(tailor.basePricingMax) : null;
-              let priceStr = 'Custom Quote';
+              let priceStr = t('tailors.customQuote', 'Custom Quote');
               if (minP && maxP) {
                 priceStr = `$${minP} - $${maxP}`;
               } else if (minP) {
-                priceStr = `From $${minP}`;
+                priceStr = t('tailors.fromPrice', { price: minP, defaultValue: `From $${minP}` });
               }
 
               const reviewCount = tailor.reviewCount || 0;
@@ -327,13 +332,33 @@ export default function Tailors() {
                   }`}
                 >
                   {/* Top: Work / Portfolio Image */}
-                  <div className="relative h-56 overflow-hidden bg-slate-950">
-                    <img
-                      src={featuredImg}
-                      alt={tailor.user?.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+                  <div className="relative h-56 overflow-hidden bg-slate-950 flex items-center justify-center">
+                    {featuredImg ? (
+                      <>
+                        <img
+                          src={featuredImg}
+                          alt={tailor.user?.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+                      </>
+                    ) : (
+                      <div className={`w-full h-full flex flex-col items-center justify-center p-6 text-center transition-all ${
+                        isDark
+                          ? 'bg-gradient-to-br from-slate-900 via-slate-950 to-[#12151e]'
+                          : 'bg-gradient-to-br from-amber-50 via-orange-50/50 to-slate-100'
+                      }`}>
+                        <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 mb-2 group-hover:scale-110 transition-transform">
+                          <Scissors className="h-8 w-8" />
+                        </div>
+                        <span className={`text-xs font-bold tracking-wider uppercase truncate max-w-[90%] ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {tailor.user?.name || 'Artisan Tailor'}
+                        </span>
+                        <span className="text-[10px] text-amber-500 font-medium mt-0.5">
+                          Bespoke Atelier
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Bottom: Tailor Information */}
@@ -358,7 +383,7 @@ export default function Tailors() {
                           </h3>
                           <p className={`text-xs flex items-center truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                             <MapPin className="h-3.5 w-3.5 mr-1 text-amber-500 flex-shrink-0" />
-                            <span className="truncate">{tailor.user?.location || 'Location on request'}</span>
+                            <span className="truncate">{tailor.user?.location || t('tailors.locationOnRequest', 'Location on request')}</span>
                           </p>
                         </div>
                       </div>
@@ -375,7 +400,7 @@ export default function Tailors() {
                                   : 'bg-amber-50 text-amber-800 border border-amber-200'
                               }`}
                             >
-                              {spec}
+                              {translateSpecialty(spec)}
                             </span>
                           ))}
                         </div>
@@ -404,7 +429,7 @@ export default function Tailors() {
                           </>
                         ) : (
                           <span className="text-[11px] font-semibold text-amber-500">
-                            New Artisan
+                            {t('tailors.newTailor', 'New Tailor')}
                           </span>
                         )}
                       </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { requestsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -8,25 +8,32 @@ import { MessageSquare, Plus, Clock, CheckCircle, AlertCircle, Scissors } from '
 import { RequestCardSkeleton } from '../components/SkeletonLoaders';
 
 const statusColors: Record<string, string> = {
-  Pending: 'bg-yellow-100 text-yellow-800',
-  Under_Discussion: 'bg-blue-100 text-blue-800',
-  Agreed: 'bg-green-100 text-green-800',
-  In_Progress: 'bg-purple-100 text-purple-800',
-  Completed: 'bg-gray-100 text-gray-800',
+  Pending: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+  Under_Discussion: 'bg-blue-100 text-blue-800 border border-blue-200',
+  Agreed: 'bg-emerald-100 text-emerald-800 border border-emerald-200',
+  In_Progress: 'bg-purple-100 text-purple-800 border border-purple-200',
+  Completed: 'bg-gray-100 text-gray-800 border border-gray-200',
+  Rejected: 'bg-red-100 text-red-800 border border-red-200',
 };
 
 const statusColorsDark: Record<string, string> = {
-  Pending: 'bg-yellow-900/30 text-yellow-300',
-  Under_Discussion: 'bg-blue-900/30 text-blue-300',
-  Agreed: 'bg-green-900/30 text-green-300',
-  In_Progress: 'bg-purple-900/30 text-purple-300',
-  Completed: 'bg-gray-700 text-gray-300',
+  Pending: 'bg-yellow-900/40 text-yellow-300 border border-yellow-800',
+  Under_Discussion: 'bg-blue-900/40 text-blue-300 border border-blue-800',
+  Agreed: 'bg-emerald-900/40 text-emerald-300 border border-emerald-800',
+  In_Progress: 'bg-purple-900/40 text-purple-300 border border-purple-800',
+  Completed: 'bg-gray-800 text-gray-300 border border-gray-700',
+  Rejected: 'bg-red-900/40 text-red-300 border border-red-800',
 };
 
 export default function Dashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
   const [requests, setRequests] = useState<any[]>([]);
+  const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const isDark = useDarkMode();
@@ -37,24 +44,31 @@ export default function Dashboard() {
         return t('dashboard.filterPending');
       case 'Under_Discussion':
         return t('dashboard.filterAccepted');
+      case 'Agreed':
+        return 'Agreed';
       case 'In_Progress':
         return t('dashboard.filterInProgress');
       case 'Completed':
         return t('dashboard.filterCompleted');
       default:
-        return status;
+        return status.replace(/_/g, ' ');
     }
   };
 
   useEffect(() => {
     loadRequests();
-  }, []);
+  }, [filter]);
 
   const loadRequests = async () => {
     try {
       const params = filter ? { status: filter } : {};
       const res = await requestsAPI.getAll(params);
-      setRequests(res.data.requests);
+      setRequests(res.data.requests || []);
+
+      // If unfiltered, also store all for metric counters
+      if (!filter) {
+        setAllRequests(res.data.requests || []);
+      }
     } catch (err) {
       console.error('Failed to load requests', err);
     } finally {
@@ -78,18 +92,24 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        {['Pending', 'Under_Discussion', 'In_Progress', 'Completed'].map((status) => (
-          <button
-            key={status}
-            onClick={() => { setFilter(filter === status ? '' : status); loadRequests(); }}
-            className={`card text-center p-4 hover:shadow-md transition-shadow ${filter === status ? 'ring-2 ring-primary-500' : ''}`}
-          >
-            <div className={`text-2xl font-bold ${status === 'Completed' ? 'text-green-600' : 'text-primary-600'}`}>
-              {requests.filter((r: any) => r.status === status).length}
-            </div>
-            <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{getStatusLabel(status)}</div>
-          </button>
-        ))}
+        {['Pending', 'Under_Discussion', 'In_Progress', 'Completed'].map((status) => {
+          const count = (allRequests.length > 0 ? allRequests : requests).filter((r: any) => r.status === status).length;
+          const isSelected = filter === status;
+          return (
+            <button
+              key={status}
+              onClick={() => setFilter((prev) => prev === status ? '' : status)}
+              className={`card text-center p-4 hover:shadow-md transition-all ${
+                isSelected ? 'ring-2 ring-purple-500 bg-purple-50/50 dark:bg-purple-950/20' : ''
+              }`}
+            >
+              <div className={`text-2xl font-bold ${status === 'Completed' ? 'text-green-600 dark:text-green-400' : 'text-purple-600 dark:text-purple-400'}`}>
+                {count}
+              </div>
+              <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{getStatusLabel(status)}</div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Requests List */}

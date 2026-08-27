@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { useToast } from '../../context/ToastContext';
@@ -19,6 +20,7 @@ import ThreeBodyAvatar from '../../components/ThreeBodyAvatar';
 import FitEaseRecommendationsCard from '../../components/FitEaseRecommendationsCard';
 
 export default function CustomerProfileSettings() {
+  const { t } = useTranslation();
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const isDark = useDarkMode();
@@ -152,9 +154,9 @@ export default function CustomerProfileSettings() {
     <div className="max-w-4xl mx-auto px-4 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Customer Profile & Measurements</h1>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('profile.customer.title')}</h1>
           <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            Manage your personal profile and saved 3D body measurement vault for 1-click orders.
+            {t('profile.customer.subtitle')}
           </p>
         </div>
       </div>
@@ -170,7 +172,100 @@ export default function CustomerProfileSettings() {
       )}
 
       {/* ========================================================= */}
-      {/* 1. SAVED 3D BODY MEASUREMENTS VAULT */}
+      {/* 1. BASIC ACCOUNT INFORMATION (FIRST ON TOP) */}
+      {/* ========================================================= */}
+      <div className="card">
+        <h2 className={`font-bold text-base sm:text-lg mb-4 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <User className="h-5 w-5 mr-2 text-primary-600" />
+          <span>{t('profile.customer.basicInfo')}</span>
+        </h2>
+        <form onSubmit={handleSaveProfile} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                {t('profile.customer.fullName')} *
+              </label>
+              <input 
+                value={form.name} 
+                onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                className="input-field text-sm font-semibold" 
+                required 
+              />
+            </div>
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'} mb-1.5`}>
+                {t('profile.customer.email')}
+              </label>
+              <input 
+                value={user?.email} 
+                className="input-field text-sm opacity-75 cursor-not-allowed bg-gray-100 dark:bg-gray-800" 
+                disabled 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                {t('profile.customer.phone')}
+              </label>
+              <input 
+                value={form.phone} 
+                onChange={(e) => setForm({ ...form, phone: e.target.value })} 
+                className="input-field text-sm font-semibold" 
+              />
+            </div>
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                {t('profile.customer.city')}
+              </label>
+              <input 
+                value={form.location} 
+                onChange={(e) => setForm({ ...form, location: e.target.value })} 
+                className="input-field text-sm font-semibold" 
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+              {t('profile.customer.photo')}
+            </label>
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
+                {form.avatarUrl ? (
+                  <img src={form.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              <div 
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleAvatarUpload}
+                className={`flex-1 border-2 border-dashed rounded-2xl p-3 text-center ${isDark ? 'border-gray-700 bg-gray-800/40 hover:bg-gray-800/80' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'} cursor-pointer transition-colors`}
+              >
+                <input type="file" id="avatarImage" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                <label htmlFor="avatarImage" className="cursor-pointer flex items-center justify-center space-x-2 w-full">
+                  <UploadCloud className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
+                  <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                    {uploadingAvatar ? t('common.loading') : t('profile.customer.uploadHint')}
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button type="submit" disabled={saving} className="btn-primary text-xs sm:text-sm px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 shadow-md">
+              <Save className="h-4 w-4" />
+              <span>{saving ? t('profile.customer.saving') : t('profile.customer.saveDetails')}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ========================================================= */}
+      {/* 2. CUSTOMER PROFILE & MEASUREMENTS VAULT (AT BOTTOM) */}
       {/* ========================================================= */}
       <div className="card space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-700/80 pb-4">
@@ -180,13 +275,13 @@ export default function CustomerProfileSettings() {
             </div>
             <div>
               <h2 className={`font-bold text-base sm:text-lg flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                <span>3D Body Measurements Vault</span>
+                <span>{t('profile.customer.vaultTitle')}</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                  1-Click Ready
+                  {t('profile.customer.vaultBadge')}
                 </span>
               </h2>
               <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                Verified anatomical dimensions automatically applied to your bespoke tailoring orders.
+                {t('profile.customer.vaultSubtitle')}
               </p>
             </div>
           </div>
@@ -196,7 +291,7 @@ export default function CustomerProfileSettings() {
             className="btn-secondary text-xs px-3 py-1.5 rounded-xl font-bold flex items-center space-x-1.5 self-start sm:self-auto"
           >
             <Edit3 className="w-3.5 h-3.5" />
-            <span>{isEditingVault ? 'Cancel' : 'Edit Dimensions'}</span>
+            <span>{isEditingVault ? t('common.cancel') : t('profile.customer.editVaultBtn')}</span>
           </button>
         </div>
 
@@ -204,70 +299,82 @@ export default function CustomerProfileSettings() {
           /* Editing Form */
           <form onSubmit={handleSaveVault} className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Chest (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.chest')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.chest}
                   onChange={(e) => setVaultForm({ ...vaultForm, chest: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Natural Waist (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.waist')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.waist}
                   onChange={(e) => setVaultForm({ ...vaultForm, waist: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Hip & Seat (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.hip')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.hip}
                   onChange={(e) => setVaultForm({ ...vaultForm, hip: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Inseam (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.inseam')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.inseam}
                   onChange={(e) => setVaultForm({ ...vaultForm, inseam: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Shoulders (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.shoulderWidth')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.shoulderWidth}
                   onChange={(e) => setVaultForm({ ...vaultForm, shoulderWidth: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase">Arm Length (cm)</label>
+              <div className="p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 bg-purple-50/40 dark:bg-purple-950/20">
+                <label className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider block mb-1">
+                  {t('profile.customer.armLength')}
+                </label>
                 <input
                   type="number"
                   step="0.1"
                   required
                   value={vaultForm.armLength}
                   onChange={(e) => setVaultForm({ ...vaultForm, armLength: e.target.value })}
-                  className="input-field text-sm mt-1"
+                  className="input-field text-sm"
                 />
               </div>
             </div>
@@ -278,14 +385,14 @@ export default function CustomerProfileSettings() {
                 onClick={() => setIsEditingVault(false)}
                 className="btn-secondary text-xs px-4 py-2 font-semibold"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="submit"
                 disabled={savingVault}
                 className="btn-primary text-xs px-5 py-2 font-bold shadow-md"
               >
-                {savingVault ? 'Saving...' : 'Save Vault Dimensions'}
+                {savingVault ? t('profile.customer.saving') : t('profile.customer.saveVaultBtn')}
               </button>
             </div>
           </form>
@@ -300,17 +407,17 @@ export default function CustomerProfileSettings() {
               <Ruler className="w-6 h-6" />
             </div>
             <h4 className={`text-base font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              No saved measurements in your vault yet
+              {t('profile.customer.emptyVault')}
             </h4>
             <p className={`text-xs max-w-md mx-auto mb-4 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-              Add your anatomical measurements once to enable instant 1-click tailored fittings across all master artisans.
+              {t('profile.customer.emptyVaultDesc')}
             </p>
             <button
               onClick={() => setIsEditingVault(true)}
               className="btn-primary text-xs px-5 py-2.5 rounded-xl font-bold inline-flex items-center space-x-2 shadow-md"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Enter Body Measurements</span>
+              <span>{t('profile.customer.enterMeasurementsBtn')}</span>
             </button>
           </div>
         ) : (
@@ -318,12 +425,12 @@ export default function CustomerProfileSettings() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: 'Chest', val: vaultMeasurement.chest, sub: `${(Number(vaultMeasurement.chest) / 2.54).toFixed(1)} in` },
-                { label: 'Natural Waist', val: vaultMeasurement.waist, sub: `${(Number(vaultMeasurement.waist) / 2.54).toFixed(1)} in` },
-                { label: 'Hip & Seat', val: vaultMeasurement.hip, sub: `${(Number(vaultMeasurement.hip) / 2.54).toFixed(1)} in` },
-                { label: 'Inseam', val: vaultMeasurement.inseam, sub: `${(Number(vaultMeasurement.inseam) / 2.54).toFixed(1)} in` },
-                { label: 'Shoulder Width', val: vaultMeasurement.shoulderWidth, sub: `${(Number(vaultMeasurement.shoulderWidth) / 2.54).toFixed(1)} in` },
-                { label: 'Arm Length', val: vaultMeasurement.armLength, sub: `${(Number(vaultMeasurement.armLength) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.chest'), val: vaultMeasurement.chest, sub: `${(Number(vaultMeasurement.chest) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.waist'), val: vaultMeasurement.waist, sub: `${(Number(vaultMeasurement.waist) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.hip'), val: vaultMeasurement.hip, sub: `${(Number(vaultMeasurement.hip) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.inseam'), val: vaultMeasurement.inseam, sub: `${(Number(vaultMeasurement.inseam) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.shoulderWidth'), val: vaultMeasurement.shoulderWidth, sub: `${(Number(vaultMeasurement.shoulderWidth) / 2.54).toFixed(1)} in` },
+                { label: t('profile.customer.armLength'), val: vaultMeasurement.armLength, sub: `${(Number(vaultMeasurement.armLength) / 2.54).toFixed(1)} in` },
               ].map((item, i) => (
                 <div
                   key={i}
@@ -347,11 +454,11 @@ export default function CustomerProfileSettings() {
             }`}>
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                <span>Verified anatomical dimensions ready for 1-click commissioning.</span>
+                <span>{t('profile.customer.verifiedNote')}</span>
               </div>
               {vaultMeasurement?.createdAt && (
                 <span className="text-[10px] opacity-70 hidden sm:inline">
-                  Calibrated: {new Date(vaultMeasurement.createdAt).toLocaleDateString()}
+                  {t('profile.customer.calibratedOn')}: {new Date(vaultMeasurement.createdAt).toLocaleDateString()}
                 </span>
               )}
             </div>
@@ -362,70 +469,6 @@ export default function CustomerProfileSettings() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* ========================================================= */}
-      {/* 2. BASIC PROFILE INFORMATION */}
-      {/* ========================================================= */}
-      <div className="card">
-        <h2 className={`font-bold text-base sm:text-lg mb-4 flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          <User className="h-5 w-5 mr-2 text-primary-600" /> Basic Account Information
-        </h2>
-        <form onSubmit={handleSaveProfile} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1.5`}>Full Name</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field text-sm" required />
-            </div>
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1.5`}>Email (Read-Only)</label>
-              <input value={user?.email} className="input-field text-sm opacity-75 cursor-not-allowed" disabled />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1.5`}>Phone Number</label>
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1 (555) 000-0000" className="input-field text-sm" />
-            </div>
-            <div>
-              <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1.5`}>City / Region</label>
-              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="New York, NY" className="input-field text-sm" />
-            </div>
-          </div>
-
-          <div>
-            <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1.5`}>Profile Photo</label>
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-700 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
-                {form.avatarUrl ? (
-                  <img src={form.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-8 h-8 text-gray-400" />
-                )}
-              </div>
-              <div 
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleAvatarUpload}
-                className={`flex-1 border-2 border-dashed rounded-2xl p-3 text-center ${isDark ? 'border-gray-700 bg-gray-800/40 hover:bg-gray-800/80' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'} cursor-pointer transition-colors`}
-              >
-                <input type="file" id="avatarImage" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-                <label htmlFor="avatarImage" className="cursor-pointer flex items-center justify-center space-x-2 w-full">
-                  <UploadCloud className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} />
-                  <span className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
-                    {uploadingAvatar ? 'Uploading...' : 'Click to Upload Photo or Drag and Drop'}
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button type="submit" disabled={saving} className="btn-primary text-xs sm:text-sm px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 shadow-md">
-              <Save className="h-4 w-4" /><span>{saving ? 'Saving...' : 'Save Profile Details'}</span>
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

@@ -62,6 +62,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     const tailors = await prisma.tailor.findMany({
       where,
+      orderBy: { createdAt: 'desc' },
       include: {
         user: {
           select: {

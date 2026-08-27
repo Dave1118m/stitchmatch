@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -6,7 +7,7 @@ import { usersAPI, tailorsAPI, settingsAPI } from '../lib/api';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { 
   Settings as SettingsIcon, Sliders, Shield, User, Scissors, 
-  Bell, Lock, CheckCircle, AlertTriangle, Percent, Power, Tag, Plus, XCircle, Save, Check, Globe
+  Bell, Lock, CheckCircle, AlertTriangle, Percent, Power, Tag, Plus, XCircle, Save, Check, Globe, ExternalLink
 } from 'lucide-react';
 
 export default function Settings() {
@@ -37,16 +38,6 @@ export default function Settings() {
     basePricingMax: '',
   });
 
-  // Admin Platform Settings State
-  const [platformSettings, setPlatformSettings] = useState({
-    commissionRate: '5.0',
-    autoApproveTailors: false,
-    maintenanceMode: false,
-    announcementBanner: 'Welcome to StitchMatch Atelier Platform! Quality custom tailoring verified.',
-    specialtiesList: ['Bespoke Suits', 'Tuxedos', 'Evening Gowns', 'Bridal Wear', 'Alterations', 'Silk Dresses', 'Overcoats'],
-    newSpecialty: '',
-  });
-
   // User Preferences Form
   const [preferencesForm, setPreferencesForm] = useState({
     emailNotifications: true,
@@ -74,30 +65,8 @@ export default function Settings() {
       if (user.role === 'tailor') {
         loadTailorProfile();
       }
-      if (user.role === 'admin') {
-        loadPlatformSettings();
-      }
     }
   }, [user]);
-
-  const loadPlatformSettings = async () => {
-    try {
-      const res = await settingsAPI.getAll();
-      if (res.data?.settings) {
-        const s = res.data.settings;
-        setPlatformSettings((prev) => ({
-          ...prev,
-          commissionRate: String(s.commissionRate || '5.0'),
-          autoApproveTailors: Boolean(s.autoApproveTailors),
-          maintenanceMode: Boolean(s.maintenanceMode),
-          announcementBanner: s.announcementBanner || '',
-          specialtiesList: Array.isArray(s.specialtiesList) ? s.specialtiesList : prev.specialtiesList,
-        }));
-      }
-    } catch (err) {
-      console.error('Failed to load platform settings', err);
-    }
-  };
 
   useEffect(() => {
     if (!message) return;
@@ -120,7 +89,7 @@ export default function Settings() {
         }));
       }
     } catch (err) {
-      console.error('Failed to load tailor details', err);
+      console.error('Failed to load tailor profile', err);
     }
   };
 
@@ -129,7 +98,6 @@ export default function Settings() {
     setSaving(true);
     setMessage(null);
     try {
-      // Update basic user profile
       await usersAPI.updateMe({
         name: profileForm.name,
         phone: profileForm.phone,
@@ -153,42 +121,6 @@ export default function Settings() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleSavePlatformSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage(null);
-    try {
-      const payload = {
-        commissionRate: platformSettings.commissionRate,
-        autoApproveTailors: platformSettings.autoApproveTailors,
-        maintenanceMode: platformSettings.maintenanceMode,
-        announcementBanner: platformSettings.announcementBanner,
-        specialtiesList: platformSettings.specialtiesList,
-      };
-      await settingsAPI.update(payload);
-      setMessage({ type: 'success', text: t('settings.savedSuccess') });
-    } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.error || 'Failed to save platform settings.' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAddSpecialtyTag = () => {
-    if (!platformSettings.newSpecialty.trim()) return;
-    setPlatformSettings({
-      ...platformSettings,
-      specialtiesList: [...platformSettings.specialtiesList, platformSettings.newSpecialty.trim()],
-      newSpecialty: '',
-    });
-  };
-
-  const handleRemoveSpecialtyTag = (index: number) => {
-    const next = [...platformSettings.specialtiesList];
-    next.splice(index, 1);
-    setPlatformSettings({ ...platformSettings, specialtiesList: next });
   };
 
   const handleSavePreferences = (e: React.FormEvent) => {
@@ -240,6 +172,7 @@ export default function Settings() {
       </div>
 
       {/* Settings Tab Navigation */}
+      {/* Tabs Header */}
       <div className="flex border-b border-gray-200 dark:border-gray-700 space-x-4 overflow-x-auto">
         {user?.role === 'admin' && (
           <button
@@ -251,7 +184,7 @@ export default function Settings() {
             }`}
           >
             <Shield className="h-4 w-4" />
-            <span>Platform Settings</span>
+            <span>{t('settings.tabs.platform')}</span>
           </button>
         )}
 
@@ -306,125 +239,33 @@ export default function Settings() {
 
       {/* TAB 1: PLATFORM SETTINGS (Admin Only) */}
       {activeTab === 'platform' && user?.role === 'admin' && (
-        <form onSubmit={handleSavePlatformSettings} className="space-y-6">
-          <div className="card space-y-4">
-            <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <Sliders className="h-5 w-5 mr-2 text-primary-600" />
-              Platform Controls & Rates
-            </h2>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  <Percent className="h-4 w-4 inline mr-1" /> Platform Commission Rate (%)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="30"
-                  value={platformSettings.commissionRate}
-                  onChange={(e) => setPlatformSettings({ ...platformSettings, commissionRate: e.target.value })}
-                  className="input-field text-sm"
-                  required
-                />
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
-                  Standard commission percentage charged per completed order agreement.
+        <div className="card space-y-6">
+          <div className={`p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            isDark 
+              ? 'bg-gradient-to-r from-purple-950/40 via-gray-800 to-gray-900 border-purple-800/40 text-white' 
+              : 'bg-gradient-to-r from-purple-50 via-white to-purple-50/50 border-purple-200 text-gray-900'
+          }`}>
+            <div className="flex items-start space-x-3.5">
+              <div className="p-3 rounded-2xl bg-purple-600 text-white shadow-md flex-shrink-0">
+                <Shield className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold">{t('admin.title')}</h2>
+                <p className={`text-xs max-w-xl leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                  {t('admin.subtitle')}
                 </p>
               </div>
-
-              <div className="flex flex-col justify-center space-y-3 pt-2">
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={platformSettings.autoApproveTailors}
-                    onChange={(e) => setPlatformSettings({ ...platformSettings, autoApproveTailors: e.target.checked })}
-                    className="w-4 h-4 rounded text-primary-600 focus:ring-primary-500"
-                  />
-                  <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
-                    Auto-Approve New Tailor Registrations
-                  </span>
-                </label>
-
-                <label className="flex items-center space-x-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={platformSettings.maintenanceMode}
-                    onChange={(e) => setPlatformSettings({ ...platformSettings, maintenanceMode: e.target.checked })}
-                    className="w-4 h-4 rounded text-red-600 focus:ring-red-500"
-                  />
-                  <span className={`text-sm font-medium ${isDark ? 'text-red-300' : 'text-red-700'}`}>
-                    Enable System Maintenance Mode
-                  </span>
-                </label>
-              </div>
             </div>
 
-            <div>
-              <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                System Announcement Banner
-              </label>
-              <input
-                type="text"
-                value={platformSettings.announcementBanner}
-                onChange={(e) => setPlatformSettings({ ...platformSettings, announcementBanner: e.target.value })}
-                className="input-field text-sm"
-                placeholder="Broadcast message displayed to all platform users..."
-              />
-            </div>
+            <Link
+              to="/admin"
+              className="btn-primary text-sm font-bold flex items-center space-x-2 whitespace-nowrap self-start sm:self-auto shadow-md"
+            >
+              <span>{t('admin.title')}</span>
+              <ExternalLink className="w-4 h-4" />
+            </Link>
           </div>
-
-          {/* Specialty Tags */}
-          <div className="card space-y-4">
-            <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              <Tag className="h-5 w-5 mr-2 text-primary-600" />
-              Tailor Specialty Categories Manager
-            </h2>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add new specialty category (e.g. Leather Coats)..."
-                value={platformSettings.newSpecialty}
-                onChange={(e) => setPlatformSettings({ ...platformSettings, newSpecialty: e.target.value })}
-                className="input-field text-sm flex-1"
-              />
-              <button
-                type="button"
-                onClick={handleAddSpecialtyTag}
-                className="btn-secondary text-sm flex items-center space-x-1"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Specialty Tag</span>
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              {platformSettings.specialtiesList.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${
-                    isDark ? 'bg-gray-700 text-gray-200 border border-gray-600' : 'bg-gray-100 text-gray-800 border border-gray-200'
-                  }`}
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSpecialtyTag(idx)}
-                    className="ml-2 hover:text-red-500"
-                  >
-                    <XCircle className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2">
-            <Save className="h-4 w-4" />
-            <span>{saving ? 'Saving...' : 'Save Platform Settings'}</span>
-          </button>
-        </form>
+        </div>
       )}
 
       {/* TAB 2: PROFILE SETTINGS */}
@@ -433,59 +274,56 @@ export default function Settings() {
           <div className="card space-y-4">
             <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <User className="h-5 w-5 mr-2 text-primary-600" />
-              Personal Profile Information
+              {t('settings.profileSection.personalTitle')}
             </h2>
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Display Name
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  {t('settings.profileSection.nameLabel')} *
                 </label>
                 <input
                   type="text"
                   value={profileForm.name}
                   onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                  className="input-field text-sm"
+                  className="input-field text-sm font-semibold"
                   required
                 />
               </div>
 
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Phone Number
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  {t('settings.profileSection.phoneLabel')}
                 </label>
                 <input
                   type="text"
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className="input-field text-sm"
-                  placeholder="+1 (555) 000-0000"
+                  className="input-field text-sm font-semibold"
                 />
               </div>
 
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Location / Address
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  {t('settings.profileSection.locationLabel')}
                 </label>
                 <input
                   type="text"
                   value={profileForm.location}
                   onChange={(e) => setProfileForm({ ...profileForm, location: e.target.value })}
-                  className="input-field text-sm"
-                  placeholder="City, State, Country"
+                  className="input-field text-sm font-semibold"
                 />
               </div>
 
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Avatar Image URL
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  {t('settings.profileSection.avatarLabel')}
                 </label>
                 <input
                   type="url"
                   value={profileForm.avatarUrl}
                   onChange={(e) => setProfileForm({ ...profileForm, avatarUrl: e.target.value })}
-                  className="input-field text-sm"
-                  placeholder="https://..."
+                  className="input-field text-sm font-semibold"
                 />
               </div>
             </div>
@@ -496,46 +334,43 @@ export default function Settings() {
             <div className="card space-y-4">
               <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 <Scissors className="h-5 w-5 mr-2 text-primary-600" />
-                Tailor Atelier & Craftsmanship Details
+                {t('settings.profileSection.tailorTitle')}
               </h2>
 
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  Professional Bio & Experience
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  {t('settings.profileSection.bioLabel')}
                 </label>
                 <textarea
                   value={profileForm.bio}
                   onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                  className="input-field text-sm"
+                  className="input-field text-sm font-semibold"
                   rows={4}
-                  placeholder="Describe your tailoring heritage, craftsmanship techniques, and specialty garments..."
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    {t('tailors.startingFrom')} ($)
+                  <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                    {t('settings.profileSection.startingMin')}
                   </label>
                   <input
                     type="number"
                     value={profileForm.basePricingMin}
                     onChange={(e) => setProfileForm({ ...profileForm, basePricingMin: e.target.value })}
-                    className="input-field text-sm"
-                    placeholder="e.g. 350"
+                    className="input-field text-sm font-semibold"
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    Max Pricing ($)
+                  <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                    {t('settings.profileSection.startingMax')}
                   </label>
                   <input
                     type="number"
                     value={profileForm.basePricingMax}
                     onChange={(e) => setProfileForm({ ...profileForm, basePricingMax: e.target.value })}
-                    className="input-field text-sm"
-                    placeholder="e.g. 1800"
+                    className="input-field text-sm font-semibold"
                   />
                 </div>
               </div>
@@ -544,7 +379,7 @@ export default function Settings() {
 
           <button type="submit" disabled={saving} className="btn-primary flex items-center space-x-2">
             <Save className="h-4 w-4" />
-            <span>{saving ? t('auth.loading') : t('common.save')}</span>
+            <span>{saving ? t('common.loading') : t('common.save')}</span>
           </button>
         </form>
       )}
@@ -641,14 +476,14 @@ export default function Settings() {
         <form onSubmit={handleSavePreferences} className="card space-y-4">
           <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <Bell className="h-5 w-5 mr-2 text-primary-600" />
-            Notification Channels & Alerts
+            {t('settings.notificationsSection.title')}
           </h2>
 
           <div className="space-y-3">
             <label className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 cursor-pointer">
               <div>
-                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>In-App Notification Sounds</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Play audio chime when new messages or status updates arrive.</p>
+                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('settings.notificationsSection.inAppSound')}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('settings.notificationsSection.inAppSoundDesc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -660,8 +495,8 @@ export default function Settings() {
 
             <label className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 cursor-pointer">
               <div>
-                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Order Stage Milestone Alerts</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Receive instant notifications when order moves between cutting, sewing, and fitting.</p>
+                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('settings.notificationsSection.orderUpdates')}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('settings.notificationsSection.orderUpdatesDesc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -673,8 +508,8 @@ export default function Settings() {
 
             <label className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 cursor-pointer">
               <div>
-                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Email Notifications</p>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Receive email digests for unread messages and counter-offers.</p>
+                <p className={`font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('settings.notificationsSection.email')}</p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('settings.notificationsSection.emailDesc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -697,12 +532,12 @@ export default function Settings() {
         <form onSubmit={handleSaveSecurity} className="card space-y-4 max-w-xl">
           <h2 className={`font-semibold text-lg flex items-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
             <Lock className="h-5 w-5 mr-2 text-primary-600" />
-            Security & Password Change
+            {t('settings.securitySection.title')}
           </h2>
 
           <div>
             <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              Current Password
+              {t('settings.securitySection.currentPassword')}
             </label>
             <input
               type="password"
@@ -715,7 +550,7 @@ export default function Settings() {
 
           <div>
             <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              New Password
+              {t('settings.securitySection.newPassword')}
             </label>
             <input
               type="password"
@@ -728,7 +563,7 @@ export default function Settings() {
 
           <div>
             <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-              Confirm New Password
+              {t('settings.securitySection.confirmPassword')}
             </label>
             <input
               type="password"

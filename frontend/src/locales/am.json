@@ -1,6 +1,6 @@
 {
   "nav": {
-    "brand": "ስቲችማች",
+    "brand": "የደስደስ ፋሽን",
     "tagline": "የዘመናዊ ብጁ ልብስ ስፌት መድረክ",
     "requests": "የትዕዛዝ ዝርዝር",
     "findTailors": "ልብስ ሰፊ ፈልግ",
@@ -61,14 +61,28 @@
     },
     "howItWorks": {
       "badge": "ቀላል የ 3 ደረጃዎች ሂደት",
-      "title": "ስቲችማች እንዴት ይሰራል?",
+      "title": "የደስደስ Fashion እንዴት ይሰራል?",
       "subtitle": "ከዲጂታል ልኬት እስከ ደጃፍዎ ድረስ፤ ብጁ ልብስ ማሰፋት አሁን ከምንጊዜውም በላይ ቀላል ሆኗል።",
       "step1Title": "1. በ AI ካሜራ ወይም በእጅ መለኪያ ይውሰዱ",
       "step1Desc": "በስልክዎ ካሜራ የ 3D የሰውነት ልኬት ይውሰዱ ወይም የተዘጋጀውን መመሪያ በመከተል ትክክለኛ የሰውነት መለኪያዎን ያስገቡ።",
       "step2Title": "2. ከተመረጡ ልብስ ሰፊዎች ጋር ይገናኙ",
       "step2Desc": "ያለፉ ስራዎቻቸውን ይመልከቱ፣ በቀጥታ የቪዲዮ ጥሪ ጨርቅና ዲዛይን ይምረጡ፣ በስምምነት ውል ትዕዛዝዎን ያረጋግጡ።",
       "step3Title": "3. በእጅ ተሰፍቶ በተሟላ ልኬት ይረከቡ",
-      "step3Desc": "ባለሙያው ልብስዎን በከፍተኛ ጥንቃቄ ይሰፋል። ክፍያዎ በአስተማማኝ ሁኔታ ተይዞ የሚለቀቀው ልብሱን ተረክበው ሲያጸድቁ ብቻ ነው።"
+      "step3Desc": "ባለሙያው ልብስዎን በከፍተኛ ጥንቃቄ ይሰፋል። ክፍያዎ በአስተማማኝ ሁኔታ ተይዞ የሚለቀቀው ልብሱን ተረክበው ሲያጸድቁ ብቻ ነው።",
+      "viewStepDetails": "የደረጃውን ዝርዝር እና መመሪያ እይ",
+      "learnMore": "ተጨማሪ እይ",
+      "modal": {
+        "step1Details": "ትክክለኛ የሰውነት መለኪያ ለምርጥ ልብስ ስፌት መሰረት ነው። የ AI ካሜራ ስካነር በመጠቀም በ 60 ሰከንድ ውስጥ መለኪያ መውሰድ ይችላሉ፣ ወይም የተዘጋጀውን መመሪያ መከተል ይችላሉ።",
+        "step1Tip": "ምክር: ለስካነሩ ትክክለኛነት የተጣበቀ ልብስ ይልበሱ እና ጥሩ ብርሃን ባለበት ቦታ ይቁሙ።",
+        "step1Cta": "የ AI ካሜራ ስካነር ጀምር",
+        "step1CtaGuide": "የመለኪያ መመሪያ እይ",
+        "step2Details": "እንደ ሙያቸው አይነት፣ ቀደምት ስራዎቻቸው እና ደንበኞች በሰጧቸው ደረጃ መሰረት ምርጥ ሰፊ ይምረጡ። በቪዲዮ ጥሪ ፊት ለፊት ተገናኝተው ስለ ዲዛይኑ ይወያዩ።",
+        "step2Tip": "ምክር: የሚፈልጉትን የዲዛይን ፎቶ እና የጨርቅ ምርጫዎን በውይይት መስኮቱ ያጋሩ።",
+        "step2Cta": "ባለሙያ ሰፊዎችን ፈልግ",
+        "step3Details": "ልብስዎ በከፍተኛ ጥራት ይዘጋጃል። ክፍያዎ በዋስትና (ኤስክሮው) ተይዞ ልብሱ ደርሶዎት ሙሉ በሙሉ እስኪረኩ ድረስ ለሰፊው አይተላለፍም።",
+        "step3Tip": "ምክር: ልብሱ ማስተካከያ ቢያስፈልገው መድረኩ የማስተካከል ድጋፍ ዋስትና ይሰጣል።",
+        "step3Cta": "የስፌት ትዕዛዝ ጀምር"
+      }
     },
     "features": {
       "badge": "ዘመናዊ ጥበብ እና ቴክኖሎጂ",
@@ -118,11 +132,11 @@
       "privacy": "የግላዊነት ፖሊሲ",
       "terms": "የአጠቃቀም ደንቦች",
       "security": "የደህንነት ጥበቃ",
-      "copyright": "© 2026 ስቲችማች (StitchMatch). መብቱ በህግ የተጠበቀ ነው።"
+      "copyright": "© 2026 የደስደስ ፋሽን (Yedesdes Fashion). መብቱ በህግ የተጠበቀ ነው።"
     }
   },
   "join": {
-    "title": "ስቲችማችን ይቀላቀሉ",
+    "title": "የደስደስ ፋሽንን ይቀላቀሉ",
     "subtitle": "የብጁ ልብስ ስፌትን የወደፊት ጉዞ እንዴት መጀመር እንደሚፈልጉ ይምረጡ",
     "customerTitle": "ደንበኛ ነኝ",
     "customerRole": "ደንበኛ / ፋሽን ወዳድ",
@@ -150,7 +164,7 @@
     "signInTitle": "እንኳን ደህና መጡ",
     "signInSubtitle": "ትዕዛዞችዎን፣ መልዕክቶችዎን እና መለኪያዎችዎን ለማየት ይግቡ",
     "registerTitle": "አዲስ አካውንት ይፍጠሩ",
-    "registerSubtitle": "ብጁ ልብሶችን ለማሰፋት ወይም ለመስፋት ስቲችማችን ይቀላቀሉ",
+    "registerSubtitle": "ብጁ ልብሶችን ለማሰፋት ወይም ለመስፋት የደስደስ ፋሽንን ይቀላቀሉ",
     "emailLabel": "የኢሜይል አድራሻ",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "የይለፍ ቃል",
@@ -168,7 +182,7 @@
     "signUpNow": "ይመዝገቡ",
     "alreadyAccount": "ቀደም ሲል ተመዝግበዋል?",
     "loginSuccess": "በተሳካ ሁኔታ ገብተዋል!",
-    "registerSuccess": "አካውንትዎ በተሳካ ሁኔታ ተፈጥሯል! እንኳን ወደ ስቲችማች በደህና መጡ።",
+    "registerSuccess": "አካውንትዎ በተሳካ ሁኔታ ተፈጥሯል! እንኳን ወደ የደስደስ ፋሽን በደህና መጡ።",
     "errorInvalid": "ትክክል ያልሆነ ኢሜይል ወይም የይለፍ ቃል",
     "errorGeneric": "ስህተት ተከስቷል። እባክዎ እንደገና ይሞክሩ።"
   },
@@ -207,18 +221,54 @@
   "tailors": {
     "title": "ባለሙያ ልብስ ሰፊዎችን ይፈልጉ",
     "subtitle": "ለእርስዎ ዘይቤ የሚስማሙ የተረጋገጡ ባለሙያዎችን እና ዲዛይነሮችን ያግኙ",
-    "searchPlaceholder": "በስም፣ በስፌት አይነት፣ በከተማ ወይም በአካባቢ ይፈልጉ...",
-    "filterAllSpecialties": "ሁሉም የስፌት አይነቶች",
+    "pageSubtitle": "ለልብስዎ ተስማሚ የሆነ ምርጥ ባለሙያ ሰፊ ያግኙ።",
+    "searchPlaceholder": "በስም ወይም በአካባቢ ይፈልጉ...",
+    "filterAllSpecialties": "ሁሉም ሙያዎች",
     "filterRating": "ደረጃ 4.5+",
     "filterVerified": "የተረጋገጡ ብቻ",
+    "minRating": "ዝቅተኛ ደረጃ:",
+    "ratingAny": "ማንኛውም",
+    "maxPrice": "ከፍተኛ ዋጋ:",
+    "filterBtn": "አጣራ",
     "experience": "ዓመታት ልምድ",
     "reviewsCount": "ግምገማዎች",
     "startingFrom": "መነሻ ዋጋ",
+    "fromPrice": "ከ ${{price}}",
+    "priceRange": "${{min}} - ${{max}}",
+    "customQuote": "ብጁ ዋጋ",
+    "newTailor": "አዲስ ሰፊ",
+    "locationOnRequest": "አድራሻ በጠያቂነት",
     "viewProfile": "የባለሙያውን መገለጫ እይ",
     "message": "መልዕክት ላክ",
     "orderCustom": "የስፌት ትዕዛዝ ጠይቅ",
     "empty": "ከፍለጋዎ ጋር የሚዛመድ ልብስ ሰፊ አልተገኘም።",
-    "resetFilter": "ፍለጋውን አድስ"
+    "emptyTitle": "ከመስፈርትዎ ጋር የሚዛመድ ባለሙያ አልተገኘም",
+    "emptyDesc": "እባክዎ የስፌት አይነት ማጣሪያን፣ ዝቅተኛ ደረጃን ወይም የፍለጋ ቃልዎን ያሰፉ።",
+    "resetFilter": "ማጣሪያዎችን ዳግም አስጀምር"
+  },
+  "specialties": {
+    "all": "ሁሉም ሙያዎች",
+    "Suits & Tuxedos": "ሱፍ እና ቱክሲዶ",
+    "Bespoke Suits": "ብጁ ሱፍ",
+    "Tuxedos": "ቱክሲዶ",
+    "Traditional / Habesha Kemis": "ባህላዊ / የሀበሻ ቀሚስ",
+    "Traditional Habesha & Cultural": "ባህላዊ የሀበሻ ልብሶች",
+    "Habesha Kemis": "የሀበሻ ቀሚስ",
+    "Wedding & Bridal": "የሰርግ እና የሙሽራ ልብስ",
+    "Bridal Wear": "የሙሽራ ልብስ",
+    "Alterations & Repairs": "ማስተካከል እና መጠገን",
+    "Alterations": "ማስተካከል",
+    "Leather & Outerwear": "የቆዳ እና የውጭ ልብሶች",
+    "Overcoats": "ካፖርት እና ኮት",
+    "Dresses & Gowns": "ቀሚሶች እና ጋውን",
+    "Evening Gowns": "የምሽት ቀሚሶች",
+    "Silk Dresses": "የሀር ቀሚስ",
+    "Casual & Everyday Wear": "የዕለት ተዕለት ልብስ",
+    "Casual & Custom Streetwear": "ዘመናዊ እና የዕለት ተዕለት ልብስ",
+    "Blazers & Jackets": "ብሌዘር እና ጃኬቶች",
+    "Embroidery & Custom Stitching": "ጥልፍ እና ልዩ ስፌት",
+    "Uniforms & Workwear": "ዩኒፎርም እና የስራ ልብስ",
+    "Children & Teens": "የልጆች እና ታዳጊዎች ልብስ"
   },
   "measurements": {
     "title": "የሰውነት መለኪያዎች",
@@ -248,32 +298,50 @@
       "neckDesc": "የሸሚዝ አንገትጌ በሚያርፍበት የአንገት ስር ዙሪያ"
     },
     "scannerModal": {
-      "title": "የ AI 3D ካሜራ የሰውነት መለኪያ",
-      "subtitle": "በኮምፒውተር እይታ ቴክኖሎጂ የተደገፈ ፈጣን እና ደህንነቱ የተጠበቀ 3D መለኪያ",
-      "stepFront": "1. የፊት ገጽታ አቋም",
-      "stepSide": "2. የጎን ገጽታ አቋም",
-      "stepBack": "3. የጀርባ ገጽታ አቋም",
-      "stepReview": "4. ግምገማ እና AI",
-      "alignVertical": "ካሜራውን ቀጥ አድርጉ",
-      "target90": "ዒላማ 90°",
-      "verticalLocked": "90° ቀጥታ ተቆልፏል",
-      "desktopReady": "ዴስክቶፕ / የካሜራ ዥረት ዝግጁ ነው",
-      "landmarksLocked": "የ 33ቱ የሰውነት ነጥቦች ተቆልፈዋል (33/33)",
-      "startingCamera": "የካሜራ ዥረት በመጀመር ላይ...",
-      "cameraError": "ለ AI ልኬት የካሜራ ፍቃድ ያስፈልጋል።",
-      "tryAgain": "እንደገና ሞክር",
-      "holdPose": "አቋምዎን ጠብቀው ቀጥ ብለው ይመልከቱ!",
-      "allPosesCaptured": "ሦስቱም አቋሞች በተሳካ ሁኔታ ተነስተዋል",
-      "reviewTitle": "የመለኪያ ፎቶዎችዎን ይገምግሙ",
-      "reviewDesc": "ወደ AI መለኪያ ስሌት ከማስተላለፍዎ በፊት ሙሉ ሰውነትዎ በሦስቱም ማዕዘናት መታየቱን ያረጋግጡ።",
-      "missing": "ጎድሏል",
-      "retake": "እንደገና አንሳ",
-      "privacyNote": "ፎቶዎችዎ የተመሰጠሩ እና በስፌት መለኪያ ሞዴሎቻችን ብቻ በከፍተኛ ደህንነት የሚሰሩ ናቸው።",
-      "snapImmediately": "አሁን አንሳ",
-      "startTimer": "የ 5 ሰከንድ ቆጣሪ ጀምር",
-      "capturingIn": "በ {{count}} ሰከንድ ውስጥ ይነሳል...",
-      "backToCamera": "ወደ ካሜራ ተመለስ",
-      "processWithAI": "በ AI ስሌቱን ጀምር"
+      "title": "የ AI ሰውነት መለኪያ ካሜራ",
+      "badge": "የቀጥታ AR",
+      "steps": {
+        "height": "1. ቁመት",
+        "front": "2. የፊት አቀማመጥ",
+        "side": "3. የጎን አቀማመጥ",
+        "review": "4. ማረጋገጫ"
+      },
+      "subtitles": {
+        "height": "የቁመትዎን መጠን ያስገቡ",
+        "front": "ካሜራውን ትይዩ ሆነው ቁሙ",
+        "side": "ወደ ጎን 90° ዞረው ቁሙ",
+        "review": "መለኪያዎ እንዲሰላ ያረጋግጡ"
+      },
+      "heightSection": {
+        "title": "የቁመትዎ መጠን",
+        "subtitle": "ትክክለኛ የሰውነት መለኪያዎችን ለማስላት ይጠቅማል።",
+        "cmTab": "ሳንቲሜትር (cm)",
+        "ftTab": "ጫማ እና ኢንች (ft/in)",
+        "tip": "ጠቃሚ ምክር፦ ከ 2–3 ሜትር ርቀት ላይ ቅርፅ በሚያሳይ ልብስ ቁሙ።"
+      },
+      "camera": {
+        "switchCamera": "ካሜራ ቀይር",
+        "snapPhoto": "ፎቶ አንሳ",
+        "startTimer": "የ 5 ሰከንድ ቆጣሪ",
+        "capturingIn": "በ {{count}} ሰከንድ ውስጥ ይነሳል...",
+        "holdPosture": "አይንቀሳቀሱ...",
+        "head": "ጭንቅላት",
+        "shoulders": "ትከሻ",
+        "hips": "ወገብ",
+        "ankles": "ቁርጭምጭሚት"
+      },
+      "review": {
+        "title": "የ 3D ልኬት ፎቶዎችዎን ያረጋግጡ",
+        "heightLabel": "የተመዘገበ ቁመት",
+        "frontView": "1. የፊት ገጽታ",
+        "sideView": "2. የጎን ገጽታ",
+        "retakeFront": "የፊቱን ድጋሚ አንሳ",
+        "retakeSide": "የጎኑን ድጋሚ አንሳ",
+        "privacyNote": "ፎቶዎችዎ በሚስጥር የተጠበቁ ናቸው።",
+        "backToCamera": "ወደ ካሜራ ተመለስ",
+        "computeBtn": "መለኪያዎችን አስላ"
+      },
+      "nextStep": "ወደ ካሜራ ቀጥል"
     },
     "photoGuide": {
       "modalTitle": "የ AI መለኪያ የፎቶ መመሪያ",
@@ -350,15 +418,43 @@
   "settings": {
     "title": "የአካውንት እና የመድረክ ቅንብሮች",
     "subtitle": "የመገለጫ፣ የቋንቋ፣ የአካባቢ እና የደህንነት ምርጫዎችዎን ያስተዳድሩ",
+    "savedSuccess": "ምርጫዎችዎ በተሳካ ሁኔታ ተመዝግበዋል!",
     "tabs": {
+      "platform": "የመድረክ ቅንብሮች",
       "profile": "የመገለጫ መረጃ",
       "language": "ቋንቋ እና አካባቢ",
       "security": "ደህንነት",
       "notifications": "ማሳወቂያዎች"
     },
+    "profileSection": {
+      "personalTitle": "የግል መገለጫ መረጃ",
+      "nameLabel": "የሚታይ ስም",
+      "phoneLabel": "ስልክ ቁጥር",
+      "locationLabel": "አድራሻ / ከተማ",
+      "avatarLabel": "የመገለጫ ፎቶ ሊንክ",
+      "tailorTitle": "የልብስ ስፌት ሱቅ እና የስራ መረጃ",
+      "bioLabel": "የስራ ልምድ እና ማብራሪያ",
+      "startingMin": "የመነሻ ዋጋ ($)",
+      "startingMax": "ከፍተኛ ዋጋ ($)"
+    },
+    "notificationsSection": {
+      "title": "የማሳወቂያ መስመሮች እና ጥሪዎች",
+      "inAppSound": "የመልዕክት እና የትዕዛዝ ድምጽ",
+      "inAppSoundDesc": "አዳዲስ መልዕክቶች ወይም የትዕዛዝ ለውጦች ሲመጡ ድምጽ አሰማ።",
+      "orderUpdates": "የትዕዛዝ ሂደት ማሳወቂያዎች",
+      "orderUpdatesDesc": "ትዕዛዝዎ ከመቁረጥ፣ ስፌት እና ሙከራ ደረጃዎች ሲሸጋገር ማሳወቂያ ይድረስዎ።",
+      "email": "የኢሜይል ማሳወቂያዎች",
+      "emailDesc": "ያልተነበቡ መልዕክቶች እና የዋጋ ድርድሮች በኢሜይል ይድረሱዎ።"
+    },
+    "securitySection": {
+      "title": "የደህንነት እና የይለፍ ቃል ለውጥ",
+      "currentPassword": "የአሁኑ ይለፍ ቃል",
+      "newPassword": "አዲስ ይለፍ ቃል",
+      "confirmPassword": "አዲሱን ይለፍ ቃል አረጋግጥ"
+    },
     "languageSection": {
-      "title": "ቋንቋ እና አካባቢ",
-      "desc": "የስቲችማች መድረክ የሚታይበትን ቋንቋ ይምረጡ",
+      "title": "የስርዓቱ ቋንቋ",
+      "desc": "የየደስደስ ፋሽን መድረክ የሚታይበትን ቋንቋ ይምረጡ",
       "selectLang": "የመድረኩ ቋንቋ",
       "enOption": "English (እንግሊዝኛ)",
       "amOption": "አማርኛ (Amharic - ኢትዮጵያ)",
@@ -371,6 +467,294 @@
       "saveBtn": "የቋንቋ ምርጫዎችን መዝግብ",
       "savedSuccess": "ምርጫዎችዎ በተሳካ ሁኔታ ተመዝግበዋል!"
     }
+  },
+  "admin": {
+    "title": "የአስተዳዳሪ ክፍል",
+    "subtitle": "የመድረክ አስተዳደር፣ የልብስ ሰፊዎች ማረጋገጫ፣ የአስተያየት ሳጥን እና የስርዓቱ ቅንብሮች",
+    "refreshBtn": "አድስ",
+    "totalTailors": "አጠቃላይ ልብስ ሰፊዎች",
+    "activeArtisans": "ንቁ የልብስ ሰፊ አካውንቶች",
+    "totalCustomers": "አጠቃላይ ደንበኞች",
+    "registeredClients": "የተመዘገቡ የደንበኛ አካውንቶች",
+    "pendingApprovals": "የማረጋገጫ ጥያቄዎች",
+    "requiresReview": "የአስተዳዳሪ ምርመራ የሚያስፈልጋቸው",
+    "clientFeedback": "የደንበኞች አስተያየት",
+    "unreadIssues": "ያልተነበቡ ሪፖርቶችና ጥቆማዎች",
+    "tabs": {
+      "approvals": "የማረጋገጫ ጥያቄዎች",
+      "users": "የተጠቃሚዎች ዝርዝር",
+      "feedback": "የአስተያየት ሳጥን",
+      "settings": "የመድረክ ቅንብሮች"
+    },
+    "usersTab": {
+      "searchPlaceholder": "ተጠቃሚዎችን በስም፣ ኢሜይል ወይም ሚና ፈልግ...",
+      "allRoles": "ሁሉም ሚናዎች",
+      "allStatuses": "ሁሉም ሁኔታዎች",
+      "nameCol": "ተጠቃሚ / ስም",
+      "roleCol": "ሚና",
+      "statusCol": "ሁኔታ",
+      "joinedCol": "የተመዘገበበት ቀን",
+      "actionsCol": "እርምጃዎች",
+      "deactivateBtn": "አግድ",
+      "activateBtn": "አንቃ",
+      "deleteBtn": "አጥፋ"
+    },
+    "approvalsTab": {
+      "noPending": "በአሁኑ ጊዜ በመጠባበቅ ላይ ያለ የልብስ ሰፊ ማመልከቻ የለም።",
+      "allCaughtUp": "ሁሉም የልብስ ሰፊ ማመልከቻዎች ተገምግመዋል።",
+      "approveBtn": "ልብስ ሰፊውን አጽድቅ",
+      "rejectBtn": "ማመልከቻውን ውድቅ አድርግ",
+      "location": "አድራሻ / ከተማ",
+      "experience": "የስራ ልምድ",
+      "years": "ዓመታት",
+      "specialties": "የስፌት ሙያዎች",
+      "pricing": "የመነሻ ዋጋ"
+    },
+    "feedbackTab": {
+      "title": "የደንበኞች እና የልብስ ሰፊዎች አስተያየት ሳጥን",
+      "subtitle": "የሲስተም ችግሮች፣ የባህሪ ጥቆማዎች እና አገልግሎት ግምገማዎችን ይገምግሙ",
+      "empty": "በዚህ ዘርፍ የተላከ አስተያየት የለም።",
+      "from": "የላከው",
+      "category": "ዘርፍ",
+      "date": "የተላከበት ቀን",
+      "resolveBtn": "አጥፋ / ጨርስ"
+    },
+    "settingsTab": {
+      "title": "የመድረክ አጠቃላይ ቅንብር እና ቁጥጥር",
+      "subtitle": "የማስታወቂያ መልዕክቶች፣ የመድረክ ኮሚሽን ተመን እና የስፌት አይነቶች ዝርዝር",
+      "announcementLabel": "የህዝብ ማስታወቂያ ሰሌዳ",
+      "commissionLabel": "የመድረክ የአገልግሎት ኮሚሽን (%)",
+      "maintenanceLabel": "የጥገና እና የእድሳት ሁነታ",
+      "specialtiesLabel": "የስፌት አይነቶች ዝርዝር",
+      "addSpecialty": "ዘርፍ ጨምር",
+      "aiSettingsTitle": "የ 3D ሰውነት ልኬት AI ሞዴል ቅንብር",
+      "aiSettingsSubtitle": "የ AI ልኬት አቅራቢዎችን ወይም የኤፒአይ (API) ቁልፍ በቀላሉ ይቀይሩ",
+      "providerName": "የ AI ሞዴል አቅራቢ",
+      "apiKeyLabel": "የኤፒአይ ቁልፍ (API Key)",
+      "modelLabel": "የሞዴል ስም",
+      "baseUrlLabel": "የኤፒአይ አድራሻ (Base URL)",
+      "saveSettingsBtn": "ቅንብሮችን መዝግብ",
+      "testAIBtn": "የ AI ግንኙነት ፈትሽ"
+    }
+  },
+  "tailorProfile": {
+    "about": "ስለ ባለሙያው",
+    "specialties": "የስፌት ሙያዎች",
+    "experience": "የስራ ልምድ",
+    "startingPrice": "የመነሻ ዋጋ",
+    "rating": "ደረጃ",
+    "reviews": "ግምገማዎች",
+    "verifiedTailor": "የተረጋገጠ ባለሙያ ልብስ ሰፊ",
+    "newTailor": "አዲስ የተመዘገበ ልብስ ሰፊ",
+    "tabs": {
+      "about": "አጠቃላይ መረጃ",
+      "catalog": "የስራዎች አልበም እና ካታሎግ",
+      "reviews": "የደንበኞች ግምገማዎች"
+    },
+    "catalog": {
+      "title": "የልብስ ሰፊው አልበም",
+      "subtitle": "የተሰፉ ልብሶች ካታሎግ እና ማሳያ",
+      "noProducts": "ይህ ልብስ ሰፊ እስካሁን ምንም የካታሎግ ልብስ አልጫነም። በትዕዛዝ መስጫው ቅጽ በኩል ብጁ ልብስ ማዘዝ ይችላሉ።",
+      "garments": "ልብሶች"
+    },
+    "booking": {
+      "title": "የስፌት አገልግሎት እዘዝ",
+      "subtitle": "በትክክለኛ ልኬትዎ መሰረት ብጁ ልብስ ያሰፉ",
+      "garmentType": "የልብሱ አይነት *",
+      "fabricPreference": "የጨርቅ ምርጫ",
+      "budget": "የታሰበው ዋጋ ($) *",
+      "deadline": "የሚፈለግበት የመጨረሻ ቀን *",
+      "description": "የዲዛይን ዝርዝር እና ማብራሪያ *",
+      "submitBtn": "ትዕዛዝ ላክ",
+      "signInPrompt": "ከዚህ ልብስ ሰፊ ልብስ ለማዘዝ እንደ ደንበኛ ይግቡ።"
+    },
+    "adminCard": {
+      "title": "የልብስ ሰፊው አስተዳደር",
+      "subtitle": "የአስተዳዳሪ እይታ",
+      "status": "የማመልከቻ ሁኔታ",
+      "manageBtn": "በአስተዳዳሪ ገጽ አስተዳድር",
+      "messageBtn": "ቀጥታ መልዕክት ላክ"
+    },
+    "selfCard": {
+      "title": "የእርስዎ የህዝብ መገለጫ",
+      "subtitle": "አገልግሎትዎ፣ ዋጋዎ እና የስራዎች ካታሎግዎ ለደንበኞች የሚታየው በዚህ መንገድ ነው።",
+      "editBtn": "መገለጫ እና ካታሎግ አስተካክል"
+    },
+    "colleagueCard": {
+      "title": "የልብስ ሰፊው መረጃ",
+      "subtitle": "ቀጥታ መልዕክት",
+      "description": "ስለ ስፌት ስራዎች ለመወያየት ወይም ጨርቆችን ለመምረጥ ከ {{name}} ጋር ይገናኙ።",
+      "messageBtn": "መልዕክት ላክ"
+    }
+  },
+  "requestDetail": {
+    "backBtn": "ወደ ትዕዛዞች ተመለስ",
+    "printSpecSheet": "የስፌት መለኪያ ዝርዝር አትም",
+    "chatBtn": "መልዕክት",
+    "detailsTitle": "የትዕዛዝ መረጃ",
+    "garmentType": "የልብሱ አይነት",
+    "status": "የትዕዛዝ ሁኔታ",
+    "tailor": "የተመረጠው ልብስ ሰፊ",
+    "customer": "ደንበኛ",
+    "budget": "የተስማሙበት ዋጋ",
+    "deadline": "የተስማሙበት ቀን",
+    "fabric": "የጨርቅ ምርጫ",
+    "notes": "ተጨማሪ ማስታወሻዎች",
+    "measurementsTitle": "የተያያዘ የሰውነት ልኬት",
+    "measurementsSubtitle": "ከዚህ ትዕዛዝ ጋር የተያያዙ ትክክለኛ የሰውነት መለኪያዎች",
+    "aiCameraScan": "በ AI 3D ካሜራ ለካ",
+    "manualGuide": "የመለኪያ መመሪያ",
+    "statusStages": {
+      "pending": "በመጠባበቅ ላይ",
+      "underDiscussion": "በውይይት ላይ",
+      "agreed": "ስምምነት ተረጋግጧል",
+      "inProgress": "በስፌት ሂደት ላይ",
+      "completed": "ተጠናቆ የተረከበ",
+      "cancelled": "የተሰረዘ"
+    },
+    "negotiation": {
+      "title": "የዋጋ እና የውል ስምምነት ድርድር",
+      "subtitle": "ስፌቱ ከመጀመሩ በፊት በዋጋ፣ በቀን እና በልኬት ማስተካከያ ላይ ይስማሙ",
+      "proposeBtn": "የድርድር ጥያቄ አቅርብ",
+      "acceptBtn": "ስምምነቱን ተቀበል",
+      "declineBtn": "ስምምነቱን ውድቅ አድርግ",
+      "proposedPrice": "የቀረበው ዋጋ ($)",
+      "proposedDeadline": "የቀረበው ቀን",
+      "notes": "የድርድር ማስታወሻ"
+    },
+    "review": {
+      "title": "ልብስ ሰፊውን ይገምግሙ እና ደረጃ ይስጡ",
+      "subtitle": "የስፌቱን ጥራት፣ የልኬት ትክክለኛነት እና አገልግሎቱን ደረጃ ይስጡ።",
+      "yourRating": "የእርስዎ ደረጃ",
+      "feedbackPlaceholder": "ስለ ስፌቱ ጥራት፣ ልኬት እና አገልግሎት አስተያየትዎን ያጋሩ...",
+      "submitBtn": "ግምገማ አስገባ",
+      "verifiedReview": "የተረጋገጠ ግምገማ",
+      "tailorReply": "የልብስ ሰፊው ምላሽ",
+      "replyPrompt": "ለደንበኛው ግምገማ ምላሽ ይስጡ",
+      "postReplyBtn": "ምላሽ ላክ"
+    }
+  },
+  "feedback": {
+    "title": "አስተያየት ይስጡ",
+    "subtitle": "የየደስደስ ፋሽን መድረክን ልምድ እንድናሻሽል ይርዱን",
+    "categoryLabel": "የአስተያየት ዘርፍ",
+    "messageLabel": "መልዕክትዎ / ዝርዝር አስተያየት",
+    "messagePlaceholder": "ያጋጠመዎትን ችግር ይግለጹ ወይም ጥቆማዎን ያጋሩ...",
+    "submitBtn": "አስተያየት ላክ",
+    "submitting": "በመላክ ላይ...",
+    "success": "አመሰግናለሁ! አስተያየትዎ ለአስተዳዳሪ ቡድናችን ተልኳል።",
+    "categories": {
+      "general": "አጠቃላይ አስተያየት",
+      "bug": "የሲስተም ችግር / ብልሽት ሪፖርት",
+      "feature": "አዲስ የባህሪ ጥቆማ",
+      "tailorExperience": "የልብስ ሰፊዎች ልምድ",
+      "fitting": "የ AI 3D ካሜራ / ልኬት",
+      "payment": "ክፍያ እና ዋስትና (Escrow)"
+    }
+  },
+  "profile": {
+    "customer": {
+      "title": "የደንበኛ መገለጫ",
+      "subtitle": "የመለያ መረጃዎን እና የ 3D ሰውነት መለኪያ ካዝናዎን ያስተዳድሩ",
+      "basicInfo": "መሰረታዊ የመለያ መረጃ",
+      "fullName": "ሙሉ ስም",
+      "email": "ኢሜይል (ሊቀየር የማይችል)",
+      "phone": "ስልክ ቁጥር",
+      "city": "ከተማ / ክልል",
+      "photo": "የመገለጫ ፎቶ",
+      "uploadHint": "ፎቶ ለመጫን እዚህ ይጫኑ ወይም ይጎትቱ",
+      "saveDetails": "መረጃዎችን መዝግብ",
+      "saving": "በመመዝገብ ላይ...",
+      "vaultTitle": "የደንበኛ መገለጫ እና የ 3D ሰውነት መለኪያ ካዝና",
+      "vaultBadge": "በ 1-ክሊክ ዝግጁ",
+      "vaultSubtitle": "ለብጁ ልብስ ስፌት ትዕዛዞች የሚያገለግል ዲጂታል የሰውነት መለኪያ",
+      "editVaultBtn": "መለኪያዎችን አስተካክል",
+      "saveVaultBtn": "መለኪያዎችን መዝግብ",
+      "emptyVault": "እስካሁን የተመዘገበ የሰውነት መለኪያ የለም",
+      "emptyVaultDesc": "የሰውነት መለኪያዎን አንድ ጊዜ በመመዝገብ በማንኛውም ልብስ ሰፊ ዘንድ በ 1-ክሊክ ብጁ ልብስ ያሰፉ።",
+      "enterMeasurementsBtn": "የሰውነት መለኪያዎችን አስገባ",
+      "verifiedNote": "ለቀጥታ የልብስ ስፌት ትዕዛዝ የተረጋገጡ ትክክለኛ ልኬቶች።",
+      "calibratedOn": "የተመዘገበው",
+      "chest": "የደረት ዙሪያ (cm)",
+      "waist": "የወገብ ዙሪያ (cm)",
+      "hip": "የዳሌ እና መቀመጫ (cm)",
+      "inseam": "የእግር ርዝመት (cm)",
+      "shoulderWidth": "የትከሻ ስፋት (cm)",
+      "armLength": "የእጅ ርዝመት (cm)"
+    },
+    "tailor": {
+      "title": "የልብስ ሰፊው መገለጫ",
+      "subtitle": "የሱቅዎን ማሳያ፣ የስፌት አይነቶችን፣ ዋጋዎችን እና የልብስ ካታሎግን ያስተዳድሩ",
+      "basicInfo": "መሰረታዊ መረጃ",
+      "shopName": "የልብስ ሰፊው / የሱቅ ስም",
+      "location": "አድራሻ / ከተማ",
+      "photo": "የመገለጫ እና የሱቅ ፎቶ",
+      "bio": "የስራ ልምድ እና ማብራሪያ",
+      "specialties": "የስፌት አይነቶች",
+      "startingPrice": "የመነሻ ዋጋ ($)",
+      "saveProfile": "ለውጦችን መዝግብ",
+      "catalogTitle": "የስራዎች ካታሎግ እና አልበም",
+      "addGarment": "አዲስ ልብስ ጨምር",
+      "garmentName": "የልብሱ ስም",
+      "garmentPrice": "የመነሻ ዋጋ ($)",
+      "garmentCategory": "የልብሱ አይነት",
+      "uploadImage": "ፎቶ ጫን"
+    }
+  },
+  "productManager": {
+    "title": "የስራዎች ካታሎግ እና አልበም",
+    "subtitle": "የተመረጡ የብጁ ልብሶችን፣ የጨርቅ እና የቀለም አማራጮችን ለደንበኞችዎ ያስተዳድሩ",
+    "searchPlaceholder": "የስራዎች ካታሎግን ፈልግ...",
+    "addBtn": "አዲስ ልብስ ጨምር",
+    "empty": "በካታሎግዎ ውስጥ ምንም የተመዘገበ ልብስ የለም",
+    "emptyDesc": "የእርስዎን ጥበብ ለደንበኞች ለማሳየት ሱፎችን፣ ቀሚሶችን እና ልዩ ባህላዊ አልባሳትን ይጨምሩ።",
+    "emptySearch": "ከፍለጋዎ ጋር የሚዛመድ ልብስ አልተገኘም",
+    "emptySearchDesc": "የፍለጋ ቃልዎን በመቀየር ወይም ማጣሪያውን በማጥፋት እንደገና ይሞክሩ።",
+    "clearFilter": "ማጣሪያውን አጥፋ",
+    "addFirst": "የመጀመሪያ ልብስዎን ይጨምሩ",
+    "modalCreateTitle": "አዲስ የማሳያ ልብስ መዝግብ",
+    "modalEditTitle": "የማሳያ ልብሱን አስተካክል",
+    "modalSubtitle": "የልብሱን ዋጋ፣ የጨርቅ ናሙናዎችን እና ሌሎች ልዩ ማስተካከያዎችን ይወስኑ።",
+    "garmentTitle": "የልብሱ ስም",
+    "basePrice": "የመነሻ ዋጋ ($)",
+    "description": "የልብሱ መግለጫ እና የጨርቅ ዝርዝር",
+    "category": "የልብሱ አይነት",
+    "gallery": "የልብሱ ፎቶዎች አልበም",
+    "browsePhotos": "ፎቶዎችን ይምረጡ ወይም እዚህ ይጎትቱ",
+    "primary": "ዋና ፎቶ",
+    "setPrimary": "ዋና ፎቶ አድርግ",
+    "colorsTitle": "የጨርቅ እና የቀለም ናሙናዎች",
+    "colorName": "የቀለሙ ስም (ለምሳሌ፦ ጥቁር ሰማያዊ)",
+    "addColor": "ቀለም ጨምር",
+    "optionsTitle": "የብጁ ስፌት ምርጫዎች እና ባህሪያት",
+    "optionName": "የምርጫው ስም (ለምሳሌ፦ የካፖርት አንገት፣ የውስጥ ሸራ)",
+    "optionValues": "አማራጮች (ለምሳሌ፦ ፒክ፣ ኖች፣ ሻውል)",
+    "addOption": "አማራጭ ጨምር",
+    "editSpecs": "ዝርዝሩን አስተካክል",
+    "clickToZoom": "አጉልተው ይመልከቱ",
+    "saveChanges": "ለውጦችን መዝግብ",
+    "saving": "በመመዝገብ ላይ...",
+    "categories": {
+      "all": "ሁሉም ልብሶች",
+      "suits": "ብጁ ሱፎች",
+      "tuxedos": "ቱክሲዶ እና የፕሮግራም ልብሶች",
+      "gowns": "የምሽት ቀሚሶች",
+      "traditional": "የሀበሻ ባህላዊ አልባሳት",
+      "blazers": "ኮቶች እና ጃኬቶች",
+      "shirts": "ሸሚዞች እና ሱሪዎች",
+      "alterations": "የልብስ ማስተካከያ"
+    }
+  },
+  "specSheet": {
+    "title": "የልብስ ስፌት ዝርዝር መመሪያ",
+    "subtitle": "የብጁ ልብስ ስፌት እና የፓተርን ቆራጭ የስራ ማዘዣ",
+    "printBtn": "አትም / በ PDF አስቀምጥ",
+    "customerDetails": "የደንበኛ መረጃ",
+    "tailorDetails": "ባለሙያ ልብስ ሰፊ",
+    "dimensionsTitle": "1. ትክክለኛ የሰውነት መለኪያዎች",
+    "tolerancesTitle": "2. የልኬት ማስተካከያ እና የመላላት መጠን",
+    "milestonesTitle": "3. የምርት ሂደቶች እና የስራ ማረጋገጫ",
+    "confidential": "የደስደስ ፋሽን ፖርታል · ዓለም አቀፍ የብጁ ልብስ ስፌት ደረጃ · ሚስጥራዊ የስራ ሰነድ"
   },
   "common": {
     "save": "መዝግብ",
@@ -396,5 +780,171 @@
     "active": "ንቁ",
     "pending": "በመጠባበቅ ላይ",
     "completed": "የተጠናቀቀ"
+  },
+  "admin": {
+    "title": "የአስተዳዳሪ ፓኔል",
+    "subtitle": "የተጠቃሚ አስተዳደር፣ ፕላትፎርም ቅንጅት እና ቁጥጥር",
+    "refreshBtn": "አድስ",
+    "totalTailors": "ጠቅላላ ልብስ ሰፊዎች",
+    "totalCustomers": "ጠቅላላ ደንበኞች",
+    "pendingApprovals": "የሚጠብቁ ፍቃዶች",
+    "clientFeedback": "ግብረ መልስ",
+    "tabs": {
+      "users": "የተጠቃሚ ዝርዝር",
+      "approvals": "የሚጠብቁ ፍቃዶች",
+      "feedback": "ግብረ መልስ",
+      "settings": "የፕላትፎርም ቅንጅቶች"
+    },
+    "users": {
+      "searchPlaceholder": "በስም ወይም ኢሜይል ፈልግ...",
+      "roleFilter": {
+        "all": "ሁሉም ሚናዎች",
+        "tailor": "ልብስ ሰፊዎች ብቻ",
+        "customer": "ደንበኞች ብቻ",
+        "admin": "አስተዳዳሪዎች"
+      },
+      "statusFilter": {
+        "all": "ሁሉም ሁኔታዎች",
+        "active": "ንቁ ብቻ",
+        "deactivated": "ያልተነቃቁ ብቻ"
+      },
+      "noResults": "ለተመረጡ ማጣሪያዎች ተጠቃሚ አልተገኘም።",
+      "tableHeaders": {
+        "user": "ተጠቃሚ",
+        "role": "ሚና",
+        "location": "አድራሻ",
+        "status": "ሁኔታ",
+        "joined": "የተቀላቀሉበት",
+        "actions": "እርምጃዎች"
+      },
+      "active": "ንቁ",
+      "deactivated": "ያልተነቃቃ",
+      "notProvided": "አልተሰጠም",
+      "tooltips": {
+        "viewProfile": "ሙሉ መገለጫ ይመልከቱ",
+        "message": "ቀጥታ መልዕክት",
+        "deactivate": "መለያ አቁም",
+        "activate": "መለያ አንቃ",
+        "delete": "መለያ ሰርዝ"
+      }
+    },
+    "approvals": {
+      "title": "የሚጠብቁ የልብስ ሰፊ ምዝገባዎች",
+      "emptyTitle": "ሁሉም ማመልከቻዎች ተገምግመዋል!",
+      "emptyDesc": "አዲስ የልብስ ሰፊ ምዝገባዎች ለማረጋገጥ እዚህ ይታያሉ።",
+      "pendingBadge": "ፍቃድ ይጠብቃል",
+      "locationUnspecified": "አድራሻ አልተጠቀሰም",
+      "appliedOn": "ያመለከቱበት ቀን",
+      "messageBtn": "መልዕክት",
+      "approveBtn": "ፍቀድ",
+      "rejectBtn": "አትፍቀድ",
+      "processing": "በሂደት ላይ..."
+    },
+    "feedback": {
+      "title": "የግብረ መልስ መልዕክቶች",
+      "totalBadge": "ጠቅላላ",
+      "subtitle": "ከደንበኞች እና ልብስ ሰፊዎች የተላኩ አስተያየቶች፣ ሪፖርቶች እና ሀሳቦች",
+      "refreshBtn": "አድስ",
+      "refreshing": "እያደሰ ነው...",
+      "categoryAll": "ሁሉም",
+      "anonymous": "ስም ያልተጠቀሰ ተጠቃሚ",
+      "noEmail": "ኢሜይል የለም",
+      "receivedOn": "የተቀበለው",
+      "emptyTitle": "በዚህ ምድብ ምንም ግብረ መልስ የለም",
+      "emptyDesc": "ከፕሮግራሙ ውስጥ የሚላኩ አስተያየቶች እዚህ ይታያሉ።",
+      "categories": {
+        "general": "ጠቅላላ",
+        "tailoring": "ልብስ ስፌት",
+        "ai_measurement": "AI ልኬት",
+        "feature": "የሙሉ ሀሳብ",
+        "bug": "ስህተት ሪፖርት"
+      }
+    },
+    "settings": {
+      "title": "የፕላትፎርም ቅንጅቶች",
+      "subtitle": "ቅጽበታዊ ማብቂያዎች፣ ማስታወቂያዎች፣ ኮሚሽን እና ስፔሻሊቲዎች",
+      "saveBtn": "ቅንጅቶችን መዝግብ",
+      "saving": "በመመዝገብ ላይ...",
+      "announcementLabel": "ዓለም አቀፍ ማስታወቂያ",
+      "announcementHint": "ለሁሉም ተጠቃሚዎች ከፍተኛ ክፍል ላይ ይታያል።",
+      "commissionLabel": "የፕላትፎርም ኮሚሽን (%)",
+      "commissionHint": "ለልብስ ሰፊ ኤስክሮ ግብይቶች ላይ የሚተገበር ኮሚሽን።",
+      "maintenanceLabel": "የስርዓት ጥገና ሁነታ",
+      "maintenanceModeOn": "የጥገና ሁነታ ንቁ ነው",
+      "maintenanceModeOff": "መደበኛ አሰራር",
+      "maintenanceHint": "ስለ ታቅዱ ጥገናዎች ተጠቃሚዎችን ያሳውቃል።",
+      "specialtiesLabel": "የልብስ ስፌት ስፔሻሊቲዎች",
+      "addSpecialtyBtn": "ጨምር",
+      "aiSectionTitle": "AI የሰውነት ልኬት አቅራቢ እና API ቁልፍ",
+      "aiSectionSubtitle": "AI አቅራቢዎችን ቀይሩ እና API ቁልፍ ያስቀምጡ።",
+      "testConnectionBtn": "ግንኙነት ሞክር",
+      "testingBtn": "እየሞከረ ነው...",
+      "aiProviderLabel": "AI አቅራቢ",
+      "providerNameLabel": "የአቅራቢ ስም",
+      "apiKeyLabel": "API ቁልፍ",
+      "modelLabel": "ሞዴል / ሞተር",
+      "apiUrlLabel": "API ዩአርኤል",
+      "showKey": "አሳይ",
+      "hideKey": "ደብቅ",
+      "aiHint": "Live_AI_Measurement፣ SnapAIMeasure ወይም ማንኛውም ብጁ AI አቅራቢ ስም እና ቁልፍ በማስገባት ያዋቅሩ።"
+    },
+    "modal": {
+      "tailorDetails": "የልብስ ሰፊ ዝርዝር",
+      "email": "ኢሜይል",
+      "phone": "ስልክ",
+      "location": "አድራሻ",
+      "accountStatus": "የመለያ ሁኔታ",
+      "active": "ንቁ",
+      "deactivated": "ያልተነቃቃ",
+      "pricing": "ዋጋ",
+      "messageBtn": "ቀጥታ መልዕክት",
+      "closeBtn": "ዝጋ"
+    }
+  },
+  "scannerModal": {
+    "title": "የ AI መለኪያ",
+    "badge": "Live AR",
+    "steps": {
+      "height": "ቁመት",
+      "front": "የፊት",
+      "side": "የጎን",
+      "review": "ማረጋገጫ"
+    },
+    "subtitles": {
+      "height": "ቁመትዎን ያስገቡ",
+      "front": "ካሜራውን ይመልከቱ",
+      "side": "ወደ ጎን ይዙሩ",
+      "review": "ፎቶዎችን ያረጋግጡ"
+    },
+    "heightSection": {
+      "title": "የቁመት መጠን",
+      "subtitle": "ትክክለኛ ልኬቶችን ለማስላት ይጠቅማል",
+      "cmTab": "ሳንቲሜትር (cm)",
+      "ftTab": "ጫማ እና ኢንች (ft/in)",
+      "tip": "ጠቃሚ ምክር፦ ከ 2–3 ሜትር ርቀት ላይ ቅርፅ በሚያሳይ ልብስ ቁሙ"
+    },
+    "camera": {
+      "switchCamera": "ቀይር",
+      "snapPhoto": "ፎቶ አንሳ",
+      "startTimer": "5 ሰከንድ",
+      "capturingIn": "በ {{count}} ሰከንድ ውስጥ...",
+      "holdPosture": "አይንቀሳቀሱ...",
+      "head": "ራስ",
+      "shoulders": "ትከሻ",
+      "hips": "ወገብ",
+      "ankles": "ቁርጭምጭሚት"
+    },
+    "review": {
+      "title": "ልኬቱን ያረጋግጡ",
+      "heightLabel": "ቁመት",
+      "frontView": "የፊት",
+      "sideView": "የጎን",
+      "retakeFront": "ድጋሚ አንሳ",
+      "retakeSide": "ድጋሚ አንሳ",
+      "privacyNote": "ፎቶዎችዎ በሚስጥር የተጠበቁ ናቸው",
+      "backToCamera": "ተመለስ",
+      "computeBtn": "አስላ እና መዝግብ"
+    },
+    "nextStep": "ቀጥል"
   }
 }

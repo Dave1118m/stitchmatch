@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { messagesAPI, uploadsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -34,6 +35,7 @@ const playIncomingChime = () => {
 const EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '👏'];
 
 export default function Messages() {
+  const { t } = useTranslation();
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -189,7 +191,7 @@ export default function Messages() {
       sendTyping(conversationId!, false);
       scrollToBottom();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to send message');
+      toast.error(err.response?.data?.error || 'Failed to send message');
     }
   };
 
@@ -228,8 +230,9 @@ export default function Messages() {
     if (confirm('Delete this message?')) {
       try {
         await messagesAPI.deleteMessage(conversationId!, messageId);
+        toast.success('Message deleted');
       } catch (err: any) {
-        alert('Failed to delete message');
+        toast.error('Failed to delete message');
       }
     }
   };
@@ -239,7 +242,7 @@ export default function Messages() {
       await messagesAPI.reactToMessage(conversationId!, messageId, emoji);
       setShowReactionsFor(null);
     } catch (err: any) {
-      alert('Failed to react');
+      toast.error('Failed to react');
     }
   };
 
@@ -534,8 +537,7 @@ export default function Messages() {
               type="text"
               value={newMessage}
               onChange={(e) => handleTyping(e.target.value)}
-              placeholder="Message..."
-              className="input-field flex-1 rounded-full py-2.5 px-4 bg-gray-100 dark:bg-gray-800 border-none focus:ring-2 focus:ring-primary-500/50"
+              className="input-field flex-1 rounded-full py-2.5 px-4 bg-gray-100 dark:bg-gray-800 border-2 border-slate-300 dark:border-slate-700 font-semibold focus:ring-2 focus:ring-primary-500/50"
             />
             
             <button type="submit" disabled={!newMessage.trim()} className="btn-primary w-11 h-11 rounded-full flex items-center justify-center shadow-md disabled:opacity-50 hover:scale-105 transition-transform flex-shrink-0">
@@ -551,8 +553,8 @@ export default function Messages() {
         <div className={`p-4 rounded-2xl mb-4 ${isDark ? 'bg-primary-950/40 text-primary-400' : 'bg-primary-50 text-primary-600'}`}>
           <MessageSquare className="w-10 h-10" />
         </div>
-        <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Your Messages</h3>
-        <p className="text-sm max-w-sm">Select a conversation from the list on the left to view past messages and chat in real-time.</p>
+        <h3 className={`text-xl font-bold mb-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('messages.title')}</h3>
+        <p className="text-sm max-w-sm">{t('messages.startChatWithTailor')}</p>
       </div>
     )}
 

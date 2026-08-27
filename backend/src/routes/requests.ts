@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate, authorize, AuthRequest } from '../middleware/auth';
-import { parseJson, serializeJson } from '../utils/jsonHelpers';
+import { parseJson, parseJsonArray, serializeJson } from '../utils/jsonHelpers';
 import { notifyRequestStatus, notifyOrderStatus } from '../helpers/notificationHelper';
 import { validateBody } from '../middleware/validate';
 import { CreateRequestSchema } from '../utils/schemas';
@@ -157,6 +157,10 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
       agreementSnapshots: ((request as any).agreementSnapshots as any[] | undefined)?.map((snapshot) => ({
         ...snapshot,
         snapshot: parseJson(snapshot.snapshot),
+      })) ?? [],
+      orderEvents: ((request as any).orderEvents as any[] | undefined)?.map((event) => ({
+        ...event,
+        photos: parseJsonArray(event.photos),
       })) ?? [],
     };
 

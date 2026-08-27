@@ -1,5 +1,5 @@
 /**
- * StitchMatch Atelier - Responsive HTML Email Templates
+ * የደስደስ Fashion - Responsive HTML Email Templates
  * Premium design system with dark luxury theme, gold accents, and cross-client compatibility.
  */
 
@@ -47,9 +47,9 @@ function wrapBaseTemplate({ title, previewText, contentHtml }: BaseEmailProps): 
       border-bottom: 1px solid #232738;
     }
     .brand-name {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #ffffff;
       margin: 0;
@@ -136,8 +136,8 @@ function wrapBaseTemplate({ title, previewText, contentHtml }: BaseEmailProps): 
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <h1 class="brand-name">Stitch<span class="brand-accent">Match</span></h1>
-        <div class="brand-subtitle">Atelier Bespoke Platform</div>
+        <h1 class="brand-name">የደስደስ <span class="brand-accent">Fashion</span></h1>
+        <div class="brand-subtitle">Bespoke Tailoring Platform</div>
       </div>
 
       <div class="content">
@@ -145,7 +145,7 @@ function wrapBaseTemplate({ title, previewText, contentHtml }: BaseEmailProps): 
       </div>
 
       <div class="footer">
-        <p class="footer-text">© ${currentYear} StitchMatch Atelier. All rights reserved.</p>
+        <p class="footer-text">© ${currentYear} የደስደስ Fashion. All rights reserved.</p>
         <p class="footer-text">This is an automated security transmission. Please do not reply directly.</p>
       </div>
     </div>
@@ -155,8 +155,8 @@ function wrapBaseTemplate({ title, previewText, contentHtml }: BaseEmailProps): 
 }
 
 export function generatePasswordResetEmail(name: string, code: string, resetUrl?: string): { subject: string; html: string; text: string } {
-  const subject = `Your StitchMatch Password Reset Code: ${code}`;
-  const previewText = `Your StitchMatch password reset code is ${code}. Valid for 15 minutes.`;
+  const subject = `Your የደስደስ Fashion Password Reset Code: ${code}`;
+  const previewText = `Your የደስደስ Fashion password reset code is ${code}. Valid for 15 minutes.`;
 
   const contentHtml = `
     <h2 style="font-size: 22px; font-weight: 600; color: #ffffff; margin-top: 0;">Password Reset Request</h2>
@@ -164,7 +164,7 @@ export function generatePasswordResetEmail(name: string, code: string, resetUrl?
       Hello <strong>${name || 'Valued Member'}</strong>,
     </p>
     <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">
-      We received a request to reset the password for your StitchMatch account. Use the 6-digit verification code below to proceed:
+      We received a request to reset the password for your የደስደስ Fashion account. Use the 6-digit verification code below to proceed:
     </p>
 
     <div class="code-box">
@@ -190,13 +190,13 @@ export function generatePasswordResetEmail(name: string, code: string, resetUrl?
   `;
 
   const html = wrapBaseTemplate({ title: subject, previewText, contentHtml });
-  const text = `Hello ${name || 'User'},\n\nYour StitchMatch password reset verification code is: ${code}\n\nThis code expires in 15 minutes.\nIf you did not request this, please ignore this email.\n\nStitchMatch Atelier Team`;
+  const text = `Hello ${name || 'User'},\n\nYour የደስደስ Fashion password reset verification code is: ${code}\n\nThis code expires in 15 minutes.\nIf you did not request this, please ignore this email.\n\nየደስደስ Fashion Team`;
 
   return { subject, html, text };
 }
 
 export function generateVerificationCodeEmail(name: string, code: string): { subject: string; html: string; text: string } {
-  const subject = `Your StitchMatch Verification Code: ${code}`;
+  const subject = `Your የደስደስ Fashion Verification Code: ${code}`;
   const previewText = `Your email verification code is ${code}.`;
 
   const contentHtml = `
@@ -205,7 +205,7 @@ export function generateVerificationCodeEmail(name: string, code: string): { sub
       Hello <strong>${name || 'Valued Member'}</strong>,
     </p>
     <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">
-      Thank you for registering with StitchMatch Atelier. Please confirm your email address using the verification code below:
+      Thank you for registering with የደስደስ Fashion. Please confirm your email address using the verification code below:
     </p>
 
     <div class="code-box">
@@ -221,14 +221,14 @@ export function generateVerificationCodeEmail(name: string, code: string): { sub
   `;
 
   const html = wrapBaseTemplate({ title: subject, previewText, contentHtml });
-  const text = `Hello ${name || 'User'},\n\nYour StitchMatch verification code is: ${code}\n\nThis code expires in 15 minutes.\n\nStitchMatch Atelier Team`;
+  const text = `Hello ${name || 'User'},\n\nYour የደስደስ Fashion verification code is: ${code}\n\nThis code expires in 15 minutes.\n\nየደስደስ Fashion Team`;
 
   return { subject, html, text };
 }
 
 export function generatePasswordChangedEmail(name: string): { subject: string; html: string; text: string } {
-  const subject = `Security Alert: Your StitchMatch Password Has Been Changed`;
-  const previewText = `Your StitchMatch account password was successfully updated.`;
+  const subject = `Security Alert: Your የደስደስ Fashion Password Has Been Changed`;
+  const previewText = `Your የደስደስ Fashion account password was successfully updated.`;
 
   const contentHtml = `
     <h2 style="font-size: 22px; font-weight: 600; color: #ffffff; margin-top: 0;">Password Successfully Changed</h2>
@@ -236,7 +236,7 @@ export function generatePasswordChangedEmail(name: string): { subject: string; h
       Hello <strong>${name || 'Valued Member'}</strong>,
     </p>
     <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">
-      This email confirms that the password for your StitchMatch account was updated successfully.
+      This email confirms that the password for your የደስደስ Fashion account was updated successfully.
     </p>
 
     <div class="alert-box" style="border-left-color: #10b981; background-color: #0f1c18;">
@@ -251,7 +251,7 @@ export function generatePasswordChangedEmail(name: string): { subject: string; h
   `;
 
   const html = wrapBaseTemplate({ title: subject, previewText, contentHtml });
-  const text = `Hello ${name || 'User'},\n\nYour StitchMatch password has been successfully updated.\n\nIf you did not perform this action, please contact support immediately.\n\nStitchMatch Atelier Team`;
+  const text = `Hello ${name || 'User'},\n\nYour የደስደስ Fashion password has been successfully updated.\n\nIf you did not perform this action, please contact support immediately.\n\nየደስደስ Fashion Team`;
 
   return { subject, html, text };
 }

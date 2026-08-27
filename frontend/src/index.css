@@ -95,13 +95,15 @@
   }
   
   .input-field {
-    @apply w-full px-3.5 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-xl text-sm sm:text-base
-           focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
-           outline-none transition-all duration-200;
+    @apply w-full px-4 py-2.5 min-h-[44px] border-2 border-slate-300 rounded-xl text-sm sm:text-base font-semibold
+           bg-white text-slate-900 placeholder-slate-400
+           hover:border-purple-300 focus:border-purple-600 focus:ring-4 focus:ring-purple-500/20 
+           outline-none transition-all duration-200 shadow-sm;
   }
   
   .dark .input-field {
-    @apply bg-gray-800 border-gray-700 text-gray-100 placeholder-gray-400;
+    @apply bg-slate-900/90 border-slate-700 text-white placeholder-slate-500
+           hover:border-slate-500 focus:border-purple-400 focus:ring-4 focus:ring-purple-500/30;
   }
   
   .card {

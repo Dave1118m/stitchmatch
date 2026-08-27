@@ -159,10 +159,16 @@ export const uploadsAPI = {
   },
 };
 
-// Settings API
+// Settings & Feedback API
 export const settingsAPI = {
   getPublic: () => api.get('/settings/public'),
   getAll: () => api.get('/settings'),
   update: (data: Record<string, any>) => api.put('/settings', data),
+  submitFeedback: (data: { category: string; rating?: number; message: string; email?: string; name?: string; userId?: string }) =>
+    api.post('/settings/feedback', data),
+  getFeedback: () => api.get('/settings/feedback'),
+  deleteFeedback: (id: string) => api.delete(`/settings/feedback/${id}`),
+  testAI: (data: { provider: string; providerName?: string; apiKey: string; model?: string; baseUrl?: string }) =>
+    api.post('/settings/test-ai', data),
 };
 

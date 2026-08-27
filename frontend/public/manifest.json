@@ -1,6 +1,6 @@
 {
-  "name": "StitchMatch - Bespoke Tailoring & 3D AI Body Scan",
-  "short_name": "StitchMatch",
+  "name": "የደስደስ Fashion - Bespoke Tailoring & 3D AI Body Scan",
+  "short_name": "የደስደስ Fashion",
   "description": "Custom made-to-measure bespoke tailoring marketplace with 3D AI body measurement scan.",
   "start_url": "/",
   "id": "/",
@@ -46,7 +46,7 @@
     {
       "name": "Messages",
       "short_name": "Chat",
-      "description": "Chat with bespoke artisans and tailors",
+      "description": "Chat with bespoke tailors and clients",
       "url": "/messages",
       "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
     }

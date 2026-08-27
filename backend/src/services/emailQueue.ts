@@ -35,11 +35,12 @@ function getTransporter() {
   });
 }
 
-/**
- * Send an email immediately (priority dispatch for OTPs / password reset)
- */
 export async function sendDirectEmail(task: EmailTask): Promise<boolean> {
-  const from = (process.env.EMAIL_FROM || process.env.SMTP_USER || 'no-reply@stitchmatch.com').trim();
+  let from = (process.env.EMAIL_FROM || '').trim();
+  if (!from) {
+    const userEmail = (process.env.SMTP_USER || 'no-reply@yedestdesfashion.com').trim();
+    from = `"የደስደስ Fashion" <${userEmail}>`;
+  }
   const transporter = getTransporter();
 
   if (!transporter) {

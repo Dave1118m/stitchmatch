@@ -1,8 +1,8 @@
 {
   "nav": {
-    "brand": "StitchMatch",
+    "brand": "የደስደስ Fashion",
     "tagline": "Bespoke Tailoring Platform",
-    "requests": "Requests",
+    "requests": "Orders",
     "findTailors": "Find Tailors",
     "messages": "Messages",
     "profile": "Profile",
@@ -30,7 +30,7 @@
     "badge": "Next-Gen AI Tailoring Platform",
     "heroTitle": "Custom Tailoring,",
     "heroTitleGradient": "Engineered to Perfection",
-    "heroSubtitle": "Connect with master artisans, capture your exact measurements with AI 3D scanning, and receive handcrafted bespoke garments fitted exclusively for you.",
+    "heroSubtitle": "Connect with master tailors, capture your exact measurements with AI 3D scanning, and receive handcrafted bespoke garments fitted exclusively for you.",
     "searchPlaceholder": "Search by tailor name, suit style, evening gown, traditional wear...",
     "searchBtn": "Find Tailors",
     "getStartedBtn": "Find a Tailor",
@@ -61,14 +61,28 @@
     },
     "howItWorks": {
       "badge": "Simple 3-Step Process",
-      "title": "How StitchMatch Works",
+      "title": "How የደስደስ Fashion Works",
       "subtitle": "From digital measurements to your doorstep, bespoke tailoring has never been smoother.",
       "step1Title": "1. Measure with AI or Manual Input",
       "step1Desc": "Use your phone camera for an instant 3D body scan or enter your precise anthropometric measurements with our guided tutorial.",
       "step2Title": "2. Match & Collaborate with Tailors",
-      "step2Desc": "Browse curated portfolios, consult with top artisans over HD video fitting calls, select custom fabrics, and agree on milestones.",
+      "step2Desc": "Browse curated portfolios, consult with top tailors over HD video fitting calls, select custom fabrics, and agree on milestones.",
       "step3Title": "3. Handcrafted & Delivered to Fit",
-      "step3Desc": "Your artisan crafts your custom garment with precision craftsmanship. Protected escrow payments release upon your 100% satisfaction."
+      "step3Desc": "Your tailor crafts your custom garment with precision craftsmanship. Protected escrow payments release upon your 100% satisfaction.",
+      "viewStepDetails": "View Step Details & Guide",
+      "learnMore": "Learn more",
+      "modal": {
+        "step1Details": "Accurate measurements are the foundation of bespoke fashion. You can use our AI camera scanner for automatic landmark estimation in 60 seconds, or follow our guided interactive measurement guide.",
+        "step1Tip": "Tip: Wear fitted clothing and ensure good lighting for optimal scanner accuracy.",
+        "step1Cta": "Launch AI Body Scanner",
+        "step1CtaGuide": "View Measurement Guide",
+        "step2Details": "Find the ideal master artisan based on specialty, past bespoke creations, and verified client reviews. Schedule live HD video fitting sessions to discuss silhouette, fabrics, and deadlines.",
+        "step2Tip": "Tip: Share inspiration images, fabric preferences, and fitting milestones directly in chat.",
+        "step2Cta": "Explore & Match Tailors",
+        "step3Details": "Your custom garment is handcrafted with bespoke care. Escrow protection safeguards your payment—funds are only released when you receive your outfit and confirm 100% satisfaction.",
+        "step3Tip": "Tip: If adjustments are needed, our platform guarantees free alteration support.",
+        "step3Cta": "Start Custom Order"
+      }
     },
     "features": {
       "badge": "State of the Art Craftsmanship",
@@ -82,9 +96,9 @@
       "escrowDesc": "Your funds stay secure in escrow and are only released when you receive and approve your finished bespoke order.",
       "avatarTitle": "Interactive 3D Avatar",
       "avatarDesc": "Visualize your body silhouette in 360-degree 3D to see garment drape and fit tension before sewing begins.",
-      "chatTitle": "Instant Atelier Messaging",
+      "chatTitle": "Direct Tailor Messaging",
       "chatDesc": "Exchange fabric swatches, inspiration moodboards, sketches, and fitting updates seamlessly.",
-      "verifiedTitle": "Verified Master Artisans",
+      "verifiedTitle": "Verified Master Tailors",
       "verifiedDesc": "Every tailor on our platform undergoes rigorous craftsmanship vetting, background verification, and review curation."
     },
     "categories": {
@@ -101,10 +115,10 @@
       "title": "Ready for Clothes That Truly Fit You?",
       "subtitle": "Join thousands of clients and master tailors on the world's most advanced custom tailoring marketplace.",
       "customerBtn": "Start Your First Order",
-      "tailorBtn": "Register as an Artisan"
+      "tailorBtn": "Register as a Tailor"
     },
     "footer": {
-      "tagline": "The premier digital marketplace for bespoke tailoring, 3D body measurements, and artisanal fashion.",
+      "tagline": "The premier digital marketplace for bespoke tailoring, 3D body measurements, and custom fashion.",
       "platform": "Platform",
       "howItWorks": "How It Works",
       "aiScanner": "AI Body Scanner",
@@ -118,24 +132,24 @@
       "privacy": "Privacy Policy",
       "terms": "Terms of Service",
       "security": "Security Safeguards",
-      "copyright": "© 2026 StitchMatch Inc. All rights reserved."
+      "copyright": "© 2026 የደስደስ Fashion Inc. All rights reserved."
     }
   },
   "join": {
-    "title": "Join StitchMatch",
+    "title": "Join የደስደስ Fashion",
     "subtitle": "Choose how you want to experience the future of bespoke tailoring",
     "customerTitle": "I'm a Customer",
     "customerRole": "Client / Fashion Enthusiast",
     "customerDesc": "Discover master tailors, get measured with 3D AI, and order handcrafted garments made uniquely for your body.",
     "customerPerks": [
       "AI 3D body scan & instant measurement profile",
-      "Direct chat & HD video fitting calls with artisans",
+      "Direct chat & HD video fitting calls with tailors",
       "Escrow protection with 100% fit satisfaction guarantee",
       "Access to bespoke suits, traditional couture & everyday wear"
     ],
-    "tailorTitle": "I'm a Tailor / Artisan",
+    "tailorTitle": "I'm a Tailor",
     "tailorRole": "Master Tailor / Fashion Designer",
-    "tailorDesc": "Expand your atelier, connect with high-value local and global clients, and manage bespoke orders with digital ease.",
+    "tailorDesc": "Grow your tailoring business, connect with high-value local and global clients, and manage bespoke orders with digital ease.",
     "tailorPerks": [
       "Digital storefront & high-resolution portfolio showcase",
       "Receive verified 3D body measurements from clients",
@@ -150,7 +164,7 @@
     "signInTitle": "Welcome Back",
     "signInSubtitle": "Sign in to access your bespoke orders, messages, and measurements",
     "registerTitle": "Create Your Account",
-    "registerSubtitle": "Join StitchMatch to start creating or crafting custom fashion",
+    "registerSubtitle": "Join የደስደስ Fashion to start creating or crafting custom fashion",
     "emailLabel": "Email Address",
     "emailPlaceholder": "you@example.com",
     "passwordLabel": "Password",
@@ -168,12 +182,12 @@
     "signUpNow": "Sign Up",
     "alreadyAccount": "Already registered?",
     "loginSuccess": "Successfully signed in!",
-    "registerSuccess": "Account created successfully! Welcome to StitchMatch.",
+    "registerSuccess": "Account created successfully! Welcome to የደስደስ Fashion.",
     "errorInvalid": "Invalid email or password",
     "errorGeneric": "An error occurred. Please try again."
   },
   "dashboard": {
-    "title": "Tailoring Dashboard",
+    "title": "Orders",
     "subtitle": "Track your custom orders, client communications, and fittings",
     "newRequestBtn": "New Custom Request",
     "stats": {
@@ -206,19 +220,55 @@
   },
   "tailors": {
     "title": "Explore Master Tailors",
-    "subtitle": "Discover verified bespoke artisans and designers crafted for your style",
-    "searchPlaceholder": "Search tailors by name, specialty, location, or style...",
+    "subtitle": "Discover verified bespoke tailors and designers crafted for your style",
+    "pageSubtitle": "Find the perfect craftsperson for your garment.",
+    "searchPlaceholder": "Search by name or location...",
     "filterAllSpecialties": "All Specialties",
     "filterRating": "Rating 4.5+",
     "filterVerified": "Verified Only",
+    "minRating": "Min Rating:",
+    "ratingAny": "Any",
+    "maxPrice": "Max Price:",
+    "filterBtn": "Filter",
     "experience": "years experience",
     "reviewsCount": "reviews",
     "startingFrom": "Starting from",
-    "viewProfile": "View Atelier Profile",
+    "fromPrice": "From ${{price}}",
+    "priceRange": "${{min}} - ${{max}}",
+    "customQuote": "Custom Quote",
+    "newTailor": "New Tailor",
+    "locationOnRequest": "Location on request",
+    "viewProfile": "View Tailor Profile",
     "message": "Send Message",
     "orderCustom": "Request Custom Outfit",
     "empty": "No tailors match your search criteria.",
+    "emptyTitle": "No craftspersons found matching your criteria",
+    "emptyDesc": "Try broadening your specialty filters, rating threshold, or search query.",
     "resetFilter": "Reset Filters"
+  },
+  "specialties": {
+    "all": "All Specialties",
+    "Suits & Tuxedos": "Suits & Tuxedos",
+    "Bespoke Suits": "Bespoke Suits",
+    "Tuxedos": "Tuxedos",
+    "Traditional / Habesha Kemis": "Traditional / Habesha Kemis",
+    "Traditional Habesha & Cultural": "Traditional Habesha & Cultural",
+    "Habesha Kemis": "Habesha Kemis",
+    "Wedding & Bridal": "Wedding & Bridal",
+    "Bridal Wear": "Bridal Wear",
+    "Alterations & Repairs": "Alterations & Repairs",
+    "Alterations": "Alterations",
+    "Leather & Outerwear": "Leather & Outerwear",
+    "Overcoats": "Overcoats",
+    "Dresses & Gowns": "Dresses & Gowns",
+    "Evening Gowns": "Evening Gowns",
+    "Silk Dresses": "Silk Dresses",
+    "Casual & Everyday Wear": "Casual & Everyday Wear",
+    "Casual & Custom Streetwear": "Casual & Custom Streetwear",
+    "Blazers & Jackets": "Blazers & Jackets",
+    "Embroidery & Custom Stitching": "Embroidery & Custom Stitching",
+    "Uniforms & Workwear": "Uniforms & Workwear",
+    "Children & Teens": "Children & Teens"
   },
   "measurements": {
     "title": "Body Measurements",
@@ -248,32 +298,50 @@
       "neckDesc": "Around the base of the neck where collar sits"
     },
     "scannerModal": {
-      "title": "AI 3D Camera Body Scanner",
-      "subtitle": "Fast, privacy-safe 3D measurement estimation powered by computer vision",
-      "stepFront": "1. Front Pose",
-      "stepSide": "2. Side Pose",
-      "stepBack": "3. Back Pose",
-      "stepReview": "4. Review & AI",
-      "alignVertical": "ALIGN VERTICAL",
-      "target90": "TARGET 90°",
-      "verticalLocked": "90° VERTICAL LOCKED",
-      "desktopReady": "Desktop / Camera Stream Ready",
-      "landmarksLocked": "AR LANDMARKS LOCKED (33/33)",
-      "startingCamera": "Starting camera stream...",
-      "cameraError": "Camera permission required for AI scanning.",
-      "tryAgain": "Try Again",
-      "holdPose": "Hold Your Pose & Look Straight!",
-      "allPosesCaptured": "All 3 Poses Successfully Captured",
-      "reviewTitle": "Review Your Measurement Scans",
-      "reviewDesc": "Ensure your full body is visible in all 3 angles before feeding them to the AI measurement engine.",
-      "missing": "Missing",
-      "retake": "Retake",
-      "privacyNote": "Photos are encrypted and processed securely by our tailoring measurement models.",
-      "snapImmediately": "Snap Immediately",
-      "startTimer": "Start 5s Hands-Free Timer",
-      "capturingIn": "Capturing in {{count}}s...",
-      "backToCamera": "Back to Camera",
-      "processWithAI": "Process with AI Engine"
+      "title": "AI Body Measurement Scanner",
+      "badge": "Live AR",
+      "steps": {
+        "height": "1. Height",
+        "front": "2. Front Pose",
+        "side": "3. Side Pose",
+        "review": "4. Review"
+      },
+      "subtitles": {
+        "height": "Calibrate your standing height",
+        "front": "Stand facing the camera",
+        "side": "Turn 90° to the side",
+        "review": "Confirm scan before computing"
+      },
+      "heightSection": {
+        "title": "Your Standing Height",
+        "subtitle": "Used to accurately calculate your 3D body measurements.",
+        "cmTab": "Centimeters (cm)",
+        "ftTab": "Feet & Inches (ft/in)",
+        "tip": "Tip: Stand 2–3 meters away in a well-lit room in form-fitting clothing."
+      },
+      "camera": {
+        "switchCamera": "Switch Camera",
+        "snapPhoto": "Snap Photo",
+        "startTimer": "5s Timer",
+        "capturingIn": "Capturing in {{count}}s...",
+        "holdPosture": "Hold posture for calibration...",
+        "head": "Head",
+        "shoulders": "Shoulders",
+        "hips": "Hips",
+        "ankles": "Ankles"
+      },
+      "review": {
+        "title": "Review Your 3D Fitting Scan",
+        "heightLabel": "Calibrated Height",
+        "frontView": "1. Front View",
+        "sideView": "2. Side Profile",
+        "retakeFront": "Retake Front",
+        "retakeSide": "Retake Side",
+        "privacyNote": "Photos are encrypted and used only for bespoke digital tailoring.",
+        "backToCamera": "Back to Camera",
+        "computeBtn": "Compute 3D Measurements"
+      },
+      "nextStep": "Continue to Camera"
     },
     "photoGuide": {
       "modalTitle": "AI Measurement Photo Guide",
@@ -350,11 +418,39 @@
   "settings": {
     "title": "Account & Platform Settings",
     "subtitle": "Manage your profile, language, region, and security preferences",
+    "savedSuccess": "Preferences saved successfully!",
     "tabs": {
+      "platform": "Platform Settings",
       "profile": "Profile Info",
       "language": "Language & Region",
       "security": "Security",
       "notifications": "Notifications"
+    },
+    "profileSection": {
+      "personalTitle": "Personal Profile Information",
+      "nameLabel": "Display Name",
+      "phoneLabel": "Phone Number",
+      "locationLabel": "Location / Address",
+      "avatarLabel": "Avatar Image URL",
+      "tailorTitle": "Tailoring Shop & Craftsmanship Details",
+      "bioLabel": "Professional Bio & Experience",
+      "startingMin": "Starting Price ($)",
+      "startingMax": "Max Pricing ($)"
+    },
+    "notificationsSection": {
+      "title": "Notification Channels & Alerts",
+      "inAppSound": "In-App Notification Sounds",
+      "inAppSoundDesc": "Play audio chime when new messages or status updates arrive.",
+      "orderUpdates": "Order Stage Milestone Alerts",
+      "orderUpdatesDesc": "Receive instant notifications when order moves between cutting, sewing, and fitting.",
+      "email": "Email Notifications",
+      "emailDesc": "Receive email digests for unread messages and counter-offers."
+    },
+    "securitySection": {
+      "title": "Security & Password Change",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password"
     },
     "languageSection": {
       "title": "Language & Localization",
@@ -371,6 +467,294 @@
       "saveBtn": "Save Localization Preferences",
       "savedSuccess": "Preferences saved successfully!"
     }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Platform governance, tailor verification, feedback inbox & system settings",
+    "refreshBtn": "Refresh Inbox",
+    "totalTailors": "Total Tailors",
+    "activeArtisans": "Active tailor accounts",
+    "totalCustomers": "Total Customers",
+    "registeredClients": "Registered client accounts",
+    "pendingApprovals": "Pending Approvals",
+    "requiresReview": "Requires administrative review",
+    "clientFeedback": "Client Feedback",
+    "unreadIssues": "Unread issues & suggestions",
+    "tabs": {
+      "approvals": "Pending Approvals",
+      "users": "User Directory",
+      "feedback": "Feedback Inbox",
+      "settings": "Platform Settings"
+    },
+    "usersTab": {
+      "searchPlaceholder": "Search users by name, email, role...",
+      "allRoles": "All Roles",
+      "allStatuses": "All Statuses",
+      "nameCol": "User / Name",
+      "roleCol": "Role",
+      "statusCol": "Status",
+      "joinedCol": "Joined Date",
+      "actionsCol": "Actions",
+      "deactivateBtn": "Deactivate",
+      "activateBtn": "Activate",
+      "deleteBtn": "Delete"
+    },
+    "approvalsTab": {
+      "noPending": "No pending tailor applications at this time.",
+      "allCaughtUp": "All tailor registrations have been reviewed.",
+      "approveBtn": "Approve Tailor",
+      "rejectBtn": "Reject Application",
+      "location": "Location",
+      "experience": "Experience",
+      "years": "years",
+      "specialties": "Specialties",
+      "pricing": "Starting Price"
+    },
+    "feedbackTab": {
+      "title": "Customer & Tailor Feedback Inbox",
+      "subtitle": "Review bug reports, platform feature recommendations, and service reviews",
+      "empty": "No feedback submissions received in this category.",
+      "from": "From",
+      "category": "Category",
+      "date": "Received",
+      "resolveBtn": "Delete / Resolve"
+    },
+    "settingsTab": {
+      "title": "Platform Configuration & Governance",
+      "subtitle": "Live runtime toggles, announcement broadcasts, commission rates, and tailor specialties",
+      "announcementLabel": "Public Announcement Banner",
+      "commissionLabel": "Platform Commission Fee (%)",
+      "maintenanceLabel": "System Maintenance Mode",
+      "specialtiesLabel": "Tailoring Specialties Catalog",
+      "addSpecialty": "Add Category",
+      "aiSettingsTitle": "3D Body Measurement AI Engine Settings",
+      "aiSettingsSubtitle": "Switch AI measurement providers or configure custom API credentials seamlessly",
+      "providerName": "AI Engine Provider",
+      "apiKeyLabel": "API Key",
+      "modelLabel": "Model Name",
+      "baseUrlLabel": "Custom API Base URL",
+      "saveSettingsBtn": "Save Platform Settings",
+      "testAIBtn": "Test AI Connection"
+    }
+  },
+  "tailorProfile": {
+    "about": "About the Tailor",
+    "specialties": "Specialties & Expertise",
+    "experience": "Experience",
+    "startingPrice": "Starting Price",
+    "rating": "Rating",
+    "reviews": "Reviews",
+    "verifiedTailor": "Verified Master Tailor",
+    "newTailor": "New Verified Tailor",
+    "tabs": {
+      "about": "Overview",
+      "catalog": "Collection & Portfolio",
+      "reviews": "Client Reviews"
+    },
+    "catalog": {
+      "title": "Tailor Collection",
+      "subtitle": "Bespoke Product Catalog & Showcase",
+      "noProducts": "No catalog products uploaded by this tailor yet. You can still commission custom bespoke garments using the request panel.",
+      "garments": "Garments"
+    },
+    "booking": {
+      "title": "Request a Service",
+      "subtitle": "Commission a bespoke garment tailored specifically to your measurements",
+      "garmentType": "Garment Type *",
+      "fabricPreference": "Fabric Preference",
+      "budget": "Estimated Budget ($) *",
+      "deadline": "Target Completion Deadline *",
+      "description": "Design Notes & Instructions *",
+      "submitBtn": "Send Custom Request",
+      "signInPrompt": "Sign in as a Customer to request custom orders from this tailor."
+    },
+    "adminCard": {
+      "title": "Tailor Administration",
+      "subtitle": "Platform Governance View",
+      "status": "Application Status",
+      "manageBtn": "Manage in Admin Panel",
+      "messageBtn": "Send Direct Message"
+    },
+    "selfCard": {
+      "title": "Your Public Profile",
+      "subtitle": "This is how your services, pricing, and showcase catalog appear to customers.",
+      "editBtn": "Edit Profile & Catalog"
+    },
+    "colleagueCard": {
+      "title": "Tailor Details",
+      "subtitle": "Direct Message",
+      "description": "Connect with {{name}} to collaborate on custom projects or discuss fabrics.",
+      "messageBtn": "Send Message"
+    }
+  },
+  "requestDetail": {
+    "backBtn": "Back to Orders",
+    "printSpecSheet": "Print Spec Sheet",
+    "chatBtn": "Chat",
+    "detailsTitle": "Order Information",
+    "garmentType": "Garment Type",
+    "status": "Order Status",
+    "tailor": "Assigned Tailor",
+    "customer": "Customer",
+    "budget": "Agreed Budget",
+    "deadline": "Agreed Deadline",
+    "fabric": "Fabric Preference",
+    "notes": "Custom Notes",
+    "measurementsTitle": "Fitted Body Measurements",
+    "measurementsSubtitle": "Anatomical dimensions attached to this bespoke order",
+    "aiCameraScan": "AI 3D Camera Scan",
+    "manualGuide": "Measurement Guide",
+    "statusStages": {
+      "pending": "Pending Proposal",
+      "underDiscussion": "Under Discussion",
+      "agreed": "Agreement Confirmed",
+      "inProgress": "In Production",
+      "completed": "Completed & Delivered",
+      "cancelled": "Cancelled"
+    },
+    "negotiation": {
+      "title": "Terms Negotiation & Counter-Offers",
+      "subtitle": "Agree on price, deadline, and pattern ease allowances before production",
+      "proposeBtn": "Propose Counter-Offer",
+      "acceptBtn": "Accept Offer",
+      "declineBtn": "Decline Offer",
+      "proposedPrice": "Proposed Price ($)",
+      "proposedDeadline": "Proposed Deadline",
+      "notes": "Negotiation Notes"
+    },
+    "review": {
+      "title": "Review & Rate Tailor",
+      "subtitle": "Rate craftsmanship, fit accuracy, and bespoke tailoring service.",
+      "yourRating": "Your Rating",
+      "feedbackPlaceholder": "Share your thoughts about the fit, stitching, and service quality...",
+      "submitBtn": "Submit Review",
+      "verifiedReview": "Verified Review",
+      "tailorReply": "Tailor Response",
+      "replyPrompt": "Reply to Client Review",
+      "postReplyBtn": "Post Reply"
+    }
+  },
+  "feedback": {
+    "title": "Platform Feedback",
+    "subtitle": "Help us improve the የደስደስ Fashion platform experience",
+    "categoryLabel": "Feedback Category",
+    "messageLabel": "Your Message / Detailed Feedback",
+    "messagePlaceholder": "Describe the issue or share your recommendation...",
+    "submitBtn": "Submit Feedback",
+    "submitting": "Submitting...",
+    "success": "Thank you! Your feedback has been sent to our administration team.",
+    "categories": {
+      "general": "General Feedback",
+      "bug": "Report a Bug / Issue",
+      "feature": "Feature Suggestion",
+      "tailorExperience": "Tailor Experience",
+      "fitting": "AI 3D Fitting / Measurements",
+      "payment": "Payment & Escrow"
+    }
+  },
+  "profile": {
+    "customer": {
+      "title": "Customer Profile",
+      "subtitle": "Manage your basic account details and anatomical 3D measurement vault",
+      "basicInfo": "Basic Account Information",
+      "fullName": "Full Name",
+      "email": "Email (Read-Only)",
+      "phone": "Phone Number",
+      "city": "City / Region",
+      "photo": "Profile Photo",
+      "uploadHint": "Click to Upload Photo or Drag and Drop",
+      "saveDetails": "Save Account Details",
+      "saving": "Saving...",
+      "vaultTitle": "Customer Profile & Measurements Vault",
+      "vaultBadge": "1-Click Ready",
+      "vaultSubtitle": "Your secure digital anthropometric profile used across custom tailoring orders",
+      "editVaultBtn": "Edit Measurements",
+      "saveVaultBtn": "Save Measurements",
+      "emptyVault": "No saved measurements in your vault yet",
+      "emptyVaultDesc": "Add your anatomical measurements once to enable instant 1-click tailored fittings across all master tailors.",
+      "enterMeasurementsBtn": "Enter Body Measurements",
+      "verifiedNote": "Verified anatomical dimensions ready for 1-click commissioning.",
+      "calibratedOn": "Calibrated",
+      "chest": "Chest (cm)",
+      "waist": "Natural Waist (cm)",
+      "hip": "Hip & Seat (cm)",
+      "inseam": "Inseam (cm)",
+      "shoulderWidth": "Shoulders (cm)",
+      "armLength": "Arm Length (cm)"
+    },
+    "tailor": {
+      "title": "Tailor Profile",
+      "subtitle": "Manage your shop showcase, specialties, pricing, and catalog garments",
+      "basicInfo": "Basic Information",
+      "shopName": "Tailor / Shop Name",
+      "location": "Location / Workshop City",
+      "photo": "Profile & Shop Photo",
+      "bio": "Tailor Bio & Experience",
+      "specialties": "Specialties & Tags",
+      "startingPrice": "Starting Price ($)",
+      "saveProfile": "Save Changes",
+      "catalogTitle": "Showcase Catalog & Garments",
+      "addGarment": "Add New Garment",
+      "garmentName": "Garment Name",
+      "garmentPrice": "Base Price ($)",
+      "garmentCategory": "Category",
+      "uploadImage": "Upload Photo"
+    }
+  },
+  "productManager": {
+    "title": "Showcase Catalog & Garments",
+    "subtitle": "Manage luxury bespoke apparel, color palettes, and customization options for your clients",
+    "searchPlaceholder": "Search showcase catalog...",
+    "addBtn": "Add Garment",
+    "empty": "No products in your showcase catalog yet",
+    "emptyDesc": "Add suits, dresses, tuxedos, and bespoke attire to highlight your craftsmanship to prospective clients.",
+    "emptySearch": "No products matched your search",
+    "emptySearchDesc": "Try changing your search term or clearing the filter.",
+    "clearFilter": "Clear Search Filter",
+    "addFirst": "Add Your First Product",
+    "modalCreateTitle": "Create New Showcase Garment",
+    "modalEditTitle": "Edit Showcase Garment",
+    "modalSubtitle": "Define product pricing, fabric swatches, and customization attributes for clients.",
+    "garmentTitle": "Garment Title",
+    "basePrice": "Base Price ($)",
+    "description": "Description & Fabric Specifications",
+    "category": "Category",
+    "gallery": "Product Photography Gallery",
+    "browsePhotos": "Browse or Drag & Drop Photos",
+    "primary": "Primary",
+    "setPrimary": "Set as Primary",
+    "colorsTitle": "Fabric & Color Swatches",
+    "colorName": "Color Name (e.g. Midnight Navy)",
+    "addColor": "Add Swatch",
+    "optionsTitle": "Bespoke Customization Attributes",
+    "optionName": "Option Name (e.g. Lapel Style, Lining)",
+    "optionValues": "Values (e.g. Peak, Notch, Shawl)",
+    "addOption": "Add Option",
+    "editSpecs": "Edit Garment Specs",
+    "clickToZoom": "Click to zoom",
+    "saveChanges": "Save Changes",
+    "saving": "Saving Garment...",
+    "categories": {
+      "all": "All Garments",
+      "suits": "Bespoke Suits",
+      "tuxedos": "Tuxedos & Formal",
+      "gowns": "Evening Gowns",
+      "traditional": "Traditional Habesha",
+      "blazers": "Blazers & Jackets",
+      "shirts": "Shirts & Trousers",
+      "alterations": "Custom Alterations"
+    }
+  },
+  "specSheet": {
+    "title": "Tailor Technical Specification",
+    "subtitle": "Bespoke Tailoring & Pattern Cutter's Work Order",
+    "printBtn": "Print / Save as PDF",
+    "customerDetails": "Customer Details",
+    "tailorDetails": "Master Tailor",
+    "dimensionsTitle": "1. Precision Anthropometric Measurements",
+    "tolerancesTitle": "2. Fit & Ease Tolerances",
+    "milestonesTitle": "3. Production Milestones & Tailor Sign-Off",
+    "confidential": "የደስደስ Fashion Tailor Portal · High Precision Anthropometric Bespoke Standard · Confidential Spec Sheet"
   },
   "common": {
     "save": "Save",
@@ -396,5 +780,171 @@
     "active": "Active",
     "pending": "Pending",
     "completed": "Completed"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Platform oversight, user governance & settings",
+    "refreshBtn": "Refresh",
+    "totalTailors": "Total Tailors",
+    "totalCustomers": "Total Customers",
+    "pendingApprovals": "Pending Approvals",
+    "clientFeedback": "Feedback",
+    "tabs": {
+      "users": "User Directory",
+      "approvals": "Pending Approvals",
+      "feedback": "Feedback",
+      "settings": "Platform Settings"
+    },
+    "users": {
+      "searchPlaceholder": "Search by name or email...",
+      "roleFilter": {
+        "all": "All Roles",
+        "tailor": "Tailors Only",
+        "customer": "Customers Only",
+        "admin": "Admins"
+      },
+      "statusFilter": {
+        "all": "All Statuses",
+        "active": "Active Only",
+        "deactivated": "Deactivated Only"
+      },
+      "noResults": "No users found matching filters.",
+      "tableHeaders": {
+        "user": "User",
+        "role": "Role",
+        "location": "Location",
+        "status": "Status",
+        "joined": "Joined",
+        "actions": "Actions"
+      },
+      "active": "Active",
+      "deactivated": "Deactivated",
+      "notProvided": "Not provided",
+      "tooltips": {
+        "viewProfile": "View Full Profile",
+        "message": "Direct Message",
+        "deactivate": "Deactivate Account",
+        "activate": "Activate Account",
+        "delete": "Delete Account"
+      }
+    },
+    "approvals": {
+      "title": "Pending Tailor Registration Queue",
+      "emptyTitle": "All tailor applications reviewed!",
+      "emptyDesc": "New tailor sign-ups will appear here for verification.",
+      "pendingBadge": "Pending Approval",
+      "locationUnspecified": "Location unspecified",
+      "appliedOn": "Applied on",
+      "messageBtn": "Message",
+      "approveBtn": "Approve",
+      "rejectBtn": "Reject",
+      "processing": "Processing..."
+    },
+    "feedback": {
+      "title": "Feedback Inbox",
+      "totalBadge": "Total",
+      "subtitle": "Opinions, bug reports & recommendations from clients and tailors",
+      "refreshBtn": "Refresh",
+      "refreshing": "Refreshing...",
+      "categoryAll": "All",
+      "anonymous": "Anonymous User",
+      "noEmail": "No email",
+      "receivedOn": "Received on",
+      "emptyTitle": "No feedback in this category",
+      "emptyDesc": "Submissions from the feedback widget will appear here.",
+      "categories": {
+        "general": "General",
+        "tailoring": "Tailoring",
+        "ai_measurement": "AI Scan",
+        "feature": "Feature Idea",
+        "bug": "Bug Report"
+      }
+    },
+    "settings": {
+      "title": "Platform Settings",
+      "subtitle": "Live toggles, announcements, commission & specialties",
+      "saveBtn": "Save Settings",
+      "saving": "Saving...",
+      "announcementLabel": "Global Announcement Banner",
+      "announcementHint": "Displayed at the top of the app for all users.",
+      "commissionLabel": "Platform Commission Fee (%)",
+      "commissionHint": "Service commission applied to tailor escrow transactions.",
+      "maintenanceLabel": "System Maintenance Mode",
+      "maintenanceModeOn": "Maintenance Mode Active",
+      "maintenanceModeOff": "Normal Operation",
+      "maintenanceHint": "Warns users about scheduled upgrades.",
+      "specialtiesLabel": "Tailoring Specialties Catalog",
+      "addSpecialtyBtn": "Add",
+      "aiSectionTitle": "AI Body Measurement Provider & API Key",
+      "aiSectionSubtitle": "Switch AI measurement providers and set API keys.",
+      "testConnectionBtn": "Test Connection",
+      "testingBtn": "Testing...",
+      "aiProviderLabel": "AI Provider",
+      "providerNameLabel": "Provider Name",
+      "apiKeyLabel": "API Key",
+      "modelLabel": "Model / Engine",
+      "apiUrlLabel": "API Endpoint URL",
+      "showKey": "Show",
+      "hideKey": "Hide",
+      "aiHint": "Configure Live_AI_Measurement, SnapAIMeasure, or any custom provider by name and API key."
+    },
+    "modal": {
+      "tailorDetails": "Tailor Details",
+      "email": "Email",
+      "phone": "Phone",
+      "location": "Location",
+      "accountStatus": "Account Status",
+      "active": "Active",
+      "deactivated": "Deactivated",
+      "pricing": "Pricing",
+      "messageBtn": "Direct Message",
+      "closeBtn": "Close"
+    }
+  },
+  "scannerModal": {
+    "title": "AI Body Scanner",
+    "badge": "Live AR",
+    "steps": {
+      "height": "Height",
+      "front": "Front",
+      "side": "Side",
+      "review": "Review"
+    },
+    "subtitles": {
+      "height": "Enter your height",
+      "front": "Face the camera",
+      "side": "Turn to side",
+      "review": "Review scan"
+    },
+    "heightSection": {
+      "title": "Standing Height",
+      "subtitle": "Required for accurate 3D sizing.",
+      "cmTab": "Centimeters (cm)",
+      "ftTab": "Feet / Inches (ft/in)",
+      "tip": "Tip: Stand 2–3m back in fitted clothing."
+    },
+    "camera": {
+      "switchCamera": "Switch",
+      "snapPhoto": "Snap Photo",
+      "startTimer": "5s Timer",
+      "capturingIn": "In {{count}}s...",
+      "holdPosture": "Hold still...",
+      "head": "Head",
+      "shoulders": "Shoulders",
+      "hips": "Hips",
+      "ankles": "Ankles"
+    },
+    "review": {
+      "title": "Review Scan",
+      "heightLabel": "Height",
+      "frontView": "Front",
+      "sideView": "Side",
+      "retakeFront": "Retake",
+      "retakeSide": "Retake",
+      "privacyNote": "Encrypted & private for tailoring only.",
+      "backToCamera": "Back",
+      "computeBtn": "Save & Measure"
+    },
+    "nextStep": "Next"
   }
 }

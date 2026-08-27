@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { useToast } from '../context/ToastContext';
@@ -37,6 +38,7 @@ const CATEGORIES = [
 ];
 
 export default function ProductManager() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const isDark = useDarkMode();
@@ -47,6 +49,7 @@ export default function ProductManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [activeLightboxImage, setActiveLightboxImage] = useState<{ url: string; title?: string; description?: string } | null>(null);
 
   // Search & Category Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -182,7 +185,7 @@ export default function ProductManager() {
 
   const handleAddColor = () => {
     if (!colorName.trim()) {
-      toast.error('Please enter a color name (e.g., Midnight Blue)');
+      toast.error('Please enter a color name.');
       return;
     }
     setForm((prev) => ({
@@ -292,14 +295,14 @@ export default function ProductManager() {
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                  Product Catalog & E-Commerce Showcase
+                  {t('productManager.title')}
                 </h3>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20">
-                  {products.length} Products
+                  {products.length}
                 </span>
               </div>
               <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                Curate your luxury bespoke styles, swatches, and customization options displayed to customers.
+                {t('productManager.subtitle')}
               </p>
             </div>
           </div>
@@ -310,47 +313,17 @@ export default function ProductManager() {
           className="btn-primary text-sm px-5 py-3 rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-primary-500/25 transition-all"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Showcase Product</span>
+          <span>{t('productManager.addBtn')}</span>
         </button>
       </div>
 
-      {/* 2. Storefront Metrics Bar */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
-          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Active Garments
-          </p>
-          <p className={`text-2xl font-extrabold font-serif mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            {products.length}
-          </p>
-        </div>
-
-        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
-          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Fabric Swatches
-          </p>
-          <p className="text-2xl font-extrabold font-serif mt-1 text-primary-600 dark:text-primary-400">
-            {totalColorsCount}
-          </p>
-        </div>
-
-        <div className={`p-4 rounded-2xl border ${isDark ? 'bg-gray-800/60 border-gray-700/60' : 'bg-slate-50 border-slate-200'}`}>
-          <p className={`text-[11px] font-bold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            Bespoke Options
-          </p>
-          <p className="text-2xl font-extrabold font-serif mt-1 text-amber-500">
-            {totalOptionsCount}
-          </p>
-        </div>
-      </div>
-
-      {/* 3. Search & Filter Bar */}
+      {/* 2. Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search catalog by garment name, description, fabric..."
+            placeholder={t('productManager.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field pl-10 text-sm py-2.5"
@@ -366,7 +339,7 @@ export default function ProductManager() {
         </div>
       </div>
 
-      {/* 4. E-Commerce Product Cards Grid */}
+      {/* 3. E-Commerce Product Cards Grid */}
       {fetching ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
@@ -383,21 +356,21 @@ export default function ProductManager() {
             <Package className="w-8 h-8" />
           </div>
           <h4 className={`text-lg font-bold mb-1.5 ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            {searchQuery ? 'No products matched your search' : 'No products in your showcase catalog yet'}
+            {searchQuery ? t('productManager.emptySearch') : t('productManager.empty')}
           </h4>
           <p className={`text-xs sm:text-sm max-w-md mx-auto mb-6 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
             {searchQuery 
-              ? 'Try changing your search term or clearing the filter.' 
-              : 'Add suits, dresses, tuxedos, and bespoke attire to highlight your craftsmanship to prospective clients.'}
+              ? t('productManager.emptySearchDesc') 
+              : t('productManager.emptyDesc')}
           </p>
           <button
             onClick={searchQuery ? () => setSearchQuery('') : handleOpenCreateModal}
             className="btn-primary text-xs sm:text-sm px-6 py-3 rounded-2xl font-bold inline-flex items-center space-x-2 shadow-lg"
           >
-            {searchQuery ? <span>Clear Search Filter</span> : (
+            {searchQuery ? <span>{t('productManager.clearFilter')}</span> : (
               <>
                 <Plus className="w-4 h-4" />
-                <span>Add Your First Product</span>
+                <span>{t('productManager.addFirst')}</span>
               </>
             )}
           </button>
@@ -406,7 +379,7 @@ export default function ProductManager() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((p) => {
             const primaryImg = p.images?.find((i: any) => i.isPrimary)?.url || p.images?.[0]?.url;
-            const price = Number(p.basePrice) > 0 ? `$${Number(p.basePrice).toFixed(2)}` : 'Starting from inquiry';
+            const price = Number(p.basePrice) > 0 ? `$${Number(p.basePrice).toFixed(2)}` : 'Custom Quote';
 
             return (
               <div
@@ -415,9 +388,12 @@ export default function ProductManager() {
                   isDark ? 'bg-gray-800/90 border-gray-700/80 hover:border-amber-500/50' : 'bg-white border-slate-200 hover:border-amber-300'
                 }`}
               >
-                {/* Product Image Stage */}
+                {/* Product Image Stage with Zoom Trigger */}
                 <div>
-                  <div className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden">
+                  <div 
+                    onClick={() => primaryImg && setActiveLightboxImage({ url: primaryImg, title: p.name, description: p.description })}
+                    className="aspect-[4/3] w-full bg-slate-950 relative overflow-hidden cursor-pointer group/img"
+                  >
                     {primaryImg ? (
                       <img
                         src={primaryImg}
@@ -427,28 +403,40 @@ export default function ProductManager() {
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-slate-900">
                         <ImageIcon className="w-10 h-10 mb-1 opacity-30" />
-                        <span className="text-xs font-semibold">No Image Uploaded</span>
+                        <span className="text-xs font-semibold">Custom Bespoke</span>
                       </div>
                     )}
+
+                    {/* Zoom Overlay on Hover */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <span className="px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 border border-white/20">
+                        <Eye className="w-3.5 h-3.5 text-amber-400" />
+                        {t('productManager.clickToZoom')}
+                      </span>
+                    </div>
 
                     {/* Gradient Vignette */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
 
                     {/* Price Tag Floating Badge */}
-                    <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-xs shadow-lg">
+                    <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-black/75 backdrop-blur-md border border-white/20 text-white font-extrabold text-xs shadow-lg pointer-events-none">
                       {price}
                     </div>
 
                     {/* Image Count Badge */}
                     {p.images && p.images.length > 1 && (
-                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold">
-                        📸 {p.images.length} photos
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold pointer-events-none">
+                        📸 {p.images.length}
                       </div>
                     )}
 
                     {/* Quick Edit & Delete Actions (Floating Overlay) */}
-                    <div className="absolute top-3 right-3 flex items-center space-x-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute top-3 right-3 flex items-center space-x-1.5 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
                       <button
+                        type="button"
                         onClick={() => handleOpenEditModal(p)}
                         title="Edit Product"
                         className="p-2.5 rounded-xl bg-white/95 dark:bg-gray-900/95 text-slate-800 dark:text-white shadow-lg hover:scale-105 transition-all cursor-pointer backdrop-blur-xs"
@@ -456,6 +444,7 @@ export default function ProductManager() {
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        type="button"
                         onClick={() => handleDelete(p.id, p.name)}
                         title="Delete Product"
                         className="p-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-lg hover:scale-105 transition-all cursor-pointer backdrop-blur-xs"
@@ -468,6 +457,11 @@ export default function ProductManager() {
                   {/* Product Details Body */}
                   <div className="p-5 space-y-3">
                     <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          {p.category || 'Custom Bespoke'}
+                        </span>
+                      </div>
                       <h4 className={`font-bold text-base sm:text-lg leading-snug line-clamp-1 group-hover:text-amber-500 transition-colors ${
                         isDark ? 'text-white' : 'text-slate-900'
                       }`}>
@@ -529,7 +523,7 @@ export default function ProductManager() {
                     }`}
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    <span>Edit Garment Specs</span>
+                    <span>{t('productManager.editSpecs')}</span>
                   </button>
                 </div>
               </div>
@@ -558,10 +552,10 @@ export default function ProductManager() {
                 </div>
                 <div>
                   <h3 className="font-bold text-base sm:text-lg leading-tight">
-                    {editingProduct ? 'Edit Showcase Garment' : 'Create New Showcase Garment'}
+                    {editingProduct ? t('productManager.modalEditTitle') : t('productManager.modalCreateTitle')}
                   </h3>
                   <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-                    Define product pricing, fabric swatches, and customization attributes for clients.
+                    {t('productManager.modalSubtitle')}
                   </p>
                 </div>
               </div>
@@ -584,7 +578,7 @@ export default function ProductManager() {
                   <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                     isDark ? 'text-gray-300' : 'text-slate-700'
                   }`}>
-                    Garment Title *
+                    {t('productManager.garmentTitle')} *
                   </label>
                   <input
                     type="text"
@@ -599,7 +593,7 @@ export default function ProductManager() {
                   <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                     isDark ? 'text-gray-300' : 'text-slate-700'
                   }`}>
-                    Base Price ($)
+                    {t('productManager.basePrice')}
                   </label>
                   <input
                     type="number"
@@ -617,7 +611,7 @@ export default function ProductManager() {
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
-                  Description & Fabric Specifications
+                  {t('productManager.description')}
                 </label>
                 <textarea
                   rows={3}
@@ -632,7 +626,7 @@ export default function ProductManager() {
                 <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                   isDark ? 'text-gray-300' : 'text-slate-700'
                 }`}>
-                  Product Photography Gallery
+                  {t('productManager.gallery')}
                 </label>
                 
                 <div
@@ -657,10 +651,10 @@ export default function ProductManager() {
                   >
                     <UploadCloud className={`h-8 w-8 ${uploadingImage ? 'animate-bounce text-amber-500' : isDark ? 'text-gray-400' : 'text-slate-500'}`} />
                     <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">
-                      {uploadingImage ? 'Uploading image...' : 'Browse Image or Drag Photo'}
+                      {uploadingImage ? t('common.loading') : t('productManager.browsePhotos')}
                     </span>
                     <span className={`text-[11px] ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                      PNG, JPG, or WebP up to 10MB
+                      PNG, JPG, or WebP
                     </span>
                   </label>
                 </div>
@@ -692,7 +686,7 @@ export default function ProductManager() {
                             img.isPrimary ? 'bg-amber-500 text-white' : 'bg-black/60 text-white hover:bg-black/80'
                           }`}
                         >
-                          {img.isPrimary ? '★ Primary' : 'Set Primary'}
+                          {img.isPrimary ? `★ ${t('productManager.primary')}` : t('productManager.setPrimary')}
                         </button>
                       </div>
                     ))}
@@ -707,9 +701,8 @@ export default function ProductManager() {
                 }`}>
                   <span className="flex items-center space-x-1.5">
                     <Palette className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Fabric Colors & Swatches</span>
+                    <span>{t('productManager.colorsTitle')}</span>
                   </span>
-                  <span className="text-[10px] font-normal lowercase opacity-70">optional</span>
                 </label>
 
                 <div className="flex items-center gap-2 mb-3">
@@ -717,6 +710,7 @@ export default function ProductManager() {
                     type="text"
                     value={colorName}
                     onChange={(e) => setColorName(e.target.value)}
+                    placeholder={t('productManager.colorName')}
                     className="input-field text-xs flex-1 py-2"
                   />
                   <input
@@ -730,7 +724,7 @@ export default function ProductManager() {
                     onClick={handleAddColor}
                     className="btn-secondary text-xs px-3.5 py-2 font-bold flex-shrink-0"
                   >
-                    + Add Color
+                    + {t('productManager.addColor')}
                   </button>
                 </div>
 
@@ -765,9 +759,8 @@ export default function ProductManager() {
                 }`}>
                   <span className="flex items-center space-x-1.5">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Customization Options</span>
+                    <span>{t('productManager.optionsTitle')}</span>
                   </span>
-                  <span className="text-[10px] font-normal lowercase opacity-70">optional</span>
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
@@ -775,6 +768,7 @@ export default function ProductManager() {
                     type="text"
                     value={optName}
                     onChange={(e) => setOptName(e.target.value)}
+                    placeholder={t('productManager.optionName')}
                     className="input-field text-xs py-2"
                   />
                   <div className="flex gap-2">
@@ -782,6 +776,7 @@ export default function ProductManager() {
                       type="text"
                       value={optVals}
                       onChange={(e) => setOptVals(e.target.value)}
+                      placeholder={t('productManager.optionValues')}
                       className="input-field text-xs flex-1 py-2"
                     />
                     <button
@@ -789,7 +784,7 @@ export default function ProductManager() {
                       onClick={handleAddOption}
                       className="btn-secondary text-xs px-3 py-2 font-bold flex-shrink-0"
                     >
-                      + Add
+                      + {t('productManager.addOption')}
                     </button>
                   </div>
                 </div>
@@ -827,7 +822,7 @@ export default function ProductManager() {
                   onClick={handleCloseModal}
                   className="btn-secondary text-xs sm:text-sm px-5 py-2.5 rounded-xl"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
@@ -835,10 +830,45 @@ export default function ProductManager() {
                   className="btn-primary text-xs sm:text-sm px-6 py-2.5 rounded-xl font-bold flex items-center space-x-2 shadow-lg"
                 >
                   <Check className="w-4 h-4" />
-                  <span>{loading ? 'Saving Garment...' : editingProduct ? 'Save Changes' : 'Publish Product'}</span>
+                  <span>{loading ? t('productManager.saving') : t('productManager.saveChanges')}</span>
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 4. LIGHTBOX ZOOM MODAL FOR TAILOR PRODUCT PREVIEW */}
+      {/* ========================================================= */}
+      {activeLightboxImage && (
+        <div
+          onClick={() => setActiveLightboxImage(null)}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-4xl w-full bg-slate-950 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl"
+          >
+            <button
+              onClick={() => setActiveLightboxImage(null)}
+              className="absolute top-4 right-4 z-10 p-2.5 rounded-full bg-black/70 text-white hover:bg-black/90 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <img
+              src={activeLightboxImage.url}
+              alt={activeLightboxImage.title}
+              className="w-full max-h-[80vh] object-contain bg-black/50"
+            />
+            {activeLightboxImage.title && (
+              <div className="p-5 bg-slate-900 border-t border-slate-800 text-white">
+                <h4 className="font-bold text-base">{activeLightboxImage.title}</h4>
+                {activeLightboxImage.description && (
+                  <p className="text-xs text-slate-400 mt-1">{activeLightboxImage.description}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

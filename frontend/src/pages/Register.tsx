@@ -9,6 +9,69 @@ import { authAPI } from '../lib/api';
 import { Scissors, Mail, Lock, Eye, EyeOff, MapPin, Phone, User, ArrowRight, ShieldCheck, RefreshCw, ArrowLeft } from 'lucide-react';
 import tailorHeroImg from '../assets/atelier_tailor_hero.jpg';
 import customerHeroImg from '../assets/atelier_customer_hero.jpg';
+import Select, { StylesConfig } from 'react-select';
+import { COUNTRIES, CountryOption, getFlag } from '../lib/countryCodes';
+
+// ─── Known invalid / typo TLDs to reject ────────────────────────────────────
+const INVALID_TLDS = new Set([
+  'con','cmo','ocm','cm','gmai','gmial','gmal','gmil','yaho','yaoo',
+  'dom','cim','nett','orgg','inffo','vom','comt','nets','mailcom',
+  'gmaill','hotmial','outook','outlok','yhaoo',
+]);
+
+// ─── Validate email strictly ─────────────────────────────────────────────────
+function validateEmail(email: string): string | null {
+  const trimmed = email.trim().toLowerCase();
+  // Basic RFC-style check
+  const basicPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+  if (!basicPattern.test(trimmed)) return 'Enter a valid email address.';
+
+  const parts = trimmed.split('@');
+  if (parts.length !== 2) return 'Enter a valid email address.';
+
+  const domain = parts[1];
+  const domainParts = domain.split('.');
+  const tld = domainParts[domainParts.length - 1];
+
+  // TLD must be at least 2 chars and not in known-bad list
+  if (tld.length < 2) return 'Email domain extension is too short.';
+  if (INVALID_TLDS.has(tld)) return `"${tld}" is not a valid domain extension. Did you make a typo?`;
+
+  // Catch very common typos in domain name itself
+  const domainName = domainParts.slice(0, -1).join('.');
+  const DOMAIN_TYPOS: Record<string, string> = {
+    'gmial': 'gmail', 'gmai': 'gmail', 'gmal': 'gmail', 'gmali': 'gmail',
+    'yaho': 'yahoo', 'yaoo': 'yahoo', 'yhaoo': 'yahoo',
+    'hotmial': 'hotmail', 'outook': 'outlook', 'outlok': 'outlook',
+  };
+  if (DOMAIN_TYPOS[domainName]) {
+    return `Did you mean "${DOMAIN_TYPOS[domainName]}.com"?`;
+  }
+
+  // Consecutive dots
+  if (/\.{2,}/.test(domain)) return 'Email domain contains consecutive dots.';
+
+  return null; // valid
+}
+
+// ─── Validate local phone number for selected country ────────────────────────
+function validatePhone(localNumber: string, country: CountryOption): string | null {
+  const digits = localNumber.replace(/\D/g, '');
+  if (digits.length === 0) return null; // optional field
+
+  if (digits.length < country.minDigits || digits.length > country.maxDigits) {
+    return `${country.label} phone numbers must have ${country.minDigits === country.maxDigits ? country.minDigits : `${country.minDigits}–${country.maxDigits}`} digits.`;
+  }
+
+  if (country.prefixes && country.prefixes.length > 0) {
+    const matchesPrefix = country.prefixes.some((p) => digits.startsWith(p));
+    if (!matchesPrefix) {
+      return `${country.label} numbers must start with: ${country.prefixes.join(', ')}.`;
+    }
+  }
+
+  return null;
+}
 
 export default function Register() {
   const { t } = useTranslation();
@@ -32,6 +95,15 @@ export default function Register() {
     phone: '',
     location: '',
   });
+
+  // Country code state
+  const [selectedCountry, setSelectedCountry] = useState<CountryOption>(COUNTRIES[0]);
+  const [localPhone, setLocalPhone] = useState('');
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  // Portal target set after mount to avoid React DOM reconciliation errors
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => { setPortalTarget(document.body); }, []);
 
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +146,28 @@ export default function Register() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (name === 'email') {
+      setEmailError(validateEmail(value));
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/[^\d\s\-().+]/g, '');
+    setLocalPhone(raw);
+    setPhoneError(validatePhone(raw, selectedCountry));
+    // Compose full international number for form submission
+    const digits = raw.replace(/\D/g, '');
+    setForm((prev) => ({ ...prev, phone: digits ? `${selectedCountry.dialCode}${digits}` : '' }));
+  };
+
+  const handleCountryChange = (option: CountryOption | null) => {
+    if (!option) return;
+    setSelectedCountry(option);
+    setLocalPhone('');
+    setPhoneError(null);
+    setForm((prev) => ({ ...prev, phone: '' }));
   };
 
   // Handle OTP digit change
@@ -113,6 +206,24 @@ export default function Register() {
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Email validation
+    const emailErr = validateEmail(form.email);
+    if (emailErr) {
+      setEmailError(emailErr);
+      setError(emailErr);
+      return;
+    }
+
+    // Phone validation (if provided)
+    if (localPhone.trim()) {
+      const phoneErr = validatePhone(localPhone, selectedCountry);
+      if (phoneErr) {
+        setPhoneError(phoneErr);
+        setError(phoneErr);
+        return;
+      }
+    }
 
     // Client-side password validation
     if (form.password.length < 8) {
@@ -188,8 +299,8 @@ export default function Register() {
       });
       toast.success(
         activeRole === 'tailor'
-          ? 'Artisan account created & verified successfully!'
-          : 'Welcome to StitchMatch Atelier!'
+          ? 'Tailor account created & verified successfully!'
+          : 'Welcome to የደስደስ Fashion!'
       );
       navigate('/dashboard');
     } catch (err: any) {
@@ -209,8 +320,8 @@ export default function Register() {
         await googleLogin({ token: tokenResponse.access_token, role: activeRole });
         toast.success(
           activeRole === 'tailor'
-            ? 'Artisan account created successfully with Google!'
-            : 'Welcome to StitchMatch Atelier!'
+            ? 'Tailor account created successfully with Google!'
+            : 'Welcome to የደስደስ Fashion!'
         );
         navigate('/dashboard');
       } catch (err: any) {
@@ -237,18 +348,18 @@ export default function Register() {
         <div className="absolute inset-0 z-0">
           <img
             src={activeRole === 'tailor' ? tailorHeroImg : customerHeroImg}
-            alt="Atelier Background"
+            alt="Tailor Background"
             className="w-full h-full object-cover opacity-55 transform scale-105 transition-all duration-700 ease-out"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/60" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-transparent to-black/30" />
         </div>
 
-        {/* Top Atelier Branding */}
+        {/* Top Tailoring Branding */}
         <div className="relative z-10">
           <Link to="/" className="inline-flex items-center space-x-2">
             <span className="text-xs font-bold tracking-[0.28em] text-slate-300 uppercase">
-              Atelier Portal
+              የደስደስ Fashion
             </span>
           </Link>
         </div>
@@ -284,7 +395,7 @@ export default function Register() {
 
         {/* Bottom indicator */}
         <div className="relative z-10 text-xs text-slate-400">
-          StitchMatch Atelier · Bespoke Tailoring & Digital Commission
+          የደስደስ Fashion · Bespoke Tailoring & Custom Orders
         </div>
       </div>
 
@@ -312,7 +423,7 @@ export default function Register() {
                 <Scissors className="h-4 w-4" />
               </div>
               <span className="font-bold text-lg tracking-tight">
-                Stitch<span className="text-amber-500">Match</span>
+                የደስደስ <span className="text-amber-500">Fashion</span>
               </span>
             </Link>
           )}
@@ -331,12 +442,12 @@ export default function Register() {
                 <h2 className={`text-3xl sm:text-4xl font-serif tracking-tight font-normal ${
                   isDark ? 'text-white' : 'text-slate-900'
                 }`}>
-                  {activeRole === 'tailor' ? 'Join as an artisan' : 'Create your account'}
+                  {activeRole === 'tailor' ? 'Join as a tailor' : 'Create your account'}
                 </h2>
                 <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {activeRole === 'tailor'
-                    ? 'Create your studio profile and begin accepting custom commissions.'
-                    : 'Sign up to discover artisans and commission tailored garments.'}
+                    ? 'Create your tailor profile and begin accepting custom orders.'
+                    : 'Sign up to discover master tailors and commission custom garments.'}
                 </p>
               </div>
 
@@ -356,23 +467,23 @@ export default function Register() {
                   <label className={`block text-xs font-medium mb-1 ${
                     isDark ? 'text-slate-300' : 'text-slate-700'
                   }`}>
-                    {activeRole === 'tailor' ? 'Studio / Artisan Name *' : 'Full Name *'}
+                    {activeRole === 'tailor' ? 'Tailor / Shop Name *' : 'Full Name *'}
                   </label>
-                  <div className={`flex items-center px-3.5 py-2.5 rounded-xl border transition-all ${
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
                     isDark
-                      ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400'
-                      : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                      ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20'
+                      : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <User className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <User className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type="text"
                       required
+                      minLength={2}
                       name="name"
                       value={form.name}
                       onChange={handleChange}
-                      placeholder="e.g. Elena Rostova"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                   </div>
@@ -380,64 +491,69 @@ export default function Register() {
 
                 {/* Email Address */}
                 <div>
-                  <label className={`block text-xs font-medium mb-1 ${
-                    isDark ? 'text-slate-300' : 'text-slate-700'
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-purple-300' : 'text-purple-900'
                   }`}>
                     Email address *
                   </label>
-                  <div className={`flex items-center px-3.5 py-2.5 rounded-xl border transition-all ${
-                    isDark
-                      ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400'
-                      : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
+                    emailError
+                      ? 'border-red-500 ring-2 ring-red-500/20'
+                      : isDark
+                        ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20'
+                        : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <Mail className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <Mail className={`h-4 w-4 mr-3 flex-shrink-0 ${emailError ? 'text-red-500' : isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type="email"
                       required
+                      autoComplete="email"
                       name="email"
                       value={form.email}
                       onChange={handleChange}
-                      placeholder="name@email.com"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                   </div>
+                  {emailError && (
+                    <p className="text-[11px] text-red-500 mt-1 font-medium">{emailError}</p>
+                  )}
                 </div>
 
                 {/* Password */}
                 <div>
-                  <label className={`block text-xs font-medium mb-1 ${
-                    isDark ? 'text-slate-300' : 'text-slate-700'
+                  <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                    isDark ? 'text-purple-300' : 'text-purple-900'
                   }`}>
                     Password *
                   </label>
-                  <div className={`flex items-center px-3.5 py-2.5 rounded-xl border transition-all ${
+                  <div className={`flex items-center px-4 py-3 rounded-2xl border-2 transition-all ${
                     isDark
-                      ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400'
-                      : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                      ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20'
+                      : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                   }`}>
-                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                    <Lock className={`h-4 w-4 mr-3 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
+                      minLength={8}
                       name="password"
                       value={form.password}
                       onChange={handleChange}
-                      placeholder="••••••••"
-                      className={`w-full bg-transparent outline-none text-sm ${
-                        isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                      className={`w-full bg-transparent outline-none text-sm font-semibold ${
+                        isDark ? 'text-white' : 'text-slate-900'
                       }`}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                      className="p-1 text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  <p className={`text-[11px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <p className={`text-[11px] font-medium mt-1 ${isDark ? 'text-purple-400/80' : 'text-purple-800'}`}>
                     Must be at least 8 characters with 1 uppercase letter & 1 number.
                   </p>
                 </div>
@@ -445,54 +561,145 @@ export default function Register() {
                 {/* Location & Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={`block text-xs font-medium mb-1 ${
-                      isDark ? 'text-slate-300' : 'text-slate-700'
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                      isDark ? 'text-purple-300' : 'text-purple-900'
                     }`}>
                       City / Location
                     </label>
-                    <div className={`flex items-center px-3 py-2 rounded-xl border transition-all ${
+                    <div className={`flex items-center px-4 py-2.5 rounded-2xl border-2 transition-all ${
                       isDark
-                        ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400'
-                        : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+                        ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20'
+                        : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                     }`}>
-                      <MapPin className={`h-3.5 w-3.5 mr-2 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                      <MapPin className={`h-3.5 w-3.5 mr-2 flex-shrink-0 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
                       <input
                         type="text"
                         name="location"
                         value={form.location}
                         onChange={handleChange}
-                        placeholder="e.g. Milan, Italy"
-                        className={`w-full bg-transparent outline-none text-xs ${
-                          isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                        className={`w-full bg-transparent outline-none text-xs font-semibold ${
+                          isDark ? 'text-white' : 'text-slate-900'
                         }`}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className={`block text-xs font-medium mb-1 ${
-                      isDark ? 'text-slate-300' : 'text-slate-700'
+                    <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                      isDark ? 'text-purple-300' : 'text-purple-900'
                     }`}>
                       Phone number
                     </label>
-                    <div className={`flex items-center px-3 py-2 rounded-xl border transition-all ${
-                      isDark
-                        ? 'bg-[#171923] border-slate-700/80 focus-within:border-slate-400'
-                        : 'bg-white border-slate-200 focus-within:border-slate-900 shadow-2xs'
+
+                    {/* Single unified phone input */}
+                    <div className={`flex items-center rounded-2xl border-2 transition-all ${
+                      phoneError
+                        ? 'border-red-500 ring-2 ring-red-500/20'
+                        : isDark
+                          ? 'bg-[#171923] border-slate-700 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-500/20'
+                          : 'bg-white border-slate-300 focus-within:border-purple-600 focus-within:ring-4 focus-within:ring-purple-500/20 shadow-sm'
                     }`}>
-                      <Phone className={`h-3.5 w-3.5 mr-2 flex-shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                      {/* Country selector — borderless, blends into container */}
+                      <Select<CountryOption>
+                        options={COUNTRIES}
+                        value={selectedCountry}
+                        onChange={handleCountryChange}
+                        isSearchable
+                        menuPlacement="auto"
+                        menuPosition="fixed"
+                        menuPortalTarget={portalTarget}
+                        placeholder="🌍"
+                        formatOptionLabel={(opt, { context }) =>
+                          context === 'menu' ? (
+                            // Dropdown: flag emoji + full country name + dial code
+                            <span className="flex items-center gap-2 text-xs">
+                              <span className="text-base leading-none">{getFlag(opt.value)}</span>
+                              <span className="font-medium flex-1 truncate">{opt.label}</span>
+                              <span className={`font-mono text-[11px] font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{opt.dialCode}</span>
+                            </span>
+                          ) : (
+                            // Control (selected) — compact: flag + dial code only
+                            <span className="flex items-center gap-1 text-xs font-bold">
+                              <span className="text-base leading-none">{getFlag(opt.value)}</span>
+                              <span className={`font-mono ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{opt.dialCode}</span>
+                            </span>
+                          )
+                        }
+                        getOptionLabel={(opt) => `${opt.label} ${opt.dialCode}`}
+                        getOptionValue={(opt) => opt.value}
+                        styles={{
+                          container: (base) => ({ ...base, flexShrink: 0 }),
+                          control: (base) => ({
+                            ...base,
+                            background: 'transparent',
+                            border: 'none',
+                            boxShadow: 'none',
+                            minHeight: 40,
+                            paddingLeft: 10,
+                            paddingRight: 0,
+                            cursor: 'pointer',
+                            width: 110,
+                          }),
+                          valueContainer: (base) => ({ ...base, padding: '0 4px 0 0' }),
+                          singleValue: (base) => ({ ...base, color: isDark ? '#fff' : '#0f172a', margin: 0 }),
+                          menu: (base) => ({
+                            ...base,
+                            background: isDark ? '#1e2130' : '#fff',
+                            zIndex: 9999,
+                            borderRadius: 14,
+                            overflow: 'hidden',
+                            width: 260,
+                            boxShadow: '0 8px 30px rgba(0,0,0,0.22)',
+                          }),
+                          menuList: (base) => ({ ...base, padding: 4 }),
+                          option: (base, state) => ({
+                            ...base,
+                            background: state.isSelected ? '#7c3aed' : state.isFocused ? (isDark ? '#2d3148' : '#f5f3ff') : 'transparent',
+                            color: state.isSelected ? '#fff' : isDark ? '#e2e8f0' : '#1e293b',
+                            fontSize: 12,
+                            borderRadius: 10,
+                            cursor: 'pointer',
+                            padding: '7px 10px',
+                          }),
+                          input: (base) => ({ ...base, color: isDark ? '#fff' : '#0f172a', fontSize: 12, margin: 0 }),
+                          placeholder: (base) => ({ ...base, fontSize: 14, color: isDark ? '#64748b' : '#94a3b8' }),
+                          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                          indicatorSeparator: () => ({ display: 'none' }),
+                          dropdownIndicator: (base) => ({
+                            ...base,
+                            padding: '0 6px 0 0',
+                            color: isDark ? '#64748b' : '#94a3b8',
+                          }),
+                        } as StylesConfig<CountryOption>}
+                      />
+
+                      {/* Thin divider */}
+                      <div className={`w-px self-stretch my-2 ${isDark ? 'bg-slate-600' : 'bg-slate-200'}`} />
+
+                      {/* Number input */}
                       <input
-                        type="text"
+                        type="tel"
                         name="phone"
-                        value={form.phone}
-                        onChange={handleChange}
-                        placeholder="+1 (555) 000-0000"
-                        className={`w-full bg-transparent outline-none text-xs ${
-                          isDark ? 'text-white placeholder-slate-500' : 'text-slate-900 placeholder-slate-400'
+                        value={localPhone}
+                        onChange={handlePhoneChange}
+                        inputMode="numeric"
+                        className={`flex-1 bg-transparent outline-none text-xs font-semibold px-3 py-2.5 ${
+                          isDark ? 'text-white' : 'text-slate-900'
                         }`}
                       />
                     </div>
+
+                    {/* Hint / error below */}
+                    {phoneError ? (
+                      <p className="text-[11px] text-red-500 mt-1 font-medium">{phoneError}</p>
+                    ) : (
+                      <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {selectedCountry.flag} {selectedCountry.label} {selectedCountry.dialCode} &middot; {selectedCountry.minDigits === selectedCountry.maxDigits ? `${selectedCountry.minDigits} digits` : `${selectedCountry.minDigits}–${selectedCountry.maxDigits} digits`}
+                        {selectedCountry.prefixes ? ` · starts with ${selectedCountry.prefixes.slice(0, 3).join(', ')}` : ''}
+                      </p>
+                    )}
                   </div>
+
                 </div>
 
                 {/* Submit Button */}
@@ -538,7 +745,7 @@ export default function Register() {
                       <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                     </svg>
                   )}
-                  <span>{googleLoading ? 'Connecting with Google...' : activeRole === 'tailor' ? 'Register with Google as Artisan' : 'Continue with Google'}</span>
+                  <span>{googleLoading ? 'Connecting with Google...' : activeRole === 'tailor' ? 'Register with Google as Tailor' : 'Continue with Google'}</span>
                 </button>
               </div>
 
@@ -663,7 +870,7 @@ export default function Register() {
         {/* Footer Note */}
         <div className="text-center pt-6">
           <p className={`text-[11px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-            © 2026 Atelier Portal · Crafted with care
+            © 2026 የደስደስ Fashion · Custom Tailoring Platform
           </p>
         </div>
 

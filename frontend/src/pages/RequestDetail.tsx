@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { requestsAPI, measurementsAPI, ordersAPI, reviewsAPI, negotiationsAPI, uploadsAPI } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDarkMode } from '../hooks/useDarkMode';
@@ -44,6 +45,7 @@ import { validateDualPoseImages, validateTriplePoseImages } from '../utils/image
 const statusFlow = ['Pending', 'Under_Discussion', 'Agreed', 'In_Progress', 'Completed'];
 
 export default function RequestDetail() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -196,18 +198,20 @@ export default function RequestDetail() {
   const handleAccept = async () => {
     try {
       await requestsAPI.accept(id!);
+      toast.success('Service request accepted! You can now finalize specifications.');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to accept');
+      toast.error(err.response?.data?.error || 'Failed to accept request');
     }
   };
 
   const handleReject = async () => {
     try {
       await requestsAPI.reject(id!);
+      toast.info('Service request declined.');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to reject');
+      toast.error(err.response?.data?.error || 'Failed to reject request');
     }
   };
 
@@ -215,9 +219,10 @@ export default function RequestDetail() {
     setSubmitting(true);
     try {
       await requestsAPI.confirmCustomer(id!);
+      toast.success('You confirmed the tailoring agreement!');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to confirm');
+      toast.error(err.response?.data?.error || 'Failed to confirm agreement');
     } finally {
       setSubmitting(false);
     }
@@ -227,9 +232,10 @@ export default function RequestDetail() {
     setSubmitting(true);
     try {
       await requestsAPI.confirmTailor(id!);
+      toast.success('Tailor agreement confirmed!');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to confirm');
+      toast.error(err.response?.data?.error || 'Failed to confirm agreement');
     } finally {
       setSubmitting(false);
     }
@@ -375,23 +381,25 @@ export default function RequestDetail() {
 
       setShowAdjustmentsPanel(false);
       setAdjustmentsForm({ chest: '', waist: '', hip: '', inseam: '', shoulderWidth: '', armLength: '', note: '' });
+      toast.success('Bespoke measurement adjustments saved!');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to save adjustments');
+      toast.error(err.response?.data?.error || 'Failed to save adjustments');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleUpdateOrder = async (e: React.FormEvent) => {
+  const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await ordersAPI.createEvent(id!, { status: orderStatus, notes: orderNotes });
+      await ordersAPI.createEvent(id!, { status: 'completed', notes: orderNotes.trim() || undefined });
+      toast.success('Order marked as Completed & Delivered! Client can now leave a review.');
       loadRequest();
       setOrderNotes('');
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to update order');
+      toast.error(err.response?.data?.error || 'Failed to complete order');
     } finally {
       setSubmitting(false);
     }
@@ -402,11 +410,12 @@ export default function RequestDetail() {
     setSubmitting(true);
     try {
       await reviewsAPI.create(id!, { rating: reviewRating, feedback: reviewFeedback.trim() });
+      toast.success('Thank you! Your review and rating have been published.');
       setReviewFeedback('');
       setReviewRating(5);
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to submit review');
+      toast.error(err.response?.data?.error || 'Failed to submit review');
     } finally {
       setSubmitting(false);
     }
@@ -418,10 +427,11 @@ export default function RequestDetail() {
     try {
       if (!request.review?.id) return;
       await reviewsAPI.reply(request.review.id, { tailorReply: reviewReply.trim() });
+      toast.success('Your response to the client has been posted!');
       setReviewReply('');
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to submit reply');
+      toast.error(err.response?.data?.error || 'Failed to submit reply');
     } finally {
       setSubmitting(false);
     }
@@ -444,11 +454,12 @@ export default function RequestDetail() {
         garmentSpecs: garmentSpecsParsed,
         notes: negotiationForm.notes || undefined,
       });
+      toast.success('Counter-offer submitted to the tailor!');
       setShowNegotiationForm(false);
       setNegotiationForm({ proposedPrice: '', proposedDeadline: '', garmentSpecs: '{}', notes: '' });
       loadNegotiations();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to propose counter-offer');
+      toast.error(err.response?.data?.error || 'Failed to propose counter-offer');
     } finally {
       setSubmitting(false);
     }
@@ -457,19 +468,21 @@ export default function RequestDetail() {
   const handleAcceptNegotiation = async (negotiationId: string) => {
     try {
       await negotiationsAPI.accept(negotiationId);
+      toast.success('Counter-offer accepted! Terms have been updated.');
       loadNegotiations();
       loadRequest();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to accept');
+      toast.error(err.response?.data?.error || 'Failed to accept negotiation');
     }
   };
 
   const handleDeclineNegotiation = async (negotiationId: string) => {
     try {
       await negotiationsAPI.decline(negotiationId);
+      toast.info('Counter-offer declined.');
       loadNegotiations();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to decline');
+      toast.error(err.response?.data?.error || 'Failed to decline negotiation');
     }
   };
 
@@ -486,7 +499,7 @@ export default function RequestDetail() {
   return (
     <div>
       <Link to="/dashboard" className={`flex items-center space-x-1 ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} mb-6 print:hidden`}>
-        <ArrowLeft className="h-4 w-4" /><span>Back to Dashboard</span>
+        <ArrowLeft className="h-4 w-4" /><span>{t('requestDetail.backBtn')}</span>
       </Link>
 
       {/* Image Modal Lightbox */}
@@ -520,16 +533,18 @@ export default function RequestDetail() {
         <div className="flex items-center justify-between mb-4">
           <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{request.garmentType}</h1>
           <div className="flex items-center space-x-2 print:hidden">
-            <button
-              onClick={() => setShowSpecSheetModal(true)}
-              className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium flex items-center space-x-2 transition-colors cursor-pointer"
-              title="Print or Save Atelier Technical Spec Sheet PDF"
-            >
-              <Printer className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              <span className="hidden sm:inline">Print Spec Sheet</span>
-            </button>
+            {(isTailor || user?.role === 'admin') && (
+              <button
+                onClick={() => setShowSpecSheetModal(true)}
+                className="px-3.5 py-2 rounded-xl border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium flex items-center space-x-2 transition-colors cursor-pointer"
+                title="Print or Save Tailor Technical Spec Sheet PDF"
+              >
+                <Printer className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <span className="hidden sm:inline">{t('requestDetail.printSpecSheet')}</span>
+              </button>
+            )}
             <Link to={`/messages/${id}`} className="btn-secondary flex items-center space-x-2">
-              <MessageSquare className="h-4 w-4" /><span>Chat</span>
+              <MessageSquare className="h-4 w-4" /><span>{t('requestDetail.chatBtn')}</span>
             </Link>
           </div>
         </div>
@@ -548,23 +563,27 @@ export default function RequestDetail() {
           ))}
         </div>
         <div className={`flex justify-between mt-2 text-[10px] sm:text-xs font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-          <span>Pending</span><span>Discuss</span><span>Agreed</span><span>Progress</span><span>Done</span>
+          <span>{t('requestDetail.statusStages.pending')}</span>
+          <span>{t('requestDetail.statusStages.underDiscussion')}</span>
+          <span>{t('requestDetail.statusStages.agreed')}</span>
+          <span>{t('requestDetail.statusStages.inProgress')}</span>
+          <span>{t('requestDetail.statusStages.completed')}</span>
         </div>
       </div>
 
       {/* Details */}
       <div className="grid md:grid-cols-2 gap-6">
         <div className="card">
-          <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Request Details</h2>
+          <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('requestDetail.detailsTitle')}</h2>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Customer:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.customer.name}</span></div>
-            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Tailor:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.tailor.name}</span></div>
-            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Garment:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.garmentType}</span></div>
-            {request.fabricPreference && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Fabric:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.fabricPreference}</span></div>}
-            {request.deadline && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Deadline:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{new Date(request.deadline).toLocaleDateString()}</span></div>}
-            {request.budget && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Budget:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>${Number(request.budget).toLocaleString()}</span></div>}
+            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.customer')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.customer.name}</span></div>
+            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.tailor')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.tailor.name}</span></div>
+            <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.garmentType')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.garmentType}</span></div>
+            {request.fabricPreference && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.fabric')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{request.fabricPreference}</span></div>}
+            {request.deadline && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.deadline')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>{new Date(request.deadline).toLocaleDateString()}</span></div>}
+            {request.budget && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.budget')}:</span><span className={isDark ? 'text-white' : 'text-gray-900'}>${Number(request.budget).toLocaleString()}</span></div>}
             {request.finalPrice && <div className="flex justify-between"><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Final Price:</span><span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>${Number(request.finalPrice).toLocaleString()}</span></div>}
-            {request.notes && <div className={`mt-2 p-2 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded`}><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>Notes:</span><p className={`mt-1 ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>{request.notes}</p></div>}
+            {request.notes && <div className={`mt-2 p-2 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded`}><span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{t('requestDetail.notes')}:</span><p className={`mt-1 ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>{request.notes}</p></div>}
           </div>
         </div>
 
@@ -1040,7 +1059,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="+1.5"
                                 value={adjustmentsForm.chest}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, chest: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1051,7 +1069,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="+2.0"
                                 value={adjustmentsForm.waist}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, waist: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1062,7 +1079,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="+1.0"
                                 value={adjustmentsForm.hip}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, hip: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1073,7 +1089,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="-0.5"
                                 value={adjustmentsForm.inseam}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, inseam: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1084,7 +1099,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="+1.0"
                                 value={adjustmentsForm.shoulderWidth}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, shoulderWidth: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1095,7 +1109,6 @@ export default function RequestDetail() {
                               <input
                                 type="number"
                                 step="0.1"
-                                placeholder="+1.5"
                                 value={adjustmentsForm.armLength}
                                 onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, armLength: e.target.value })}
                                 className="input-field text-xs py-1.5"
@@ -1107,7 +1120,6 @@ export default function RequestDetail() {
                             <label className="text-[10px] uppercase font-bold text-gray-500">Tailoring Notes</label>
                             <input
                               type="text"
-                              placeholder="e.g., Added extra ease for structured tuxedo drape"
                               value={adjustmentsForm.note}
                               onChange={(e) => setAdjustmentsForm({ ...adjustmentsForm, note: e.target.value })}
                               className="input-field text-xs py-1.5"
@@ -1377,64 +1389,458 @@ export default function RequestDetail() {
                     </form>
                   )}
                 </div>
+              ) : isCustomer ? (
+                <div className="space-y-4">
+                  {/* 1-CLICK APPLY SAVED MEASUREMENTS VAULT CARD */}
+                  {vaultMeasurement && (
+                    <div className={`p-4 rounded-2xl border space-y-3 ${
+                      isDark 
+                        ? 'bg-gradient-to-r from-purple-950/40 via-gray-800 to-gray-800 border-purple-800/60' 
+                        : 'bg-gradient-to-r from-purple-50 via-slate-50 to-white border-purple-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2.5">
+                          <div className="p-1.5 rounded-lg bg-purple-600 text-white shadow-xs">
+                            <Sparkles className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                              Saved 3D Measurements Found in Your Vault
+                            </h4>
+                            <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                              Apply your verified body profile with 1 click without rescanning.
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          1-Click Ready
+                        </span>
+                      </div>
+
+                      {/* Quick Metric Pills */}
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center text-xs font-mono">
+                        {[
+                          { label: 'Chest', key: 'chest' },
+                          { label: 'Waist', key: 'waist' },
+                          { label: 'Hip', key: 'hip' },
+                          { label: 'Inseam', key: 'inseam' },
+                          { label: 'Shoulder', key: 'shoulderWidth' },
+                          { label: 'Arm', key: 'armLength' },
+                        ].map(({ label, key }) => {
+                          const dim = formatDimension(vaultMeasurement[key]);
+                          return (
+                            <div key={key} className="p-1.5 rounded-lg bg-white/70 dark:bg-gray-900/60 border border-purple-100 dark:border-gray-700">
+                              <span className="text-[9px] text-gray-400 uppercase block font-sans">{label}</span>
+                              <strong className="text-xs">{dim.primary}</strong>
+                              {dim.secondary && (
+                                <span className="block text-[9px] text-gray-400 font-normal">({dim.secondary})</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={handleApplyVaultMeasurements}
+                        disabled={submitting}
+                        className="btn-primary w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{submitting ? 'Applying Profile...' : 'Apply Saved 3D Measurements to This Order'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="text-center">
+                    <div className={`p-3 rounded-full inline-flex mb-3 ${isDark ? 'bg-primary-950 text-primary-400' : 'bg-primary-50 text-primary-600'}`}>
+                      <Camera className="w-8 h-8" />
+                    </div>
+                    <h3 className={`text-base sm:text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      {vaultMeasurement ? 'Or Scan / Upload New Body Measurements' : 'Ready for AI Body Measurement?'}
+                    </h3>
+                    <p className={`text-xs max-w-md mx-auto ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                      Scan your body using your camera or upload 3 reference photos to extract millimeter-accurate dimensions for your tailor.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons: Live AI Camera Scan OR Upload */}
+                  <div className="space-y-2.5">
+                    <button
+                      onClick={() => setShowCameraScanner(true)}
+                      className="btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all"
+                    >
+                      <Camera className="w-5 h-5" />
+                      <span>Launch Live AI Camera Scan</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-white/20 text-white">
+                        Gyroscope 90° Level
+                      </span>
+                    </button>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setShowInstructions(true)}
+                        className="btn-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center space-x-1"
+                      >
+                        <Info className="w-3.5 h-3.5" />
+                        <span>View Photo Guide</span>
+                      </button>
+
+                      <button
+                        onClick={() => setShowManualPhotoUpload(!showManualPhotoUpload)}
+                        className="btn-secondary flex-1 py-2 text-xs font-semibold flex items-center justify-center space-x-1"
+                      >
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        <span>{showManualPhotoUpload ? 'Hide Uploader' : 'Upload Photos (Files / Gallery)'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Photo Upload Form: Height calibration + Front/Side Photo Cards */}
+                  {showManualPhotoUpload && (
+                    <form onSubmit={handleUploadPhotos} className="space-y-4">
+                      {/* Height Calibration Input & Guidelines */}
+                      <div className={`p-4 rounded-2xl border space-y-3 ${
+                        isDark ? 'bg-gray-900/80 border-gray-700/80' : 'bg-white border-gray-200'
+                      }`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                              Standing Height Calibration (cm) *
+                            </label>
+                            <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              The AI uses your exact height to convert image pixels into centimeter tailoring dimensions.
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min="100"
+                              max="240"
+                              required
+                              value={scanHeightCm}
+                              onChange={(e) => setScanHeightCm(Number(e.target.value))}
+                              className="input-field w-24 text-center font-mono font-bold text-sm py-1.5"
+                            />
+                            <span className="text-xs font-bold text-primary-500">cm</span>
+                          </div>
+                        </div>
+
+                        {/* Quick Presets */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className={`text-[10px] font-semibold mr-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Quick select:</span>
+                          {[160, 165, 170, 175, 180, 185, 190].map((preset) => (
+                            <button
+                              key={preset}
+                              type="button"
+                              onClick={() => setScanHeightCm(preset)}
+                              className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold border transition-all ${
+                                scanHeightCm === preset
+                                  ? 'bg-primary-600 border-primary-600 text-white'
+                                  : isDark ? 'border-gray-700 bg-gray-800 text-gray-300 hover:border-primary-500' : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-primary-500'
+                              }`}
+                            >
+                              {preset}cm
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Human Only Guidelines */}
+                        <div className={`p-2.5 rounded-xl border text-[11px] flex items-center space-x-2 ${
+                          isDark ? 'bg-amber-950/30 border-amber-800/40 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'
+                        }`}>
+                          <Info className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                          <span>
+                            <strong>Human Subject Required:</strong> Photos must be full-body upright photos of yourself in form-fitting clothes.
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2 Photo Upload Cards Grid (Front & Side) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Front Photo Card */}
+                        <div className={`p-3.5 rounded-2xl border flex flex-col items-center justify-between text-center relative ${
+                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <div className="mb-2">
+                            <span className="text-xs font-bold block">1. Front View Pose *</span>
+                            <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Facing camera upright</span>
+                          </div>
+                          
+                          <div className="w-full h-36 rounded-xl overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-3">
+                            {photos.frontPhotoUrl ? (
+                              <img src={photos.frontPhotoUrl} alt="Front Preview" className="w-full h-full object-cover" />
+                            ) : uploadingPhotoField === 'front' ? (
+                              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="text-gray-400 flex flex-col items-center">
+                                <ImageIcon className="w-7 h-7 mb-1 opacity-50" />
+                                <span className="text-[11px]">No photo selected</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <label className="btn-secondary w-full text-xs py-2 cursor-pointer flex items-center justify-center space-x-1 font-bold">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Browse Front Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload('front', e)}
+                            />
+                          </label>
+                        </div>
+
+                        {/* Side Photo Card */}
+                        <div className={`p-3.5 rounded-2xl border flex flex-col items-center justify-between text-center relative ${
+                          isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <div className="mb-2">
+                            <span className="text-xs font-bold block">2. 90° Side Profile Pose *</span>
+                            <span className={`text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Turned 90° for body depth</span>
+                          </div>
+
+                          <div className="w-full h-36 rounded-xl overflow-hidden bg-black/10 dark:bg-black/40 flex items-center justify-center relative mb-3">
+                            {photos.sidePhotoUrl ? (
+                              <img src={photos.sidePhotoUrl} alt="Side Preview" className="w-full h-full object-cover" />
+                            ) : uploadingPhotoField === 'side' ? (
+                              <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <div className="text-gray-400 flex flex-col items-center">
+                                <ImageIcon className="w-7 h-7 mb-1 opacity-50" />
+                                <span className="text-[11px]">No photo selected</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <label className="btn-secondary w-full text-xs py-2 cursor-pointer flex items-center justify-center space-x-1 font-bold">
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Browse Side Photo</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFileUpload('side', e)}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={submitting || !photos.frontPhotoUrl || !photos.sidePhotoUrl}
+                        className="btn-primary w-full text-xs sm:text-sm py-3 flex items-center justify-center space-x-2 font-bold shadow-lg disabled:opacity-50"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        <span>{submitting ? 'Analyzing Photos...' : 'Convert Pixels to Centimeter Measurements'}</span>
+                      </button>
+                    </form>
+                  )}
+                </div>
               ) : (
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Awaiting customer body scan or photo upload for AI measurement extraction.
-                </p>
+                <div className="text-center py-6 px-4">
+                  <div className={`p-3 rounded-full inline-flex mb-2 ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
+                    <Camera className="w-6 h-6" />
+                  </div>
+                  <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Awaiting customer body scan or photo upload for AI measurement extraction.
+                  </p>
+                  <p className={`text-[11px] mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Once uploaded by the client, the 3D model, biometrics, and cutting spec sheet will appear here.
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* Tailor: Update Order Status */}
+          {/* Tailor: Direct Order Completion */}
           {isTailor && (request.status === 'Agreed' || request.status === 'In_Progress') && (
-            <div className="card">
-              <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Update Order Status</h2>
-              <form onSubmit={handleUpdateOrder} className="space-y-3">
-                <select value={orderStatus} onChange={(e) => setOrderStatus(e.target.value)} className="input-field" required>
-                  <option value="">Select status...</option>
-                  <option value="cutting">Cutting</option>
-                  <option value="sewing">Sewing</option>
-                  <option value="ready_for_fitting">Ready for Fitting</option>
-                  <option value="completed">Completed</option>
-                </select>
-                <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} className="input-field" placeholder="Notes (optional)" rows={2} />
-                <button type="submit" disabled={submitting} className="btn-primary w-full">
-                  {submitting ? 'Updating...' : 'Update Status'}
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Customer: Leave Review */}
-          {isCustomer && request.status === 'Completed' && !request.review && (
-            <div className="card">
-              <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Leave a Review</h2>
-              <form onSubmit={handleSubmitReview} className="space-y-3">
-                <div className="flex space-x-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} type="button" onClick={() => setReviewRating(star)}>
-                      <Star className={`h-6 w-6 ${star <= reviewRating ? 'text-yellow-400 fill-current' : (isDark ? 'text-gray-600' : 'text-gray-300')}`} />
-                    </button>
-                  ))}
+            <div className={`card border ${isDark ? 'border-emerald-900/40 bg-gradient-to-b from-gray-800 to-gray-900' : 'border-emerald-100 bg-gradient-to-b from-white to-emerald-50/20'} shadow-md`}>
+              <div className="flex items-center space-x-2.5 mb-2">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <CheckCircle className="w-5 h-5" />
                 </div>
-                <textarea value={reviewFeedback} onChange={(e) => setReviewFeedback(e.target.value)} className="input-field" placeholder="Share your experience..." rows={3} />
-                <button type="submit" disabled={submitting} className="btn-primary w-full">
-                  {submitting ? 'Submitting...' : 'Submit Review'}
+                <div>
+                  <h2 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>Complete & Deliver Garment</h2>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Garment agreed. When the piece is crafted and handed over to the client, mark this order as completed.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleCompleteOrder} className="space-y-3 mt-3">
+                <textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  className="input-field text-xs"
+                  rows={2}
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>{submitting ? 'Completing Order...' : 'Mark Order as Completed & Delivered'}</span>
                 </button>
               </form>
             </div>
           )}
 
-          {/* Tailor: Reply to Review */}
-          {isTailor && request.review && !request.review.tailorReply && (
-            <div className="card">
-              <h2 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>Reply to Review</h2>
-              <form onSubmit={handleSubmitReply} className="space-y-3">
-                <textarea value={reviewReply} onChange={(e) => setReviewReply(e.target.value)} className="input-field" placeholder="Write your reply..." rows={3} />
-                <button type="submit" disabled={submitting} className="btn-primary w-full">
-                  {submitting ? 'Submitting...' : 'Submit Reply'}
+          {/* Customer Reviews Tailor Section */}
+          {request.status === 'Completed' && !request.review && isCustomer && (
+            <div className={`card border ${isDark ? 'border-amber-900/40 bg-gradient-to-b from-gray-800 to-gray-900' : 'border-amber-100 bg-gradient-to-b from-white to-amber-50/30'} shadow-lg`}>
+              <div className="flex items-center space-x-2.5 mb-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Star className="w-5 h-5 fill-amber-500" />
+                </div>
+                <div>
+                  <h2 className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Review & Rate Tailor: {request.tailor?.name}
+                  </h2>
+                  <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Rate {request.tailor?.name}'s craftsmanship, fit accuracy, and bespoke tailoring service.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div>
+                  <label className={`block text-xs font-semibold mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Your Rating for {request.tailor?.name}:
+                  </label>
+                  <div className="flex items-center space-x-1.5 py-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        className="p-1 transition-transform hover:scale-125 focus:outline-none"
+                      >
+                        <Star
+                          className={`h-7 w-7 transition-colors ${
+                            star <= reviewRating
+                              ? 'text-amber-400 fill-amber-400 drop-shadow-md'
+                              : isDark ? 'text-gray-700' : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                    <span className="ml-2 text-xs font-semibold text-amber-500">
+                      {reviewRating === 5 ? 'Exceptional (5.0 ★)' :
+                       reviewRating === 4 ? 'Very Good (4.0 ★)' :
+                       reviewRating === 3 ? 'Good (3.0 ★)' :
+                       reviewRating === 2 ? 'Fair (2.0 ★)' : 'Needs Improvement (1.0 ★)'}
+                    </span>
+                  </div>
+                </div>
+
+                <textarea
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                  className="input-field"
+                  rows={3}
+                />
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  <Star className="w-4 h-4 fill-white" />
+                  <span>{submitting ? 'Submitting...' : `Submit Review for ${request.tailor?.name}`}</span>
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* Existing Review Card (Client Review for Tailor) */}
+          {request.review && (
+            <div className={`card border ${isDark ? 'border-gray-800 bg-gray-800/80' : 'border-gray-200 bg-white'} shadow-md`}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white flex items-center justify-center font-bold text-sm">
+                    {request.customer?.name?.charAt(0) || 'C'}
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {request.customer?.name || 'Customer'}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300">
+                        Verified Review for {request.tailor?.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1 mt-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-3.5 h-3.5 ${
+                            star <= (request.review.rating || 5)
+                              ? 'text-amber-400 fill-amber-400'
+                              : isDark ? 'text-gray-700' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                      <span className="text-xs font-bold text-amber-500 ml-1">
+                        {request.review.rating}.0 ★
+                      </span>
+                      <span className={`text-[10px] ml-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {new Date(request.review.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {request.review.feedback && (
+                <p className={`text-sm italic leading-relaxed pl-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  "{request.review.feedback}"
+                </p>
+              )}
+
+              {/* Tailor's Reply Block */}
+              {request.review.tailorReply ? (
+                <div className={`mt-4 p-3.5 rounded-2xl border ${
+                  isDark ? 'bg-gray-900/80 border-gray-700 text-gray-200' : 'bg-purple-50/60 border-purple-100 text-gray-800'
+                }`}>
+                  <div className="flex items-center space-x-2 mb-1.5">
+                    <Scissors className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                      Tailor Response ({request.tailor?.name || 'Tailor'})
+                    </span>
+                    {request.review.replyAt && (
+                      <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        • {new Date(request.review.replyAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed pl-6">
+                    {request.review.tailorReply}
+                  </p>
+                </div>
+              ) : isTailor ? (
+                <div className={`mt-4 pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
+                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Reply to Client Review as {request.tailor?.name}
+                  </h4>
+                  <form onSubmit={handleSubmitReply} className="space-y-2.5">
+                    <textarea
+                      value={reviewReply}
+                      onChange={(e) => setReviewReply(e.target.value)}
+                      className="input-field text-xs"
+                      rows={2}
+                    />
+                    <button
+                      type="submit"
+                      disabled={submitting || !reviewReply.trim()}
+                      className="btn-primary text-xs py-2 px-4"
+                    >
+                      {submitting ? 'Submitting...' : 'Post Tailor Reply'}
+                    </button>
+                  </form>
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -1447,12 +1853,14 @@ export default function RequestDetail() {
             <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               <DollarSign className="h-5 w-5 inline mr-1" /> Negotiation
             </h2>
-            <button
-              onClick={() => setShowNegotiationForm(!showNegotiationForm)}
-              className="btn-primary text-sm"
-            >
-              {showNegotiationForm ? 'Cancel' : 'Propose Counter-Offer'}
-            </button>
+            {(request.status === 'Pending' || request.status === 'Under_Discussion') && (
+              <button
+                onClick={() => setShowNegotiationForm(!showNegotiationForm)}
+                className="btn-primary text-sm"
+              >
+                {showNegotiationForm ? 'Cancel' : 'Propose Counter-Offer'}
+              </button>
+            )}
           </div>
 
           {/* Pending Negotiations Alert */}
@@ -1466,55 +1874,56 @@ export default function RequestDetail() {
 
           {/* Negotiation Form */}
           {showNegotiationForm && (
-            <form onSubmit={handleProposeNegotiation} className={`mb-6 p-4 ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg space-y-3`}>
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleProposeNegotiation} className={`mb-6 p-5 ${isDark ? 'bg-gray-800/80 border border-gray-700' : 'bg-slate-50 border border-slate-200'} rounded-2xl space-y-4`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    <DollarSign className="h-4 w-4 inline" /> Proposed Price ($)
+                  <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                    <DollarSign className="h-4 w-4 inline mr-1 text-purple-500" /> Proposed Price ($) *
                   </label>
                   <input
                     type="number"
+                    min="1"
+                    step="0.01"
+                    required
                     value={negotiationForm.proposedPrice}
                     onChange={(e) => setNegotiationForm({ ...negotiationForm, proposedPrice: e.target.value })}
-                    className="input-field"
-                    placeholder="e.g. 450"
+                    className="input-field text-sm font-semibold"
                   />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                    <Calendar className="h-4 w-4 inline" /> Proposed Deadline
+                  <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                    <Calendar className="h-4 w-4 inline mr-1 text-purple-500" /> Proposed Deadline
                   </label>
                   <input
                     type="date"
+                    min={new Date().toISOString().split('T')[0]}
                     value={negotiationForm.proposedDeadline}
                     onChange={(e) => setNegotiationForm({ ...negotiationForm, proposedDeadline: e.target.value })}
-                    className="input-field"
+                    className="input-field text-sm font-semibold"
                   />
                 </div>
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                  <FileText className="h-4 w-4 inline" /> Garment Specs (JSON or text)
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>
+                  <FileText className="h-4 w-4 inline mr-1 text-purple-500" /> Garment Specs
                 </label>
                 <textarea
                   value={negotiationForm.garmentSpecs}
                   onChange={(e) => setNegotiationForm({ ...negotiationForm, garmentSpecs: e.target.value })}
-                  className="input-field"
+                  className="input-field text-sm font-semibold"
                   rows={2}
-                  placeholder='e.g. {"material": "Wool", "color": "Navy", "lining": "Silk"} or just type specs'
                 />
               </div>
               <div>
-                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} mb-1`}>Notes</label>
+                <label className={`block text-xs font-bold uppercase tracking-wider ${isDark ? 'text-purple-300' : 'text-purple-900'} mb-1.5`}>Notes & Terms</label>
                 <textarea
                   value={negotiationForm.notes}
                   onChange={(e) => setNegotiationForm({ ...negotiationForm, notes: e.target.value })}
-                  className="input-field"
+                  className="input-field text-sm font-semibold"
                   rows={2}
-                  placeholder="Explain your counter-offer..."
                 />
               </div>
-              <button type="submit" disabled={submitting} className="btn-primary w-full">
+              <button type="submit" disabled={submitting || !negotiationForm.proposedPrice} className="btn-primary w-full py-3 rounded-xl font-bold text-sm shadow-md">
                 {submitting ? 'Submitting...' : 'Submit Counter-Offer'}
               </button>
             </form>
@@ -1621,25 +2030,39 @@ export default function RequestDetail() {
         <div className="card mt-6">
           <h2 className={`font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Order Timeline</h2>
           <div className="space-y-4">
-            {request.orderEvents.map((event: any) => (
-              <div key={event.id} className="flex items-start space-x-3">
-                <div className="w-3 h-3 bg-primary-600 rounded-full mt-1.5" />
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className={`font-medium capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.status.replace(/_/g, ' ')}</span>
-                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(event.createdAt).toLocaleString()}</span>
-                  </div>
-                  {event.notes && <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>{event.notes}</p>}
-                  {event.photos?.length > 0 && (
-                    <div className="flex space-x-2 mt-2">
-                      {event.photos.map((p: string, i: number) => (
-                        <img key={i} src={p} alt="" className="w-20 h-20 object-cover rounded" />
-                      ))}
+            {request.orderEvents.map((event: any) => {
+              let photoList: string[] = [];
+              if (Array.isArray(event.photos)) {
+                photoList = event.photos;
+              } else if (typeof event.photos === 'string') {
+                try {
+                  const parsed = JSON.parse(event.photos);
+                  if (Array.isArray(parsed)) photoList = parsed;
+                } catch {
+                  if (event.photos.trim()) photoList = [event.photos.trim()];
+                }
+              }
+
+              return (
+                <div key={event.id} className="flex items-start space-x-3">
+                  <div className="w-3 h-3 bg-primary-600 rounded-full mt-1.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <span className={`font-medium capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{event.status.replace(/_/g, ' ')}</span>
+                      <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{new Date(event.createdAt).toLocaleString()}</span>
                     </div>
-                  )}
+                    {event.notes && <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-1`}>{event.notes}</p>}
+                    {photoList.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {photoList.map((p: string, i: number) => (
+                          <img key={i} src={p} alt="" className="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

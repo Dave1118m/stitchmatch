@@ -275,33 +275,30 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div 
-        className={`relative w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col ${
+        className={`relative w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden flex flex-col ${
           isDark ? 'bg-gray-900 border border-gray-800 text-white' : 'bg-white text-gray-900'
         }`}
-        style={{ maxHeight: '95vh' }}
+        style={{ maxHeight: '92vh' }}
       >
         {/* Top Header */}
-        <div className={`flex items-center justify-between px-5 py-3.5 border-b ${
+        <div className={`flex items-center justify-between px-6 py-4 border-b ${
           isDark ? 'border-gray-800 bg-gray-900/90' : 'border-gray-100 bg-white'
         }`}>
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-gradient-to-tr from-primary-600 to-purple-600 text-white shadow-md">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-primary-600 to-purple-600 text-white shadow-md">
               <Camera className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold leading-tight flex items-center gap-2">
-                <span>AI Body Measurement Scanner</span>
+                <span>{t('scannerModal.title')}</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300 flex items-center gap-1">
-                  <Activity className="w-3 h-3 animate-pulse" /> Live Skeleton AR
+                  <Activity className="w-3 h-3 animate-pulse" /> {t('scannerModal.badge')}
                 </span>
               </h2>
-              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {currentPose === 'height' && 'Step 1: Calibrate your exact standing height'}
-                {currentPose === 'front' && 'Step 2: Stand facing camera (Real-time skeleton active)'}
-                {currentPose === 'side' && 'Step 3: Turn 90° to side for depth contour scan'}
-                {currentPose === 'review' && 'Step 4: Review scan & compute centimeter measurements'}
+              <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
+                {t(`scannerModal.subtitles.${currentPose}`)}
               </p>
             </div>
           </div>
@@ -313,7 +310,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className={`p-2 rounded-xl border transition-colors ${
                   isDark ? 'border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700' : 'border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
-                title="Switch Camera (Front/Back)"
+                title={t('scannerModal.camera.switchCamera')}
               >
                 <SwitchCamera className="w-4 h-4" />
               </button>
@@ -330,26 +327,26 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
         </div>
 
         {/* Step Indicator Tabs */}
-        <div className={`px-4 py-2 border-b flex items-center justify-around text-xs font-semibold ${
+        <div className={`px-4 py-2.5 border-b flex items-center justify-center gap-2 sm:gap-3 text-xs font-semibold overflow-x-auto ${
           isDark ? 'border-gray-800 bg-gray-900/50' : 'border-gray-100 bg-gray-50'
         }`}>
           {[
-            { id: 'height', label: '1. Height Calibration', done: heightCm > 50 },
-            { id: 'front', label: '2. Front Live Pose', done: capturedPhotos.front !== null },
-            { id: 'side', label: '3. 90° Side Profile', done: capturedPhotos.side !== null },
-            { id: 'review', label: '4. AI Review', done: false }
+            { id: 'height', label: t('scannerModal.steps.height'), done: heightCm > 50 },
+            { id: 'front', label: t('scannerModal.steps.front'), done: capturedPhotos.front !== null },
+            { id: 'side', label: t('scannerModal.steps.side'), done: capturedPhotos.side !== null },
+            { id: 'review', label: t('scannerModal.steps.review'), done: false }
           ].map((step, idx) => {
             const isActive = currentPose === step.id;
             return (
               <button
                 key={step.id}
                 onClick={() => setCurrentPose(step.id as PoseType)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full transition-all ${
+                className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-primary-600 text-white shadow-md'
+                    ? 'bg-primary-600 text-white shadow-md font-bold'
                     : step.done && step.id !== 'review'
                     ? isDark ? 'text-primary-400 bg-gray-800' : 'text-primary-700 bg-primary-50'
-                    : isDark ? 'text-gray-500' : 'text-gray-400'
+                    : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 {step.done && step.id !== 'review' ? (
@@ -359,25 +356,26 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     {idx + 1}
                   </span>
                 )}
-                <span className="hidden sm:inline">{step.label}</span>
+                <span>{step.label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Viewport Container */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col items-center justify-center min-h-[360px] sm:min-h-[440px]">
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center min-h-[340px] sm:min-h-[400px]">
           
           {/* STEP 1: HEIGHT CALIBRATION */}
           {currentPose === 'height' && (
-            <div className="w-full max-w-md space-y-5 text-center animate-fadeIn">
+            <div className="w-full max-w-md space-y-6 text-center animate-fadeIn">
               <div className="w-16 h-16 rounded-3xl bg-primary-500/10 text-primary-500 mx-auto flex items-center justify-center border border-primary-500/20 shadow-inner">
                 <Ruler className="w-8 h-8" />
               </div>
+              
               <div>
-                <h3 className="text-xl font-extrabold">Calibrate Your Standing Height</h3>
-                <p className={`text-xs mt-1 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  The AI uses your exact height as the ground-truth physical scale to convert live skeleton landmarks into centimeter tailoring measurements.
+                <h3 className="text-xl sm:text-2xl font-bold">{t('scannerModal.heightSection.title')}</h3>
+                <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {t('scannerModal.heightSection.subtitle')}
                 </p>
               </div>
 
@@ -390,7 +388,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     heightUnit === 'cm' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  Centimeters (cm)
+                  {t('scannerModal.heightSection.cmTab')}
                 </button>
                 <button
                   type="button"
@@ -399,13 +397,20 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     heightUnit === 'ft' ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500'
                   }`}
                 >
-                  Feet & Inches (ft / in)
+                  {t('scannerModal.heightSection.ftTab')}
                 </button>
               </div>
 
               {heightUnit === 'cm' ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center space-x-3">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setHeightCm((prev) => Math.max(100, prev - 1))}
+                      className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg hover:border-primary-500 transition-colors"
+                    >
+                      -
+                    </button>
                     <input
                       type="number"
                       min="100"
@@ -414,6 +419,13 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                       onChange={(e) => setHeightCm(Number(e.target.value))}
                       className="input-field text-3xl font-mono font-extrabold text-center w-36 py-2"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setHeightCm((prev) => Math.min(240, prev + 1))}
+                      className="w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-lg hover:border-primary-500 transition-colors"
+                    >
+                      +
+                    </button>
                     <span className="text-xl font-bold text-primary-500">cm</span>
                   </div>
 
@@ -423,7 +435,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                         key={preset}
                         type="button"
                         onClick={() => setHeightCm(preset)}
-                        className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
                           heightCm === preset 
                             ? 'bg-primary-600 border-primary-600 text-white shadow-xs' 
                             : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary-500'
@@ -462,14 +474,12 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 </div>
               )}
 
-              {/* Human-Only Photo Notice */}
-              <div className={`p-3.5 rounded-2xl border text-xs flex items-center space-x-2.5 ${
+              {/* Compact Tip Notice */}
+              <div className={`p-3 rounded-2xl border text-xs flex items-center justify-center space-x-2 ${
                 isDark ? 'bg-amber-950/30 border-amber-800/40 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800'
               }`}>
-                <User className="w-5 h-5 text-amber-500 shrink-0" />
-                <span className="text-left leading-relaxed">
-                  <strong>Human Body Live Tracking:</strong> Stand 2–3 meters away in a well-lit room in form-fitting clothing for real-time landmark tracking.
-                </span>
+                <User className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>{t('scannerModal.heightSection.tip')}</span>
               </div>
             </div>
           )}
@@ -504,22 +514,22 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                   <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
                     framingAssessment.headVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
                   }`}>
-                    Head
+                    {t('scannerModal.camera.head')}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
                     framingAssessment.shouldersVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
                   }`}>
-                    Shoulders
+                    {t('scannerModal.camera.shoulders')}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
                     framingAssessment.hipsVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
                   }`}>
-                    Hips
+                    {t('scannerModal.camera.hips')}
                   </span>
                   <span className={`px-2 py-0.5 rounded-full backdrop-blur-sm ${
                     framingAssessment.anklesVisible ? 'bg-green-500/80 text-white' : 'bg-red-500/80 text-white'
                   }`}>
-                    Ankles
+                    {t('scannerModal.camera.ankles')}
                   </span>
                 </div>
               </div>
@@ -531,7 +541,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     {countdown}
                   </div>
                   <p className="text-white text-base sm:text-lg font-bold mt-4 tracking-wide shadow-black drop-shadow">
-                    Hold posture for calibration...
+                    {t('scannerModal.camera.holdPosture')}
                   </p>
                 </div>
               )}
@@ -542,12 +552,9 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
           {currentPose === 'review' && (
             <div className="w-full max-w-2xl space-y-5 animate-fadeIn">
               <div className="text-center">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300 mb-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Both Dual Poses & Calibrated Height Ready
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold">Review Your 3D Fitting Scan</h3>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Calibrated Height: <strong className="text-primary-500 font-mono">{heightCm} cm</strong>
+                <h3 className="text-lg sm:text-xl font-bold">{t('scannerModal.review.title')}</h3>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-0.5`}>
+                  {t('scannerModal.review.heightLabel')}: <strong className="text-primary-500 font-mono">{heightCm} cm</strong>
                 </p>
               </div>
 
@@ -556,7 +563,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className={`p-3 rounded-2xl border flex flex-col items-center ${
                   isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs font-bold mb-1.5">1. Front View</span>
+                  <span className="text-xs font-bold mb-1.5">{t('scannerModal.review.frontView')}</span>
                   <div className="w-full h-44 rounded-xl overflow-hidden bg-black relative">
                     {capturedPhotos.front ? (
                       <img src={capturedPhotos.front} alt="Front" className="w-full h-full object-cover" />
@@ -569,7 +576,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     className="mt-2 text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Retake Front</span>
+                    <span>{t('scannerModal.review.retakeFront')}</span>
                   </button>
                 </div>
 
@@ -577,7 +584,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 <div className={`p-3 rounded-2xl border flex flex-col items-center ${
                   isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
                 }`}>
-                  <span className="text-xs font-bold mb-1.5">2. 90° Side Profile</span>
+                  <span className="text-xs font-bold mb-1.5">{t('scannerModal.review.sideView')}</span>
                   <div className="w-full h-44 rounded-xl overflow-hidden bg-black relative">
                     {capturedPhotos.side ? (
                       <img src={capturedPhotos.side} alt="Side" className="w-full h-full object-cover" />
@@ -590,7 +597,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                     className="mt-2 text-xs font-semibold text-primary-600 hover:text-primary-700 flex items-center space-x-1"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>Retake Side</span>
+                    <span>{t('scannerModal.review.retakeSide')}</span>
                   </button>
                 </div>
               </div>
@@ -600,7 +607,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 isDark ? 'bg-emerald-950/40 border border-emerald-800/40 text-emerald-300' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
               }`}>
                 <ShieldCheck className="w-4 h-4 mr-1.5 text-emerald-500 shrink-0" />
-                <span>Photos are encrypted and strictly analyzed for Made-to-Measure digital tailoring.</span>
+                <span>{t('scannerModal.review.privacyNote')}</span>
               </div>
             </div>
           )}
@@ -616,13 +623,13 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 onClick={onClose}
                 className="btn-secondary text-xs sm:text-sm px-5 py-2.5 rounded-full"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => setCurrentPose('front')}
                 className="btn-primary text-xs sm:text-sm px-7 py-2.5 rounded-full font-bold shadow-lg flex items-center space-x-1.5"
               >
-                <span>Launch Real-Time AR Viewfinder</span>
+                <span>{t('scannerModal.nextStep')}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </>
@@ -633,7 +640,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-secondary text-xs sm:text-sm px-4 py-2.5 rounded-full flex items-center space-x-1.5"
               >
                 <Camera className="w-4 h-4" />
-                <span>Snap Instant Photo</span>
+                <span>{t('scannerModal.camera.snapPhoto')}</span>
               </button>
 
               <button
@@ -646,7 +653,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 }`}
               >
                 <Timer className="w-5 h-5" />
-                <span>{countdown !== null ? `Capturing in ${countdown}s...` : '5s Hands-Free Timer'}</span>
+                <span>{countdown !== null ? t('scannerModal.camera.capturingIn', { count: countdown }) : t('scannerModal.camera.startTimer')}</span>
               </button>
             </>
           ) : (
@@ -656,7 +663,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-secondary text-xs sm:text-sm px-5 py-2.5 rounded-full flex items-center space-x-1.5"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                <span>Back to Camera</span>
+                <span>{t('scannerModal.review.backToCamera')}</span>
               </button>
 
               <button
@@ -664,7 +671,7 @@ export default function AICameraScannerModal({ isOpen, onClose, onComplete }: AI
                 className="btn-primary text-sm sm:text-base px-7 sm:px-9 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center space-x-2"
               >
                 <Sparkles className="w-5 h-5" />
-                <span>Convert Pixels to Centimeters</span>
+                <span>{t('scannerModal.review.computeBtn')}</span>
                 <ChevronRight className="w-4 h-4 ml-1 -mr-1" />
               </button>
             </>

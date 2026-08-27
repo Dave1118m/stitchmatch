@@ -8,10 +8,11 @@ import { getSocket } from '../lib/socket';
 import { showBrowserNotification } from '../lib/pushNotifications';
 import LanguageSwitcher from './LanguageSwitcher';
 import InstallAppBanner from './InstallAppBanner';
+import CustomerFeedbackModal from './CustomerFeedbackModal';
 import { 
   Scissors, MessageSquare, User, LogOut, Settings, Moon, Sun, Menu, X, 
   Bell, ClipboardList, Shield, ChevronDown, Check, CheckCheck, Trash2, 
-  Star, ShoppingBag, ShieldCheck, AlertCircle, Clock
+  Star, ShoppingBag, ShieldCheck, AlertCircle, Clock, MessageSquareHeart
 } from 'lucide-react';
 
 function playNotificationChime() {
@@ -58,6 +59,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [switchingRole, setSwitchingRole] = useState<string | null>(null);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
@@ -113,8 +115,8 @@ export default function Layout({ children }: { children: ReactNode }) {
       setNotifications((prev) => [newNotif, ...prev.filter((n) => n.id !== newNotif.id)]);
 
       // 4. Trigger Web Push / OS Notification if backgrounded or visible
-      showBrowserNotification(newNotif.title || 'StitchMatch Notification', {
-        body: newNotif.message || 'You have an update regarding your order.',
+      showBrowserNotification(newNotif.title || `${t('nav.brand')} Notification`, {
+        body: newNotif.message || t('nav.updateDefault'),
         icon: '/favicon.ico',
         tag: `notif-${newNotif.id}`,
       });
@@ -260,11 +262,11 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isActive = (path: string) => location.pathname === path;
 
   const mainNavLinks = [
-    { path: '/dashboard', label: t('nav.requests'), icon: ClipboardList, roles: ['customer', 'tailor', 'admin'] },
-    { path: '/tailors', label: t('nav.findTailors'), icon: Scissors, roles: ['customer'] },
-    { path: '/messages', label: t('nav.messages'), icon: MessageSquare, roles: ['customer', 'tailor'] },
-    { path: '/profile', label: t('nav.profile'), icon: User, roles: ['customer', 'tailor', 'admin'] },
     { path: '/admin', label: t('nav.adminPanel'), icon: Shield, roles: ['admin'] },
+    { path: '/dashboard', label: t('nav.requests'), icon: ClipboardList, roles: ['customer', 'tailor'] },
+    { path: '/tailors', label: t('nav.findTailors'), icon: Scissors, roles: ['customer'] },
+    { path: '/messages', label: t('nav.messages'), icon: MessageSquare, roles: ['customer', 'tailor', 'admin'] },
+    { path: '/profile', label: t('nav.profile'), icon: User, roles: ['customer', 'tailor'] },
   ];
 
   const roleOptions = [
@@ -290,19 +292,19 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <Scissors className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
               </div>
               {sidebarOpen && (
-                <span className={`text-lg lg:text-xl font-bold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>StitchMatch</span>
+                <span className={`text-lg lg:text-xl font-bold truncate ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('nav.brand')}</span>
               )}
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto">
+          <nav className="flex-1 p-2 lg:p-4 space-y-1 lg:space-y-2 overflow-y-auto overflow-x-visible">
             {mainNavLinks.map((link) =>
               link.roles.includes(user?.role || '') && (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`flex items-center space-x-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
+                  className={`group relative flex items-center ${sidebarOpen ? 'space-x-3 px-3 lg:px-4' : 'justify-center px-2'} py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
                     isActive(link.path)
                       ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
                       : darkMode
@@ -311,14 +313,30 @@ export default function Layout({ children }: { children: ReactNode }) {
                   }`}
                 >
                   <link.icon className="h-5 w-5 flex-shrink-0" />
-                  {sidebarOpen && <span className="font-medium">{link.label}</span>}
+                  {sidebarOpen ? (
+                    <span className="font-medium">{link.label}</span>
+                  ) : (
+                    /* Collapsed Overlay Tooltip with Arrow */
+                    <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                      <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                        darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                      }`} />
+                      <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                        darkMode
+                          ? 'bg-gray-950 text-white border border-gray-800'
+                          : 'bg-gray-900 text-white shadow-lg'
+                      }`}>
+                        {link.label}
+                      </div>
+                    </div>
+                  )}
                 </Link>
               )
             )}
           </nav>
 
           {/* Role Switcher Dropdown & Bottom Bar */}
-          <div className={`p-2 lg:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2`}>
+          <div className={`p-2 lg:p-4 border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2 overflow-visible`}>
             {/* Role Switcher Dropdown */}
             {sidebarOpen ? (
               <div className="relative" ref={roleDropdownRef}>
@@ -350,7 +368,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wider ${
                       darkMode ? 'border-gray-700 text-gray-400 bg-gray-800/90' : 'border-gray-100 text-gray-500 bg-gray-50'
                     }`}>
-                      Switch Account Role
+                      {t('nav.switchRole')}
                     </div>
                     <div className="p-1.5 space-y-1">
                       {roleOptions.map((r) => {
@@ -369,7 +387,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                             className={`w-full flex items-start space-x-2.5 px-2.5 py-2 rounded-xl transition-all duration-150 text-left ${
                               isSelected
                                 ? darkMode
-                                  ? 'bg-purple-900/30 text-purple-300 font-semibold'
+                                   ? 'bg-purple-900/30 text-purple-300 font-semibold'
                                   : 'bg-purple-50 text-purple-700 font-semibold'
                                 : darkMode
                                 ? 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
@@ -404,7 +422,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 )}
               </div>
             ) : (
-              <div className="relative flex justify-center" ref={roleDropdownRef}>
+              <div className="relative flex justify-center group" ref={roleDropdownRef}>
                 <button
                   onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
                   title={`Current Role: ${currentRoleObj.label}. Click to switch.`}
@@ -417,6 +435,22 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <CurrentRoleIcon className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </button>
 
+                {/* Collapsed Mode Overlay Tooltip with Arrow */}
+                {!roleDropdownOpen && (
+                  <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                    <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                      darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                    }`} />
+                    <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                      darkMode
+                        ? 'bg-gray-950 text-white border border-gray-800'
+                        : 'bg-gray-900 text-white shadow-lg'
+                    }`}>
+                      {currentRoleObj.label} ({t('nav.switchRole')})
+                    </div>
+                  </div>
+                )}
+
                 {roleDropdownOpen && (
                   <div className={`absolute bottom-full left-12 mb-2 w-56 rounded-2xl shadow-xl border overflow-hidden z-50 transition-all ${
                     darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
@@ -424,7 +458,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     <div className={`px-3.5 py-2 border-b text-[10px] font-semibold uppercase tracking-wider ${
                       darkMode ? 'border-gray-700 text-gray-400 bg-gray-800/90' : 'border-gray-100 text-gray-500 bg-gray-50'
                     }`}>
-                      Switch Account Role
+                      {t('nav.switchRole')}
                     </div>
                     <div className="p-1.5 space-y-1">
                       {roleOptions.map((r) => {
@@ -464,9 +498,61 @@ export default function Layout({ children }: { children: ReactNode }) {
               </div>
             )}
 
+            {user?.role === 'admin' ? (
+              <Link
+                to="/admin?tab=feedback"
+                className={`group relative flex items-center ${sidebarOpen ? 'space-x-3 px-3 lg:px-4' : 'justify-center px-2'} py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
+                  darkMode
+                    ? 'text-gray-300 hover:bg-purple-950/40 hover:text-purple-300'
+                    : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                }`}
+              >
+                <MessageSquareHeart className="h-5 w-5 flex-shrink-0 text-purple-500" />
+                {sidebarOpen ? (
+                  <span className="font-medium">{t('admin.clientFeedback')}</span>
+                ) : (
+                  <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                    <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                      darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                    }`} />
+                    <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                      darkMode ? 'bg-gray-950 text-white border border-gray-800' : 'bg-gray-900 text-white shadow-lg'
+                    }`}>
+                      {t('admin.clientFeedback')}
+                    </div>
+                  </div>
+                )}
+              </Link>
+            ) : (
+              <button
+                onClick={() => setShowFeedbackModal(true)}
+                className={`group relative w-full flex items-center ${sidebarOpen ? 'space-x-3 px-3 lg:px-4' : 'justify-center px-2'} py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
+                  darkMode
+                    ? 'text-gray-300 hover:bg-purple-950/40 hover:text-purple-300'
+                    : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                }`}
+              >
+                <MessageSquareHeart className="h-5 w-5 flex-shrink-0 text-purple-500" />
+                {sidebarOpen ? (
+                  <span className="font-medium">{t('feedback.title')}</span>
+                ) : (
+                  <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                    <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                      darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                    }`} />
+                    <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                      darkMode ? 'bg-gray-950 text-white border border-gray-800' : 'bg-gray-900 text-white shadow-lg'
+                    }`}>
+                      {t('feedback.title')}
+                    </div>
+                  </div>
+                )}
+              </button>
+            )}
+
             <Link
               to="/settings"
-              className={`flex items-center space-x-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
+              className={`group relative flex items-center ${sidebarOpen ? 'space-x-3 px-3 lg:px-4' : 'justify-center px-2'} py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
                 isActive('/settings')
                   ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
                   : darkMode
@@ -475,18 +561,44 @@ export default function Layout({ children }: { children: ReactNode }) {
               }`}
             >
               <Settings className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">{t('nav.settings')}</span>}
+              {sidebarOpen ? (
+                <span className="font-medium">{t('nav.settings')}</span>
+              ) : (
+                <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                  <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                    darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                  }`} />
+                  <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                    darkMode ? 'bg-gray-950 text-white border border-gray-800' : 'bg-gray-900 text-white shadow-lg'
+                  }`}>
+                    {t('nav.settings')}
+                  </div>
+                </div>
+              )}
             </Link>
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center space-x-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
+              className={`group relative w-full flex items-center ${sidebarOpen ? 'space-x-3 px-3 lg:px-4' : 'justify-center px-2'} py-2.5 lg:py-3 rounded-xl transition-all duration-200 text-sm lg:text-base ${
                 darkMode
                   ? 'text-gray-300 hover:bg-red-700/30 hover:text-red-400'
                   : 'text-gray-600 hover:bg-red-50 hover:text-red-600'
               }`}
             >
               <LogOut className="h-5 w-5 flex-shrink-0" />
-              {sidebarOpen && <span className="font-medium">{t('nav.logout')}</span>}
+              {sidebarOpen ? (
+                <span className="font-medium">{t('nav.logout')}</span>
+              ) : (
+                <div className="pointer-events-none absolute left-full ml-3.5 top-1/2 -translate-y-1/2 z-50 hidden lg:flex items-center opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out">
+                  <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[7px] ${
+                    darkMode ? 'border-r-gray-950' : 'border-r-gray-900'
+                  }`} />
+                  <div className={`px-3 py-1.5 rounded-lg shadow-2xl text-xs font-bold whitespace-nowrap ${
+                    darkMode ? 'bg-gray-950 text-white border border-gray-800' : 'bg-gray-900 text-white shadow-lg'
+                  }`}>
+                    {t('nav.logout')}
+                  </div>
+                </div>
+              )}
             </button>
           </div>
         </aside>
@@ -731,7 +843,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-2 rounded-lg flex-shrink-0">
                   <Scissors className="h-6 w-6 text-white" />
                 </div>
-                <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>StitchMatch</span>
+                <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t('nav.brand')}</span>
               </Link>
             </div>
             <nav className="flex-1 p-3 sm:p-4 space-y-1 sm:space-y-2 overflow-y-auto">
@@ -826,6 +938,33 @@ export default function Layout({ children }: { children: ReactNode }) {
                   </div>
                 )}
               </div>
+
+              {user?.role === 'admin' ? (
+                <Link
+                  to="/admin?tab=feedback"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 text-sm sm:text-base ${
+                    darkMode
+                      ? 'text-gray-300 hover:bg-purple-950/40 hover:text-purple-300'
+                      : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <MessageSquareHeart className="h-5 w-5 text-purple-500" />
+                  <span className="font-medium">{t('admin.clientFeedback')}</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={() => { setShowFeedbackModal(true); setMobileMenuOpen(false); }}
+                  className={`w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 text-sm sm:text-base ${
+                    darkMode
+                      ? 'text-gray-300 hover:bg-purple-950/40 hover:text-purple-300'
+                      : 'text-gray-600 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <MessageSquareHeart className="h-5 w-5 text-purple-500" />
+                  <span className="font-medium">{t('feedback.title')}</span>
+                </button>
+              )}
 
               <Link
                 to="/settings"
@@ -945,6 +1084,12 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       {/* PWA Mobile Add to Home Screen Banner */}
       <InstallAppBanner />
+
+      {/* Customer Platform Feedback Modal */}
+      <CustomerFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
     </div>
   );
 }

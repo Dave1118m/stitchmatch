@@ -398,12 +398,13 @@ async function processAIMeasurements(prisma: PrismaClient, requestId: string, io
       return;
     }
 
-    // Execute Gemini Pro Vision Multimodal Measurement Engine
+    // Execute Multi-Provider AI Measurement Engine (Gemini / OpenAI / Claude / Custom)
     const aiResult = await analyzeBodyMeasurementsWithGemini(
       measurement.frontPhotoUrl,
       measurement.sidePhotoUrl,
       measurement.backPhotoUrl,
-      calibratedHeight
+      calibratedHeight,
+      prisma
     );
 
     // Check if Human verification failed (e.g. animal, object, landscape uploaded)
