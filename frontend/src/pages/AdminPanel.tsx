@@ -54,7 +54,7 @@ export default function AdminPanel() {
     aiProvider: 'gemini',
     aiProviderName: 'Google Gemini',
     aiApiKey: '',
-    aiModel: 'gemini-1.5-flash',
+    aiModel: 'gemini-flash-latest',
     aiApiBaseUrl: '',
   });
   const [newSpecialty, setNewSpecialty] = useState('');
@@ -127,9 +127,13 @@ export default function AdminPanel() {
       try {
         const setRes = await settingsAPI.getAll();
         if (setRes.data?.settings) {
+          const raw = setRes.data.settings;
+          if (raw.aiApiBaseUrl && raw.aiApiBaseUrl.includes('api.bodygram.com')) {
+            raw.aiApiBaseUrl = 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session';
+          }
           setPlatformSettings((prev) => ({
             ...prev,
-            ...setRes.data.settings,
+            ...raw,
           }));
         }
       } catch (setErr) {
@@ -248,13 +252,18 @@ export default function AdminPanel() {
       return;
     }
     setTestingAI(true);
+    let targetBaseUrl = platformSettings.aiApiBaseUrl;
+    if (targetBaseUrl && targetBaseUrl.includes('api.bodygram.com')) {
+      targetBaseUrl = 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session';
+      setPlatformSettings((prev) => ({ ...prev, aiApiBaseUrl: targetBaseUrl }));
+    }
     try {
       const res = await settingsAPI.testAI({
         provider: platformSettings.aiProvider,
         providerName: platformSettings.aiProviderName,
         apiKey: platformSettings.aiApiKey,
         model: platformSettings.aiModel,
-        baseUrl: platformSettings.aiApiBaseUrl,
+        baseUrl: targetBaseUrl,
       });
       toast.success(res.data?.message || 'AI Connection verified successfully!');
     } catch (err: any) {
@@ -265,11 +274,15 @@ export default function AdminPanel() {
   };
 
   const handleProviderSelect = (provider: string) => {
-    let defaultModel = 'gemini-1.5-flash';
+    let defaultModel = 'gemini-3.6-flash';
     let defaultName = 'Google Gemini';
     let defaultBaseUrl = '';
 
-    if (provider === 'live_ai_measurement') {
+    if (provider === 'bodygram') {
+      defaultModel = 'bodygram-scan-v1';
+      defaultName = 'Bodygram Platform';
+      defaultBaseUrl = 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session';
+    } else if (provider === 'live_ai_measurement') {
       defaultModel = 'live-scan-v1';
       defaultName = 'Live_AI_Measurement';
       defaultBaseUrl = 'https://api.liveaimeasurement.com/v1/scan';
@@ -987,19 +1000,35 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleTestAIConnection}
-                    disabled={testingAI}
-                    className="btn-secondary text-xs py-1.5 px-3 flex items-center space-x-1.5 font-bold shadow-xs cursor-pointer self-start sm:self-auto"
-                  >
-                    {testingAI ? (
-                      <div className="w-3.5 h-3.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Cpu className="w-3.5 h-3.5 text-purple-500" />
-                    )}
-                    <span>{testingAI ? t('admin.settings.testingBtn') : t('admin.settings.testConnectionBtn')}</span>
-                  </button>
+                  <div className="flex items-center space-x-2 self-start sm:self-auto flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={handleTestAIConnection}
+                      disabled={testingAI}
+                      className="btn-secondary text-xs py-1.5 px-3 flex items-center space-x-1.5 font-bold shadow-xs cursor-pointer"
+                    >
+                      {testingAI ? (
+                        <div className="w-3.5 h-3.5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Cpu className="w-3.5 h-3.5 text-purple-500" />
+                      )}
+                      <span>{testingAI ? t('admin.settings.testingBtn') : t('admin.settings.testConnectionBtn')}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleSaveSettings(e as any)}
+                      disabled={savingSettings}
+                      className="btn-primary text-xs py-1.5 px-3 flex items-center space-x-1.5 font-bold shadow-xs cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      {savingSettings ? (
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Save className="w-3.5 h-3.5" />
+                      )}
+                      <span>Save & Activate Provider</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1013,6 +1042,7 @@ export default function AdminPanel() {
                       onChange={(e) => handleProviderSelect(e.target.value)}
                       className="input-field text-sm"
                     >
+                      <option value="bodygram">Bodygram Platform (3D Scanning API)</option>
                       <option value="gemini">Google Gemini Vision (Default)</option>
                       <option value="live_ai_measurement">Live_AI_Measurement</option>
                       <option value="snapaimeasure">SnapAIMeasure</option>
@@ -1046,6 +1076,7 @@ export default function AdminPanel() {
                         type={showApiKey ? 'text' : 'password'}
                         value={platformSettings.aiApiKey}
                         onChange={(e) => setPlatformSettings({ ...platformSettings, aiApiKey: e.target.value })}
+                        placeholder={platformSettings.aiProvider === 'bodygram' ? 'Bodygram Client ID (from developers.bodygram.com)' : 'sk-... or API key'}
                         className="input-field text-sm font-mono pr-16"
                       />
                       <button
@@ -1082,13 +1113,16 @@ export default function AdminPanel() {
                       type="text"
                       value={platformSettings.aiApiBaseUrl}
                       onChange={(e) => setPlatformSettings({ ...platformSettings, aiApiBaseUrl: e.target.value })}
+                      placeholder={platformSettings.aiProvider === 'bodygram' ? 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session' : 'https://api.example.com/endpoint'}
                       className="input-field text-sm font-mono"
                     />
                   </div>
                 </div>
 
                 <p className={`text-[11px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  💡 {t('admin.settings.aiHint')}
+                  💡 {platformSettings.aiProvider === 'bodygram'
+                    ? 'Bodygram Platform uses a registered Client ID to initiate 3D scanning sessions. Endpoint: https://api.bodyscanner.bodygram.com/scanning/v0/create-session. Obtain your Client ID from developers.bodygram.com.'
+                    : t('admin.settings.aiHint')}
                 </p>
               </div>
             </div>

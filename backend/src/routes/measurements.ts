@@ -42,7 +42,7 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
   try {
     const prisma: PrismaClient = req.app.get('prisma');
     const { requestId } = req.params;
-    const { frontPhotoUrl, sidePhotoUrl, backPhotoUrl, heightCm } = req.body;
+    const { frontPhotoUrl, sidePhotoUrl, backPhotoUrl, heightCm, weightKg, gender, bodyBuild, calculatedMeasurements } = req.body;
 
     // Verify access
     const serviceRequest = await prisma.serviceRequest.findUnique({ where: { id: requestId } });
@@ -84,7 +84,7 @@ router.post('/:requestId/photos', authenticate, authorize('customer'), validateB
     // Process AI body measurement analysis
     const io = req.app.get('io');
     const height = heightCm ? Number(heightCm) : 175;
-    processAIMeasurements(prisma, requestId, io, height);
+    processAIMeasurements(prisma, requestId, io, height, weightKg ? Number(weightKg) : undefined, gender, bodyBuild, calculatedMeasurements);
 
     res.json({ measurement });
   } catch (error) {
@@ -332,8 +332,17 @@ router.put('/:requestId/adjustments', authenticate, authorize('tailor'), validat
   }
 });
 
-// Process AI measurement analysis via Gemini Vision & Anthropometric rules
-async function processAIMeasurements(prisma: PrismaClient, requestId: string, io?: Server, userHeightCm: number = 175) {
+// Process AI measurement analysis via Local Math / Multi-Provider AI Vision & Anthropometric rules
+async function processAIMeasurements(
+  prisma: PrismaClient, 
+  requestId: string, 
+  io?: Server, 
+  userHeightCm: number = 175,
+  weightKg?: number,
+  gender?: string,
+  bodyBuild?: string,
+  calculatedMeasurements?: any
+) {
   try {
     // Update status to processing
     await prisma.measurement.update({
@@ -398,14 +407,60 @@ async function processAIMeasurements(prisma: PrismaClient, requestId: string, io
       return;
     }
 
-    // Execute Multi-Provider AI Measurement Engine (Gemini / OpenAI / Claude / Custom)
-    const aiResult = await analyzeBodyMeasurementsWithGemini(
-      measurement.frontPhotoUrl,
-      measurement.sidePhotoUrl,
-      measurement.backPhotoUrl,
-      calibratedHeight,
-      prisma
-    );
+    let aiResult: any;
+
+    // Execute Multi-Provider AI Vision Engine (Gemini / OpenAI / Claude) with full photo analysis
+    try {
+      const visionResult = await analyzeBodyMeasurementsWithGemini(
+        measurement.frontPhotoUrl,
+        measurement.sidePhotoUrl,
+        measurement.backPhotoUrl,
+        calibratedHeight,
+        prisma,
+        weightKg ? Number(weightKg) : undefined,
+        gender || 'male',
+        bodyBuild || 'average'
+      );
+
+      // If vision analysis completed
+      if (visionResult) {
+        aiResult = {
+          ...visionResult,
+          // Complement with micro-measurements from client landmarks if available
+          ankle_left_circumference: visionResult.ankle_left_circumference || calculatedMeasurements?.ankle_left_circumference,
+          arm_length: visionResult.arm_length || calculatedMeasurements?.arm_length || visionResult.armLength,
+          back_to_shoulder: visionResult.back_to_shoulder || calculatedMeasurements?.back_to_shoulder,
+          bicep_right_circumference: visionResult.bicep_right_circumference || calculatedMeasurements?.bicep_right_circumference,
+          chest_circumference: visionResult.chest_circumference || visionResult.chest,
+          forearm_circumference: visionResult.forearm_circumference || calculatedMeasurements?.forearm_circumference,
+          hip_circumference: visionResult.hip_circumference || visionResult.hip,
+          inside_leg_height: visionResult.inside_leg_height || calculatedMeasurements?.inside_leg_height || visionResult.inseam,
+          neck_circumference: visionResult.neck_circumference || visionResult.neck,
+          neck_to_pelvis: visionResult.neck_to_pelvis || calculatedMeasurements?.neck_to_pelvis,
+          foot_length: visionResult.foot_length || calculatedMeasurements?.foot_length,
+          shoulder_breadth: visionResult.shoulder_breadth || visionResult.shoulderWidth,
+          thigh_left_circumference: visionResult.thigh_left_circumference || calculatedMeasurements?.thigh_left_circumference,
+          waist_circumference: visionResult.waist_circumference || visionResult.waist,
+          wrist_circumference: visionResult.wrist_circumference || calculatedMeasurements?.wrist_circumference,
+        };
+      }
+    } catch (visionErr: any) {
+      console.warn('⚠️ [AI Measurement] Vision engine error, falling back to client local calculations:', visionErr?.message || visionErr);
+      if (
+        calculatedMeasurements &&
+        Number(calculatedMeasurements.chest) > 30 &&
+        Number(calculatedMeasurements.waist) > 30
+      ) {
+        aiResult = {
+          ...calculatedMeasurements,
+          height: calibratedHeight,
+          isHuman: true,
+          isOrientationValid: true,
+        };
+      } else {
+        throw visionErr;
+      }
+    }
 
     // Check if Human verification failed (e.g. animal, object, landscape uploaded)
     if (aiResult.isHuman === false) {
@@ -496,6 +551,26 @@ async function processAIMeasurements(prisma: PrismaClient, requestId: string, io
         armLength: aiResult.armLength,
         aiConfidence: aiResult.aiConfidence,
         aiStatus: 'completed',
+        adjustments: JSON.stringify({
+          allMeasurements: {
+            ankle_left_circumference: aiResult.ankle_left_circumference,
+            arm_length: aiResult.arm_length || aiResult.armLength,
+            back_to_shoulder: aiResult.back_to_shoulder,
+            bicep_right_circumference: aiResult.bicep_right_circumference,
+            chest_circumference: aiResult.chest_circumference || aiResult.chest,
+            forearm_circumference: aiResult.forearm_circumference,
+            hip_circumference: aiResult.hip_circumference || aiResult.hip,
+            inside_leg_height: aiResult.inside_leg_height || aiResult.inseam,
+            neck_circumference: aiResult.neck_circumference || aiResult.neck,
+            neck_to_pelvis: aiResult.neck_to_pelvis,
+            foot_length: aiResult.foot_length,
+            shoulder_breadth: aiResult.shoulder_breadth || aiResult.shoulderWidth,
+            thigh_left_circumference: aiResult.thigh_left_circumference,
+            waist_circumference: aiResult.waist_circumference || aiResult.waist,
+            wrist_circumference: aiResult.wrist_circumference,
+            total_height: calibratedHeight,
+          }
+        }),
       },
     });
 

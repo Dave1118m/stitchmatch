@@ -28,10 +28,13 @@ import { setupSocketHandlers } from './socket';
 
 dotenv.config();
 
+console.log('🚀 StitchMatch Backend initialized. Active AI Provider:', (process.env.AI_PROVIDER || 'gemini').toUpperCase(), `(Model: ${process.env.AI_MODEL || 'gemini-3.6-flash'})`);
+
 // Global BigInt JSON serialization polyfill
 (BigInt.prototype as any).toJSON = function () {
   return Number(this);
 };
+
 
 const app = express();
 const prisma = new PrismaClient();

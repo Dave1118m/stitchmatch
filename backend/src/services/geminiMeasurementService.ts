@@ -9,7 +9,10 @@ export async function analyzeBodyMeasurementsWithGemini(
   sidePhotoUrl: string,
   backPhotoUrl?: string | null,
   userHeightCm: number = 175,
-  prisma?: any
+  prisma?: any,
+  weightKg?: number,
+  gender: string = 'male',
+  bodyBuild: string = 'average'
 ): Promise<BodyMeasurementsOutput> {
-  return analyzeBodyMeasurementsWithAI(frontPhotoUrl, sidePhotoUrl, backPhotoUrl, userHeightCm, prisma);
+  return analyzeBodyMeasurementsWithAI(frontPhotoUrl, sidePhotoUrl, backPhotoUrl, userHeightCm, prisma, weightKg, gender, bodyBuild);
 }

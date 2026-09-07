@@ -53,12 +53,12 @@ export default function CuttersSpecSheetModal({ isOpen, onClose, request }: Cutt
   };
 
   const dimensions = [
-    getDimensionData('chest', measurement?.chest, 'Chest Circumference'),
-    getDimensionData('waist', measurement?.waist, 'Natural Waist'),
-    getDimensionData('hip', measurement?.hip, 'Hip & Seat'),
-    getDimensionData('inseam', measurement?.inseam, 'Inseam Length'),
-    getDimensionData('shoulderWidth', measurement?.shoulderWidth, 'Shoulder Biacromial Width'),
-    getDimensionData('armLength', measurement?.armLength, 'Sleeve / Arm Length'),
+    getDimensionData('chest', measurement?.chest, 'Chest Circumference (chest_circumference)'),
+    getDimensionData('waist', measurement?.waist, 'Waist Circumference (waist_circumference)'),
+    getDimensionData('hip', measurement?.hip, 'Hip Circumference (hip_circumference)'),
+    getDimensionData('shoulderWidth', measurement?.shoulderWidth, 'Shoulder Width (shoulder_width)'),
+    getDimensionData('armLength', measurement?.armLength, 'Sleeve Length (sleeve_length)'),
+    getDimensionData('inseam', measurement?.inseam, 'Inside Leg Length (inside_leg_length)'),
   ];
 
   const handlePrint = () => {

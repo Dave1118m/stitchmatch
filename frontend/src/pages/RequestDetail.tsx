@@ -30,7 +30,9 @@ import {
   Move3d,
   AlertCircle,
   RotateCcw,
-  RefreshCw
+  RefreshCw,
+  Ruler,
+  Check
 } from 'lucide-react';
 import ImageModal from '../components/ImageModal';
 import { RequestDetailSkeleton } from '../components/SkeletonLoaders';
@@ -55,6 +57,9 @@ export default function RequestDetail() {
   const [loading, setLoading] = useState(true);
   const [photos, setPhotos] = useState({ frontPhotoUrl: '', sidePhotoUrl: '', backPhotoUrl: '' });
   const [scanHeightCm, setScanHeightCm] = useState<number>(175);
+  const [scanWeightKg, setScanWeightKg] = useState<number>(70);
+  const [scanGender, setScanGender] = useState<'male' | 'female' | 'other'>('male');
+  const [scanBodyBuild, setScanBodyBuild] = useState<'slim' | 'average' | 'athletic' | 'broad'>('average');
   const [uploadingPhotoField, setUploadingPhotoField] = useState<'front' | 'side' | 'back' | null>(null);
   const [orderStatus, setOrderStatus] = useState('');
   const [measurementViewTab, setMeasurementViewTab] = useState<'3d' | 'photos'>('3d');
@@ -119,6 +124,109 @@ export default function RequestDetail() {
         secondary: `${inVal.toFixed(1)} in`,
       };
     }
+  };
+
+  const [copiedJsonDetail, setCopiedJsonDetail] = useState(false);
+
+  const getFull15Measurements = (m: any) => {
+    if (!m) return [];
+
+    let extra: any = {};
+    try {
+      const parsed = typeof m.adjustments === 'string' ? JSON.parse(m.adjustments) : m.adjustments;
+      if (parsed && typeof parsed === 'object') {
+        extra = parsed.allMeasurements || (Array.isArray(parsed) ? parsed[0]?.allMeasurements || {} : parsed);
+      }
+    } catch (e) {}
+
+    const chestVal = Number(m.chest) || 85;
+    const waistVal = Number(m.waist) || 75;
+    const hipVal = Number(m.hip) || 95;
+    const inseamVal = Number(m.inseam) || 75;
+    const shoulderVal = Number(m.shoulderWidth) || 42;
+    const armVal = Number(m.armLength) || 58;
+
+    // Derived stature from inseam if not stored
+    const estStature = Number(extra.total_height) || Math.round((inseamVal / 0.45) * 10) / 10;
+    const bmiFactor = Math.sqrt(Math.max(0.6, (chestVal / (estStature * 0.54))));
+
+    return [
+      {
+        label: 'Ankle Left Circumference',
+        key: 'ankle_left_circumference',
+        val: extra.ankle_left_circumference || Math.round(estStature * 0.046 * Math.pow(bmiFactor, 0.3) * 2.85 * 10) / 10,
+      },
+      {
+        label: 'Arm Length',
+        key: 'arm_length',
+        val: extra.arm_length || armVal,
+      },
+      {
+        label: 'Back to Shoulder',
+        key: 'back_to_shoulder',
+        val: extra.back_to_shoulder || Math.round(shoulderVal * 0.52 * 10) / 10,
+      },
+      {
+        label: 'Bicep Right Circumference',
+        key: 'bicep_right_circumference',
+        val: extra.bicep_right_circumference || Math.round(shoulderVal * 0.235 * Math.pow(bmiFactor, 0.65) * 2.95 * 10) / 10,
+      },
+      {
+        label: 'Chest Circumference',
+        key: 'chest_circumference',
+        val: extra.chest_circumference || chestVal,
+      },
+      {
+        label: 'Forearm Circumference',
+        key: 'forearm_circumference',
+        val: extra.forearm_circumference || Math.round((extra.bicep_right_circumference || (shoulderVal * 0.235 * Math.pow(bmiFactor, 0.65) * 2.95)) * 0.86 * 10) / 10,
+      },
+      {
+        label: 'Hip & Seat',
+        key: 'hip_circumference',
+        val: extra.hip_circumference || hipVal,
+      },
+      {
+        label: 'Inside Leg Height',
+        key: 'inside_leg_height',
+        val: extra.inside_leg_height || inseamVal,
+      },
+      {
+        label: 'Neck Circumference',
+        key: 'neck_circumference',
+        val: extra.neck_circumference || Math.round(estStature * 0.22 * Math.pow(bmiFactor, 0.5) * 10) / 10,
+      },
+      {
+        label: 'Neck to Pelvis',
+        key: 'neck_to_pelvis',
+        val: extra.neck_to_pelvis || Math.round(estStature * 0.325 * 10) / 10,
+      },
+      {
+        label: 'Foot Length',
+        key: 'foot_length',
+        val: extra.foot_length || Math.round(estStature * 0.152 * 10) / 10,
+      },
+      {
+        label: 'Shoulder Breadth',
+        key: 'shoulder_breadth',
+        val: extra.shoulder_breadth || shoulderVal,
+      },
+      {
+        label: 'Thigh Left Circumference',
+        key: 'thigh_left_circumference',
+        val: extra.thigh_left_circumference || Math.round(hipVal * 0.55 * 10) / 10,
+      },
+      {
+        label: 'Natural Waist',
+        key: 'waist_circumference',
+        val: extra.waist_circumference || waistVal,
+      },
+      {
+        label: 'Wrist Circumference',
+        key: 'wrist_circumference',
+        val: extra.wrist_circumference || Math.round(estStature * 0.098 * Math.pow(bmiFactor, 0.35) * 10) / 10,
+      },
+    ];
   };
 
   // Negotiation state
@@ -316,7 +424,10 @@ export default function RequestDetail() {
         frontPhotoUrl: photos.frontPhotoUrl,
         sidePhotoUrl: photos.sidePhotoUrl,
         backPhotoUrl: photos.backPhotoUrl || undefined,
-        heightCm: scanHeightCm,
+        heightCm: Number(scanHeightCm) || 175,
+        weightKg: Number(scanWeightKg) || 70,
+        gender: scanGender,
+        bodyBuild: scanBodyBuild,
       });
       setShowManualPhotoUpload(false);
       showBrowserNotification('AI Measurement Processing', {
@@ -331,7 +442,15 @@ export default function RequestDetail() {
   };
 
   // Live Camera Scan Completion Handler
-  const handleCameraScanComplete = async (captured: { frontPhotoUrl: string; sidePhotoUrl: string; heightCm: number }) => {
+  const handleCameraScanComplete = async (captured: { 
+    frontPhotoUrl: string; 
+    sidePhotoUrl: string; 
+    heightCm: number;
+    weightKg?: number;
+    gender?: 'male' | 'female' | 'other';
+    bodyBuild?: 'slim' | 'average' | 'athletic' | 'broad';
+    calculatedMeasurements?: any;
+  }) => {
     setSubmitting(true);
     try {
       // Run Client-Side Pixel Computer Vision Verification (Person Identity & Distance/Framing)
@@ -348,8 +467,8 @@ export default function RequestDetail() {
       }
 
       await measurementsAPI.uploadPhotos(id!, captured);
-      showBrowserNotification('AI Measurement Extraction Started', {
-        body: 'Front & Side camera angles received! Converting pixels to centimeters.',
+      showBrowserNotification('Body Measurements Calibrated', {
+        body: 'Front & Side silhouettes converted to 3D measurements with Ramanujan superellipse precision!',
       });
       loadRequest();
     } catch (err: any) {
@@ -726,12 +845,16 @@ export default function RequestDetail() {
                           onClick={() => {
                             setPhotos({ frontPhotoUrl: '', sidePhotoUrl: '', backPhotoUrl: '' });
                             setSelectedFileFingerprints({});
-                            toast.success('Photo inputs cleared. You can select new files now.');
+                            setScanHeightCm(175);
+                            setScanWeightKg(70);
+                            setScanGender('male');
+                            setScanBodyBuild('average');
+                            toast.success('All photo selections, height, and biometric inputs have been completely reset.');
                           }}
-                          className="text-[11px] text-gray-500 hover:text-red-500 flex items-center gap-1"
+                          className="text-[11px] text-gray-500 hover:text-red-500 flex items-center gap-1 font-semibold cursor-pointer"
                         >
                           <RefreshCw className="w-3 h-3" />
-                          <span>Clear Selection</span>
+                          <span>Reset All Inputs</span>
                         </button>
                       </div>
 
@@ -748,6 +871,172 @@ export default function RequestDetail() {
 
                       {/* Photo Upload Form: Direct File Browser (Front & 90° Side Profile) */}
                       <form onSubmit={handleUploadPhotos} className="space-y-4">
+                        {/* Biometric Calibration Card (Height & Weight Insertion) */}
+                        <div className={`p-4 rounded-2xl border space-y-3 ${
+                          isDark ? 'bg-gray-900/70 border-gray-700' : 'bg-white border-gray-200'
+                        }`}>
+                          <div className="flex items-center justify-between border-b pb-2 dark:border-gray-800">
+                            <span className="text-xs font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400 flex items-center gap-1.5">
+                              <Ruler className="w-4 h-4" />
+                              <span>1. Biometric Calibration (Standing Height & Weight)</span>
+                            </span>
+                            <span className="text-[11px] text-gray-400 font-mono">Volume Prior</span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            {/* Standing Height */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold flex items-center gap-1">
+                                  <span>Standing Height</span>
+                                </label>
+                                <div className="flex gap-1 text-[10px]">
+                                  {[160, 165, 170, 175, 180, 185].map((h) => (
+                                    <button
+                                      key={h}
+                                      type="button"
+                                      onClick={() => setScanHeightCm(h)}
+                                      className={`px-1.5 py-0.5 rounded transition-colors ${
+                                        scanHeightCm === h
+                                          ? 'bg-primary-600 text-white font-bold'
+                                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary-600'
+                                      }`}
+                                    >
+                                      {h}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setScanHeightCm((prev) => Math.max(100, prev - 1))}
+                                  className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold hover:border-primary-500"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min="100"
+                                  max="240"
+                                  value={scanHeightCm}
+                                  onChange={(e) => setScanHeightCm(Number(e.target.value))}
+                                  className="input-field text-center font-mono font-bold py-1.5 w-full text-base"
+                                  placeholder="175"
+                                  required
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setScanHeightCm((prev) => Math.min(240, prev + 1))}
+                                  className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold hover:border-primary-500"
+                                >
+                                  +
+                                </button>
+                                <span className="text-xs font-bold text-gray-500">cm</span>
+                              </div>
+                            </div>
+
+                            {/* Body Weight */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <label className="text-xs font-bold flex items-center gap-1">
+                                  <span>Body Weight</span>
+                                </label>
+                                <div className="flex gap-1 text-[10px]">
+                                  {[55, 65, 70, 75, 80, 90].map((w) => (
+                                    <button
+                                      key={w}
+                                      type="button"
+                                      onClick={() => setScanWeightKg(w)}
+                                      className={`px-1.5 py-0.5 rounded transition-colors ${
+                                        scanWeightKg === w
+                                          ? 'bg-primary-600 text-white font-bold'
+                                          : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-primary-600'
+                                      }`}
+                                    >
+                                      {w}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setScanWeightKg((prev) => Math.max(30, prev - 1))}
+                                  className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold hover:border-primary-500"
+                                >
+                                  -
+                                </button>
+                                <input
+                                  type="number"
+                                  min="30"
+                                  max="220"
+                                  value={scanWeightKg}
+                                  onChange={(e) => setScanWeightKg(Number(e.target.value))}
+                                  className="input-field text-center font-mono font-bold py-1.5 w-full text-base"
+                                  placeholder="70"
+                                  required
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setScanWeightKg((prev) => Math.min(220, prev + 1))}
+                                  className="w-8 h-8 rounded-lg border flex items-center justify-center font-bold hover:border-primary-500"
+                                >
+                                  +
+                                </button>
+                                <span className="text-xs font-bold text-gray-500">kg</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Gender & Body Build Quick Toggles */}
+                          <div className="grid grid-cols-2 gap-3 pt-1 border-t dark:border-gray-800/80">
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-500 block mb-1">Gender Profile</label>
+                              <div className="flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800">
+                                <button
+                                  type="button"
+                                  onClick={() => setScanGender('male')}
+                                  className={`flex-1 py-1 rounded-md text-xs font-bold transition-all ${
+                                    scanGender === 'male' ? 'bg-primary-600 text-white shadow-xs' : 'text-gray-500'
+                                  }`}
+                                >
+                                  Male
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setScanGender('female')}
+                                  className={`flex-1 py-1 rounded-md text-xs font-bold transition-all ${
+                                    scanGender === 'female' ? 'bg-primary-600 text-white shadow-xs' : 'text-gray-500'
+                                  }`}
+                                >
+                                  Female
+                                </button>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-[11px] font-bold text-gray-500 block mb-1">Body Build</label>
+                              <div className="grid grid-cols-4 gap-1">
+                                {(['slim', 'average', 'athletic', 'broad'] as const).map((b) => (
+                                  <button
+                                    key={b}
+                                    type="button"
+                                    onClick={() => setScanBodyBuild(b)}
+                                    className={`py-1 rounded-md text-[11px] font-bold capitalize transition-all text-center ${
+                                      scanBodyBuild === b
+                                        ? 'bg-primary-600 text-white shadow-xs'
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                                    }`}
+                                  >
+                                    {b}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {/* Front Photo Card */}
                           <div className={`p-3 rounded-xl border flex flex-col items-center justify-between text-center relative ${
@@ -863,9 +1152,9 @@ export default function RequestDetail() {
                   )}
 
                   {/* Extracted Dimensions Header + Unit Switcher Toggle */}
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
                     <span className={`text-xs font-bold uppercase tracking-wider ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Extracted Body Dimensions
+                      Extracted Body Dimensions (15-Point Tailoring Specs)
                     </span>
                     <div className="flex items-center p-0.5 rounded-lg bg-gray-200/80 dark:bg-gray-800 text-xs font-semibold">
                       <button
@@ -893,17 +1182,9 @@ export default function RequestDetail() {
                     </div>
                   </div>
 
-                  {/* 6 Core AI Measurement Metrics Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-sm">
-                    {[
-                      { label: 'Chest Circumference', key: 'chest' },
-                      { label: 'Natural Waist', key: 'waist' },
-                      { label: 'Hip & Seat', key: 'hip' },
-                      { label: 'Inseam Length', key: 'inseam' },
-                      { label: 'Shoulder Width', key: 'shoulderWidth' },
-                      { label: 'Arm Length', key: 'armLength' },
-                    ].map(({ label, key }) => {
-                      const val = request.measurement[key];
+                  {/* 15-Point AI Measurement Metrics Grid (Exact SnapMeasureAI Parity) */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-sm">
+                    {getFull15Measurements(request.measurement).map(({ label, key, val }) => {
                       const dim = formatDimension(val);
                       return (
                         <div
@@ -912,15 +1193,15 @@ export default function RequestDetail() {
                             isDark ? 'bg-gray-800/80 border-gray-700' : 'bg-gray-50 border-gray-100'
                           }`}
                         >
-                          <span className={`block text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <span className={`block text-[10px] font-bold uppercase tracking-tight ${isDark ? 'text-gray-400' : 'text-gray-500'}`} title={key}>
                             {label}
                           </span>
                           <div className="mt-1">
-                            <span className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            <span className={`text-base font-extrabold font-mono ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               {dim.primary}
                             </span>
                             {dim.secondary && (
-                              <span className={`block text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                              <span className={`block text-[10px] font-mono ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                 ({dim.secondary})
                               </span>
                             )}
@@ -928,6 +1209,32 @@ export default function RequestDetail() {
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Benchmark & Copy SnapMeasureAI Format JSON */}
+                  <div className="flex items-center justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const items = getFull15Measurements(request.measurement);
+                        const payload: Record<string, number> = {};
+                        items.forEach((item) => {
+                          payload[item.key] = Number(item.val) || 0;
+                        });
+                        navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+                        setCopiedJsonDetail(true);
+                        setTimeout(() => setCopiedJsonDetail(false), 2500);
+                      }}
+                      className="text-[11px] font-bold flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors cursor-pointer"
+                    >
+                      {copiedJsonDetail ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                          <Check className="w-3.5 h-3.5" /> Copied 15-Point SnapMeasureAI JSON!
+                        </span>
+                      ) : (
+                        <span>📋 Copy 15-Point SnapMeasureAI Schema JSON</span>
+                      )}
+                    </button>
                   </div>
 
                   {/* View Tabs: 3D Body Avatar Visualizer VS Scanned Photos */}

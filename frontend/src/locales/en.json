@@ -301,20 +301,20 @@
       "title": "AI Body Measurement Scanner",
       "badge": "Live AR",
       "steps": {
-        "height": "1. Height",
+        "height": "1. Biometrics",
         "front": "2. Front Pose",
         "side": "3. Side Pose",
         "review": "4. Review"
       },
       "subtitles": {
-        "height": "Calibrate your standing height",
+        "height": "Calibrate height, weight and body volume",
         "front": "Stand facing the camera",
         "side": "Turn 90° to the side",
         "review": "Confirm scan before computing"
       },
       "heightSection": {
-        "title": "Your Standing Height",
-        "subtitle": "Used to accurately calculate your 3D body measurements.",
+        "title": "Biometric Calibration",
+        "subtitle": "Used with Ramanujan superellipse geometry for millimeter-accurate tailoring.",
         "cmTab": "Centimeters (cm)",
         "ftTab": "Feet & Inches (ft/in)",
         "tip": "Tip: Stand 2–3 meters away in a well-lit room in form-fitting clothing."

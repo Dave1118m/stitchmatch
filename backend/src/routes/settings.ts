@@ -13,7 +13,7 @@ const DEFAULT_SETTINGS: Record<string, any> = {
   specialtiesList: ['Bespoke Suits', 'Tuxedos', 'Evening Gowns', 'Bridal Wear', 'Alterations', 'Silk Dresses', 'Overcoats'],
   aiProvider: 'gemini',
   aiApiKey: '',
-  aiModel: 'gemini-1.5-flash',
+  aiModel: 'gemini-flash-latest',
   aiApiBaseUrl: '',
 };
 
@@ -232,12 +232,13 @@ router.post('/test-ai', authenticate, authorize('admin'), async (req: AuthReques
     const cleanKey = (apiKey || '').trim();
     const cleanProvider = (provider || 'gemini').toLowerCase().trim();
     const displayName = providerName || (
-      cleanProvider === 'gemini' ? 'Google Gemini' :
-      cleanProvider === 'openai' ? 'OpenAI Vision' :
-      cleanProvider === 'claude' ? 'Anthropic Claude' :
-      cleanProvider === 'snapaimeasure' ? 'SnapAIMeasure' :
-      cleanProvider === 'live_ai_measurement' ? 'Live_AI_Measurement' :
-      'Custom AI Provider'
+      cleanProvider === 'bodygram' ? 'Bodygram Platform' :
+        cleanProvider === 'gemini' ? 'Google Gemini' :
+          cleanProvider === 'openai' ? 'OpenAI Vision' :
+            cleanProvider === 'claude' ? 'Anthropic Claude' :
+              cleanProvider === 'snapaimeasure' ? 'SnapAIMeasure' :
+                cleanProvider === 'live_ai_measurement' ? 'Live_AI_Measurement' :
+                  'Custom AI Provider'
     );
 
     if (!cleanKey) {
@@ -247,12 +248,12 @@ router.post('/test-ai', authenticate, authorize('admin'), async (req: AuthReques
     if (cleanProvider === 'gemini') {
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(cleanKey);
-      const m = genAI.getGenerativeModel({ model: model || 'gemini-1.5-flash' });
+      const m = genAI.getGenerativeModel({ model: model || 'gemini-flash-latest' });
       const result = await m.generateContent('Respond with "OK" if connected.');
       const txt = result.response.text();
       return res.json({
         success: true,
-        message: `${displayName} connection verified! Model ${model || 'gemini-1.5-flash'} responded: "${txt.trim()}"`,
+        message: `${displayName} connection verified! Model ${model || 'gemini-flash-latest'} responded: "${txt.trim()}"`,
       });
     } else if (cleanProvider === 'claude') {
       const endpoint = baseUrl || 'https://api.anthropic.com/v1/messages';
@@ -282,45 +283,73 @@ router.post('/test-ai', authenticate, authorize('admin'), async (req: AuthReques
         success: true,
         message: `${displayName} connection verified! Model ${mName} responded: "${txt.trim()}"`,
       });
-    } else if (cleanProvider === 'snapaimeasure' || cleanProvider === 'live_ai_measurement' || cleanProvider === 'custom') {
+    } else if (cleanProvider === 'bodygram' || cleanProvider === 'snapaimeasure' || cleanProvider === 'live_ai_measurement' || cleanProvider === 'custom') {
       // Specialized measurement endpoint or custom gateway
-      const endpoint = baseUrl || (
-        cleanProvider === 'snapaimeasure' ? 'https://api.snapaimeasure.com/v1/ping' :
-        cleanProvider === 'live_ai_measurement' ? 'https://api.liveaimeasurement.com/v1/health' :
-        'https://api.openai.com/v1/chat/completions'
+      let endpoint = baseUrl || (
+        cleanProvider === 'bodygram' ? 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session' :
+          cleanProvider === 'snapaimeasure' ? 'https://api.snapaimeasure.com/v1/ping' :
+            cleanProvider === 'live_ai_measurement' ? 'https://api.liveaimeasurement.com/v1/health' :
+              'https://api.openai.com/v1/chat/completions'
       );
 
+      // Auto-correct deprecated or dead Bodygram domain
+      if (endpoint.includes('api.bodygram.com')) {
+        endpoint = 'https://api.bodyscanner.bodygram.com/scanning/v0/create-session';
+      }
+
       try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${cleanKey}`,
-            'X-API-Key': cleanKey,
-          },
-          body: JSON.stringify({
+        const isBodygram = cleanProvider === 'bodygram' || endpoint.includes('bodyscanner.bodygram.com');
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${cleanKey}`,
+          'X-API-Key': cleanKey,
+          'Client-ID': cleanKey,
+        };
+        const bodyPayload = isBodygram
+          ? {
+            clientId: cleanKey,
+            clientScanningId: `probe_${Date.now()}`,
+            scanningConfig: {
+              languageCode: 'en',
+              include3dAvatarInResults: true,
+            },
+          }
+          : {
             apiKey: cleanKey,
             model: model || 'default',
             test: true,
             messages: [{ role: 'user', content: 'ping' }],
-          }),
+          };
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(bodyPayload),
         });
 
-        if (response.ok || response.status === 200 || response.status === 204) {
+        const rawBody = await response.text();
+        let parsed: any = null;
+        try { parsed = JSON.parse(rawBody); } catch { }
+
+        if (response.ok || response.status === 200 || response.status === 201) {
           return res.json({
             success: true,
-            message: `${displayName} API key and connection verified! Status: 200 OK.`,
+            message: `${displayName} API connection verified! (HTTP ${response.status} OK${parsed?.scanningSessionId ? ` - Session: ${parsed.scanningSessionId}` : ''})`,
+          });
+        } else if (response.status === 403 && parsed?.error?.errorType === 'INVALID_CLIENT_ID') {
+          return res.status(400).json({
+            error: `Bodygram Platform reached successfully, but rejected your Client ID (HTTP 403): "${parsed.error.message}". Bodygram requires a registered "Client ID" (not an API secret) from developers.bodygram.com.`,
+          });
+        } else {
+          return res.status(400).json({
+            error: `${displayName} returned HTTP ${response.status}: ${parsed?.error?.message || rawBody.substring(0, 300) || 'Unauthorized or invalid credentials.'}`,
           });
         }
-      } catch (pingErr) {
-        // Fallback: If endpoint is offline or dev mocked, validate key format
+      } catch (pingErr: any) {
+        return res.status(400).json({
+          error: `Could not reach ${displayName} endpoint at ${endpoint}: ${pingErr.message || 'Network unreachable. Please check API URL.'}`,
+        });
       }
-
-      // If simulated or test key
-      return res.json({
-        success: true,
-        message: `${displayName} API key registered and configured for live 3D scans!`,
-      });
     } else {
       // OpenAI or OpenAI-compatible Vision API
       const endpoint = baseUrl || 'https://api.openai.com/v1/chat/completions';

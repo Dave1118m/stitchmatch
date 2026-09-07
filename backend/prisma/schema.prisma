@@ -164,7 +164,7 @@ model Measurement {
   inseam          Decimal?
   shoulderWidth   Decimal?  @map("shoulder_width")
   armLength       Decimal?  @map("arm_length")
-  adjustments     String?   @default("[]")
+  adjustments     String?   @db.Text
   createdAt       DateTime  @default(now()) @map("created_at")
 
   request         ServiceRequest? @relation(fields: [requestId], references: [id], onDelete: NoAction, onUpdate: NoAction)

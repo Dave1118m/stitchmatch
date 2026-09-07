@@ -120,6 +120,10 @@ export const MeasurementPhotoSchema = z.object({
   sidePhotoUrl: z.string().min(1, { message: 'Side photo is required' }),
   backPhotoUrl: z.string().optional().nullable().or(z.literal('')),
   heightCm: z.coerce.number().min(50).max(260).optional().nullable(),
+  weightKg: z.coerce.number().min(25).max(300).optional().nullable(),
+  gender: z.enum(['male', 'female', 'other']).optional().nullable(),
+  bodyBuild: z.enum(['slim', 'average', 'athletic', 'broad']).optional().nullable(),
+  calculatedMeasurements: z.any().optional().nullable(),
 });
 
 export const MeasurementAdjustmentSchema = z.object({
